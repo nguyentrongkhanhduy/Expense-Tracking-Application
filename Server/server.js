@@ -21,3 +21,6 @@ app.listen(port, startServer);
 app.get("/", (req, res) => {
   res.send("Server is working!");
 });
+
+const authRouter = require("./routes/authentication");
+app.use("/api/auth", authRouter);
