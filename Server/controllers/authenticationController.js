@@ -8,7 +8,17 @@ const signUp = async (req, res) => {
       password,
       displayName,
     });
-    res.status(201).json({ message: "User created successfully", userRecord });
+    console.log(`User created: ${userRecord.uid}`);
+    res.status(201).json({
+      uid: userRecord.uid,
+      email: userRecord.email,
+      displayName: userRecord.displayName,
+    });
+    console.log("Responding with:", {
+      uid: userRecord.uid,
+      email: userRecord.email,
+      displayName: userRecord.displayName,
+    });
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
@@ -21,10 +31,16 @@ const signIn = async (req, res) => {
     const uid = decodedToken.uid;
     const userRecord = await admin.auth().getUser(uid);
 
+    console.log(`User signed in: ${userRecord.uid}`);
     res.status(200).json({
-      message: "Token verified. User signed in.",
       uid: userRecord.uid,
       email: userRecord.email,
+      displayName: userRecord.displayName,
+    });
+    console.log("Responding with:", {
+      uid: userRecord.uid,
+      email: userRecord.email,
+      displayName: userRecord.displayName,
     });
   } catch (error) {
     res.status(401).json({ error: "Invalid or expired ID token" });
