@@ -13,52 +13,71 @@ import kotlinx.coroutines.launch
 
 class AuthViewModel : ViewModel() {
     private val auth = FirebaseAuth.getInstance()
-    private val _authState = MutableStateFlow<String?>(null)
-    val authState: StateFlow<String?> = _authState
 
     private val _user = MutableStateFlow<User?>(null)
     val user: StateFlow<User?> = _user
 
+    private val _isSignedUp = MutableStateFlow(false)
+    val isSignedUp: StateFlow<Boolean> = _isSignedUp
+
+    private val _isSignedIn = MutableStateFlow(false)
+    val isSignedIn: StateFlow<Boolean> = _isSignedIn
+
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> = _isLoading
+
     fun signIn(email: String, password: String) {
+        _isLoading.value = true
+        _isSignedIn.value = false
         viewModelScope.launch {
             auth.signInWithEmailAndPassword(email, password)
                 .addOnSuccessListener { result ->
                     result.user?.getIdToken(true)?.addOnSuccessListener { tokenResult ->
                         val idToken = tokenResult.token ?: return@addOnSuccessListener
-
                         viewModelScope.launch {
                             try {
                                 val response = RetrofitClient.instance.signIn(TokenRequest(idToken))
-                                _authState.value = "Sign in successful: ${response.displayName}"
+                                _isSignedIn.value = true
+                                _isLoading.value = false
                                 _user.value = response
                                 println("User: ${response.email}")
                             } catch (e: Exception) {
-                                _authState.value = "Sign in failed: ${e.message}"
                                 println("Error: ${e.message}")
+                                _isLoading.value = false
                             }
                         }
                     }
 
                 }
                 .addOnFailureListener { exception ->
-                    _authState.value = "Sign in failed: ${exception.message}"
                     println("Error: ${exception.message}")
                 }
         }
     }
 
     fun signUp(email: String, password: String, displayName: String) {
+        _isSignedUp.value = false
+        _isLoading.value = true
         val request = SignUpRequest(email, password, displayName)
         viewModelScope.launch {
             try {
                 val response = RetrofitClient.instance.signUp(request)
-                _authState.value = "Sign up successful: ${response.displayName}"
                 _user.value = response
+                _isSignedUp.value = true
+                _isLoading.value = false
+                _isSignedIn.value = true
                 println("User: ${response.email}")
             } catch (e: Exception) {
-                _authState.value = "Sign up failed: ${e.message}"
                 println("Error: ${e.message}")
+                _isLoading.value = false
             }
         }
+    }
+
+    fun signOut() {
+        auth.signOut()
+        _user.value = null
+        _isSignedIn.value = false
+        _isSignedUp.value = false
     }
 }

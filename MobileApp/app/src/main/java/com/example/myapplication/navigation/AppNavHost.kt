@@ -17,8 +17,8 @@ fun AppNavHost() {
     val viewModel = AuthViewModel()
     NavHost(navController, startDestination = "welcome") {
         composable("welcome") { WelcomeScreen(navController) }
-        composable("login") { LoginScreen(navController) }
+        composable("login") { LoginScreen(navController, viewModel) }
         composable("signup") { SignUpScreen(navController, viewModel) }
-        composable("home") { HomeScreen() }
+        composable("home") { HomeScreen(navController, viewModel) }
     }
 }

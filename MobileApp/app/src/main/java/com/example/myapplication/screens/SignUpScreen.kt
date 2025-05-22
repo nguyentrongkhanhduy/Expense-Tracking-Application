@@ -16,6 +16,9 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -34,12 +37,21 @@ fun SignUpScreen(navController: NavController, viewModel: AuthViewModel) {
     var confirmPassword by remember { mutableStateOf("1234567") }
     var displayName by remember { mutableStateOf("test123") }
 
-//    val authState by viewModel.authState.collectAsState()
+    val isSignedUp by viewModel.isSignedUp.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsState()
+
+    LaunchedEffect(isSignedUp) {
+        if (isSignedUp) {
+            navController.navigate("home") {
+                popUpTo("signup") { inclusive = true }
+            }
+        }
+    }
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .padding(horizontal = 32.dp)
+            .padding(horizontal = 24.dp)
     ) {
         Text(
             "< Back",
@@ -93,10 +105,17 @@ fun SignUpScreen(navController: NavController, viewModel: AuthViewModel) {
             Spacer(Modifier.height(16.dp))
             Button(
                 onClick = { viewModel.signUp(email, password, displayName) },
-                enabled = email.isNotBlank() && password.isNotBlank() && password.length >= 6 && confirmPassword.isNotBlank() && displayName.isNotBlank() && password == confirmPassword,
+                enabled = !isLoading && email.isNotBlank() && password.isNotBlank() && password.length >= 6 && confirmPassword.isNotBlank() && displayName.isNotBlank() && password == confirmPassword,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Create Account")
+                if (isLoading) {
+                    androidx.compose.material3.CircularProgressIndicator(
+                        modifier = Modifier.padding(4.dp).size(20.dp),
+                        strokeWidth = 2.dp
+                    )
+                } else {
+                    Text("Create Account")
+                }
             }
         }
     }
@@ -107,6 +126,5 @@ fun SignUpScreen(navController: NavController, viewModel: AuthViewModel) {
 @Composable
 fun SignUpScreenPreview() {
     val navController = rememberNavController()
-    val viewModel = AuthViewModel()
-    SignUpScreen(navController = navController, viewModel = viewModel)
+    SignUpScreen(navController = navController, viewModel = AuthViewModel())
 }

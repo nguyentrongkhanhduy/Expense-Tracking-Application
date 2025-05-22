@@ -10,7 +10,6 @@ data class SignUpRequest(
     val displayName: String
 )
 
-
 data class TokenRequest(val idToken: String)
 
 interface AuthApiService {
