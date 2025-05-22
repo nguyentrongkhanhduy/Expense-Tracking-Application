@@ -51,6 +51,7 @@ class AuthViewModel : ViewModel() {
                 }
                 .addOnFailureListener { exception ->
                     println("Error: ${exception.message}")
+                    _isLoading.value = false
                 }
         }
     }
