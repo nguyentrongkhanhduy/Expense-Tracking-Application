@@ -1,4 +1,5 @@
 package com.example.myapplication.screens
+
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,6 +14,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Button
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -22,16 +24,18 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.example.myapplication.components.BackButton
+import com.example.myapplication.components.MyButton
+import com.example.myapplication.ui.theme.PrimaryBlue
 import com.example.myapplication.viewmodel.AuthViewModel
 
 @Composable
-fun LoginScreen(navController: NavController, viewModel: AuthViewModel) {
+fun LoginScreen(navController: NavController, viewModel: AuthViewModel, showGuestOption: Boolean = false) {
     var email by remember { mutableStateOf("test@123.com") }
     var password by remember { mutableStateOf("1234567") }
 
@@ -51,16 +55,12 @@ fun LoginScreen(navController: NavController, viewModel: AuthViewModel) {
             .fillMaxSize()
             .padding(horizontal = 24.dp)
     ) {
-        Text(
-            text = if (navController.previousBackStackEntry != null) "< Back" else "",
-            fontSize = 16.sp,
-            modifier = Modifier
-                .align(Alignment.TopStart)
-                .padding(top = 16.dp)
-                .clickable(enabled = navController.previousBackStackEntry != null) {
-                    navController.popBackStack()
-                }
-        )
+        if (navController.previousBackStackEntry != null) {
+            BackButton(
+                modifier = Modifier.align(Alignment.TopStart),
+                onClick = { navController.popBackStack() }
+            )
+        }
 
         Column(
             modifier = Modifier
@@ -70,10 +70,11 @@ fun LoginScreen(navController: NavController, viewModel: AuthViewModel) {
         ) {
             Text(
                 text = "Login",
-                fontSize = 22.sp,
-                fontWeight = FontWeight.Bold
+                fontSize = 48.sp,
+                fontWeight = FontWeight.Bold,
+                color = PrimaryBlue
             )
-            Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(32.dp))
             OutlinedTextField(
                 value = email,
                 onValueChange = { email = it },
@@ -82,7 +83,7 @@ fun LoginScreen(navController: NavController, viewModel: AuthViewModel) {
                     .fillMaxWidth()
                     .height(56.dp)
             )
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(24.dp))
             OutlinedTextField(
                 value = password,
                 onValueChange = { password = it },
@@ -92,44 +93,44 @@ fun LoginScreen(navController: NavController, viewModel: AuthViewModel) {
                     .fillMaxWidth()
                     .height(56.dp)
             )
-            Spacer(Modifier.height(24.dp))
-            Button(
+            Spacer(Modifier.height(32.dp))
+            MyButton(
                 onClick = { viewModel.signIn(email, password) },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(48.dp),
                 enabled = !isLoading && email.isNotBlank() && password.isNotBlank()
             ) {
                 if (isLoading) {
                     androidx.compose.material3.CircularProgressIndicator(
-                        modifier = Modifier.padding(4.dp).size(20.dp),
+                        modifier = Modifier
+                            .padding(4.dp)
+                            .size(20.dp),
                         strokeWidth = 2.dp
                     )
                 } else {
-                    Text("Login")
+                    Text("Login", fontSize = 20.sp, fontWeight = FontWeight.Bold)
                 }
             }
             Spacer(Modifier.height(24.dp))
             Row(
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("Don't have an account?")
+                Text("Don't have an account?", fontSize = 16.sp)
                 Spacer(Modifier.width(4.dp))
                 Text(
                     text = "Sign Up",
-                    color = Color(0xFF1976D2),
+                    color = PrimaryBlue,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Medium,
                     modifier = Modifier.clickable { navController.navigate("signup") }
                 )
             }
 
-            if (navController.previousBackStackEntry == null) {
+            Spacer(Modifier.height(32.dp))
+
+            if (showGuestOption) {
+                Text("Or", color = PrimaryBlue, fontSize = 18.sp)
                 Spacer(Modifier.height(16.dp))
-                Text("Or")
-                Spacer(Modifier.height(16.dp))
-                Button(onClick = {  }) {
-                    Text("Continue as guest")
+                TextButton(onClick = {}) {
+                    Text("Continue as guest", color = PrimaryBlue, fontSize = 20.sp)
                 }
             }
         }

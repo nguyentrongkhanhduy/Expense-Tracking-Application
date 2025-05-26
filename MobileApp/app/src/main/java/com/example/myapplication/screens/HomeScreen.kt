@@ -22,7 +22,7 @@ fun HomeScreen(navController: NavController, viewModel: AuthViewModel) {
 
     LaunchedEffect(isSignedIn) {
         if (!isSignedIn) {
-            navController.navigate("login") {
+            navController.navigate("login?showGuest=true") {
                 popUpTo(0)
             }
         }
