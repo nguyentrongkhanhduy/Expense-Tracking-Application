@@ -39,7 +39,7 @@ fun WelcomeScreen(navController: NavController) {
             color = PrimaryBlue
         )
         Spacer(Modifier.height(32.dp))
-        TextButton(onClick = {}) {
+        TextButton(onClick = { navController.navigate("home?isGuest=true") }) {
             Text("Continue as guest", color = PrimaryBlue, fontSize = 20.sp)
         }
         Spacer(Modifier.height(16.dp))
