@@ -85,11 +85,12 @@ fun AddTransactionDialog(
                     placeholder = { Text("Amount", color = Color.White) },
                     textStyle = TextStyle(color = Color.White, fontSize = 20.sp),
                     singleLine = true,
-                    colors = TextFieldDefaults.outlinedTextFieldColors(
-                        containerColor = Color(0xFF1C3556),
-                        unfocusedBorderColor = Color.Transparent,
+                    colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = Color.White,
-                        cursorColor = Color.White
+                        unfocusedBorderColor = Color.Transparent,
+                        cursorColor = Color.White,
+                        focusedContainerColor = Color(0xFF1C3556),
+                        unfocusedContainerColor = Color(0xFF1C3556)
                     )
                 )
 
@@ -111,11 +112,12 @@ fun AddTransactionDialog(
                             .background(Color(0xFF1C3556), RoundedCornerShape(28.dp)),
                         textStyle = TextStyle(color = Color.White),
                         singleLine = true,
-                        colors = TextFieldDefaults.outlinedTextFieldColors(
-                            containerColor = Color(0xFF1C3556),
-                            unfocusedBorderColor = Color.Transparent,
+                        colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = Color.White,
-                            cursorColor = Color.White
+                            unfocusedBorderColor = Color.Transparent,
+                            cursorColor = Color.White,
+                            focusedContainerColor = Color(0xFF1C3556),
+                            unfocusedContainerColor = Color(0xFF1C3556)
                         )
                     )
                 }
@@ -150,11 +152,12 @@ fun AddTransactionDialog(
                                 ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedType)
                             },
                             textStyle = TextStyle(color = Color.White),
-                            colors = TextFieldDefaults.outlinedTextFieldColors(
-                                containerColor = if (type == "Expense") Color(0xFFFF5252) else Color(0xFF4CAF50),
-                                unfocusedBorderColor = Color.Transparent,
+                            colors = OutlinedTextFieldDefaults.colors(
                                 focusedBorderColor = Color.White,
-                                cursorColor = Color.White
+                                unfocusedBorderColor = Color.Transparent,
+                                cursorColor = Color.White,
+                                focusedContainerColor = if (type == "Expense") Color(0xFFFF5252) else Color(0xFF4CAF50),
+                                unfocusedContainerColor = if (type == "Expense") Color(0xFFFF5252) else Color(0xFF4CAF50)
                             )
                         )
                         ExposedDropdownMenu(
@@ -189,11 +192,12 @@ fun AddTransactionDialog(
                             .background(Color(0xFF1C3556), RoundedCornerShape(28.dp)),
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedCategory) },
                         textStyle = TextStyle(color = Color.White),
-                        colors = TextFieldDefaults.outlinedTextFieldColors(
-                            containerColor = Color(0xFF1C3556),
-                            unfocusedBorderColor = Color.Transparent,
+                        colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = Color.White,
-                            cursorColor = Color.White
+                            unfocusedBorderColor = Color.Transparent,
+                            cursorColor = Color.White,
+                            focusedContainerColor = Color(0xFF1C3556),
+                            unfocusedContainerColor = Color(0xFF1C3556)
                         )
                     )
                     ExposedDropdownMenu(
@@ -222,11 +226,12 @@ fun AddTransactionDialog(
                         .background(Color(0xFF1C3556), RoundedCornerShape(28.dp)),
                     placeholder = { Text("Note", color = Color.White) },
                     textStyle = TextStyle(color = Color.White),
-                    colors = TextFieldDefaults.outlinedTextFieldColors(
-                        containerColor = Color(0xFF1C3556),
-                        unfocusedBorderColor = Color.Transparent,
+                    colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = Color.White,
-                        cursorColor = Color.White
+                        unfocusedBorderColor = Color.Transparent,
+                        cursorColor = Color.White,
+                        focusedContainerColor = Color(0xFF1C3556),
+                        unfocusedContainerColor = Color(0xFF1C3556)
                     )
                 )
 
@@ -244,11 +249,12 @@ fun AddTransactionDialog(
                         }
                     },
                     textStyle = TextStyle(color = Color.White),
-                    colors = TextFieldDefaults.outlinedTextFieldColors(
-                        containerColor = Color(0xFF1C3556),
-                        unfocusedBorderColor = Color.Transparent,
+                    colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = Color.White,
-                        cursorColor = Color.White
+                        unfocusedBorderColor = Color.Transparent,
+                        cursorColor = Color.White,
+                        focusedContainerColor = Color(0xFF1C3556),
+                        unfocusedContainerColor = Color(0xFF1C3556)
                     )
                 )
                 if (showDatePicker) {
@@ -275,11 +281,12 @@ fun AddTransactionDialog(
                             .background(Color(0xFF1C3556), RoundedCornerShape(28.dp)),
                         placeholder = { Text("Location", color = Color.White) },
                         textStyle = TextStyle(color = Color.White),
-                        colors = TextFieldDefaults.outlinedTextFieldColors(
-                            containerColor = Color(0xFF1C3556),
-                            unfocusedBorderColor = Color.Transparent,
+                        colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = Color.White,
-                            cursorColor = Color.White
+                            unfocusedBorderColor = Color.Transparent,
+                            cursorColor = Color.White,
+                            focusedContainerColor = Color(0xFF1C3556),
+                            unfocusedContainerColor = Color(0xFF1C3556)
                         )
                     )
                     Spacer(Modifier.width(8.dp))
