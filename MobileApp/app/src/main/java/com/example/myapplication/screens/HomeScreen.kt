@@ -1,342 +1,340 @@
 package com.example.myapplication.screens
-
-import com.example.myapplication.R
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.runtime.setValue
-import androidx.compose.material3.Icon
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
-import com.example.myapplication.models.User
-import com.example.myapplication.viewmodel.AuthViewModel
-import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.FabPosition
-import androidx.compose.material3.FloatingActionButton
-import com.example.myapplication.screens.TransactionListTab
-import com.example.myapplication.screens.AnalyticsTab
-import com.example.myapplication.screens.ProfileTab
-import com.example.myapplication.screens.AddTransactionDialog
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+import java.text.SimpleDateFormat
+import java.util.*
 
-data class Transaction(
-    val date: String,
-    val name: String,
-    val amount: String,
-    val type: String
-)
-
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(
-    navController: NavController,
-    viewModel: AuthViewModel
+fun AddTransactionDialog(
+    onDismiss: () -> Unit,
+    onSave: () -> Unit
 ) {
-    val user by viewModel.user.collectAsState()
-    val isSignedIn by viewModel.isSignedIn.collectAsState()
-    var showAddDialog by remember { mutableStateOf(false) }
+    var amount by remember { mutableStateOf("") }
+    var name by remember { mutableStateOf("") }
+    var type by remember { mutableStateOf("Expense") }
+    val typeOptions = listOf("Expense", "Income")
+    var expandedType by remember { mutableStateOf(false) }
+    var category by remember { mutableStateOf("Groceries") }
+    val categoryOptions = listOf("Groceries", "Food", "Bills")
+    var expandedCategory by remember { mutableStateOf(false) }
+    var note by remember { mutableStateOf("") }
+    var location by remember { mutableStateOf("") }
 
-    // Use the new Transaction data class with type
-    val balance = "$2500.00"
-    val expenses = "$1000.00"
-    val income = "$300.00"
-    val transactions = listOf(
-        Transaction("03/03/2024", "Apple Airpods", "299.99", "expense"),
-        Transaction("03/01/2024", "Apples", "11.99", "expense"),
-        Transaction("02/26/2024", "Pay Check", "181.72", "income"),
-        Transaction("02/22/2024", "Tea Leaves", "5.99", "expense"),
-        Transaction("02/21/2024", "Groceries", "45.00", "expense"),
-        Transaction("02/20/2024", "Gift", "50.00", "income"),
-        Transaction("02/19/2024", "Coffee", "3.50", "expense"),
-    )
+    // Date picker state
+    val datePickerState = rememberDatePickerState()
+    var showDatePicker by remember { mutableStateOf(false) }
+    val formattedDate = datePickerState.selectedDateMillis?.let {
+        SimpleDateFormat("MM/dd/yyyy", Locale.getDefault()).format(Date(it))
+    } ?: "04/27/2024"
 
-    var selectedTab by remember { mutableStateOf(0) }
-
-    LaunchedEffect(isSignedIn) {
-        if (!isSignedIn) {
-            navController.navigate("login?showGuest=true") {
-                popUpTo(0)
-            }
-        }
-    }
-
-    Scaffold(
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = { showAddDialog = true },
-                containerColor = Color(0xFF1C3556)
-            ) {
-                Icon(
-                    painter = painterResource(R.drawable.add),
-                    contentDescription = "Add",
-                    tint = Color.White
-                )
-            }
-        },
-        floatingActionButtonPosition = FabPosition.Center,
-        bottomBar = {
-            BottomNavigationBar(selectedTab) { selectedTab = it }
-        }
-    ) { innerPadding ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color.White)
-                .padding(innerPadding),
-            contentAlignment = Alignment.TopCenter
-        ) {
-            when (selectedTab) {
-                0 -> HomeTabContent(
-                    user = user,
-                    balance = balance,
-                    expenses = expenses,
-                    income = income,
-                    transactions = transactions
-                )
-                1 -> TransactionListTab()
-                2 -> AnalyticsTab()
-                3 -> ProfileTab()
-            }
-        }
-    }
-    if (showAddDialog) {
-        AddTransactionDialog(
-            onDismiss = { showAddDialog = false },
-            onSave = { /* handle save */ showAddDialog = false }
-        )
-    }
-}
-
-@Composable
-fun HomeTabContent(
-    user: User?,
-    balance: String,
-    expenses: String,
-    income: String,
-    transactions: List<Transaction>
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(top = 24.dp, start = 16.dp, end = 16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false)
     ) {
-        // Balance Card
-        Box(
+        Card(
+            shape = RoundedCornerShape(28.dp),
             modifier = Modifier
-                .fillMaxWidth()
-                .background(Color(0xFF1C3556), RoundedCornerShape(20.dp))
-                .padding(vertical = 24.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(
-                    text = "${user?.displayName ?: "David"}'s Balance",
-                    color = Color.White,
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Medium
-                )
-                Text(
-                    text = balance,
-                    color = Color.White,
-                    fontSize = 32.sp,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-        }
-
-        Spacer(Modifier.height(16.dp))
-
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(Color(0xFF2E4667), RoundedCornerShape(16.dp))
-                .padding(vertical = 12.dp, horizontal = 16.dp)
+                .padding(24.dp)
+                .fillMaxWidth(0.95f)
+                .wrapContentHeight()
         ) {
             Column(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    "Overview",
-                    color = Color.White,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp,
-                    modifier = Modifier.padding(bottom = 4.dp)
-                )
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Text("Expenses", color = Color.White)
-                        Text(
-                            text = expenses,
-                            color = Color.Red,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                    Spacer(modifier = Modifier.width(24.dp))
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Text("Income", color = Color.White)
-                        Text(
-                            text = income,
-                            color = Color(0xFF4CAF50),
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                }
-            }
-        }
-
-
-        Spacer(Modifier.height(20.dp))
-
-        // Recent Transactions label
-        Text(
-            "Recent Transactions",
-            color = Color.Black,
-            fontWeight = FontWeight.Bold,
-            fontSize = 18.sp,
-            modifier = Modifier.align(Alignment.Start)
-        )
-        Spacer(Modifier.height(8.dp))
-
-        RecentTransactionsList(
-            transactions = transactions,
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f)
-        )
-    }
-}
-
-@Composable
-fun RecentTransactionsList(
-    transactions: List<Transaction>,
-    modifier: Modifier = Modifier
-) {
-    LazyColumn(
-        modifier = modifier
-    ) {
-        items(transactions) { transaction ->
-            val isIncome = transaction.type == "income"
-            Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 4.dp)
-                    .background(
-                        if (isIncome) Color(0xFF4CAF50) else Color(0xFFFF5252),
-                        RoundedCornerShape(12.dp)
-                    )
-                    .padding(16.dp)
+                    .background(Color.White)
+                    .padding(24.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
+                // Top Bar
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    IconButton(onClick = onDismiss) {
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color(0xFF1C3556))
+                    }
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        "New Transaction",
+                        color = Color(0xFF1C3556),
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 22.sp
+                    )
+                }
+
+                OutlinedTextField(
+                    value = amount,
+                    onValueChange = { amount = it },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(Color(0xFF1C3556), RoundedCornerShape(28.dp)),
+                    placeholder = { Text("Amount", color = Color.White) },
+                    textStyle = TextStyle(color = Color.White, fontSize = 20.sp),
+                    singleLine = true,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Color.White,
+                        unfocusedBorderColor = Color.Transparent,
+                        cursorColor = Color.White,
+                        focusedContainerColor = Color(0xFF1C3556),
+                        unfocusedContainerColor = Color(0xFF1C3556)
+                    )
+                )
+
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Column {
-                        Text(transaction.date, color = Color.White, fontWeight = FontWeight.SemiBold)
-                        Text(transaction.name, color = Color.White)
-                    }
                     Text(
-                        transaction.amount,
-                        color = Color.White,
-                        fontWeight = FontWeight.Bold
+                        "Name",
+                        color = Color(0xFF1C3556),
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.width(70.dp)
                     )
+                    OutlinedTextField(
+                        value = name,
+                        onValueChange = { name = it },
+                        modifier = Modifier
+                            .weight(1f)
+                            .background(Color(0xFF1C3556), RoundedCornerShape(28.dp)),
+                        textStyle = TextStyle(color = Color.White),
+                        singleLine = true,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = Color.White,
+                            unfocusedBorderColor = Color.Transparent,
+                            cursorColor = Color.White,
+                            focusedContainerColor = Color(0xFF1C3556),
+                            unfocusedContainerColor = Color(0xFF1C3556)
+                        )
+                    )
+                }
+
+                // Type Row (label beside dropdown)
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        "Type",
+                        color = Color(0xFF1C3556),
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.width(70.dp)
+                    )
+                    ExposedDropdownMenuBox(
+                        expanded = expandedType,
+                        onExpandedChange = { expandedType = !expandedType }
+                    ) {
+                        OutlinedTextField(
+                            value = type,
+                            onValueChange = {},
+                            readOnly = true,
+                            modifier = Modifier
+                                .weight(1f)
+                                .menuAnchor()
+                                .background(
+                                    if (type == "Expense") Color(0xFFFF5252) else Color(0xFF4CAF50),
+                                    RoundedCornerShape(28.dp)
+                                ),
+                            trailingIcon = {
+                                ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedType)
+                            },
+                            textStyle = TextStyle(color = Color.White),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = Color.White,
+                                unfocusedBorderColor = Color.Transparent,
+                                cursorColor = Color.White,
+                                focusedContainerColor = if (type == "Expense") Color(0xFFFF5252) else Color(0xFF4CAF50),
+                                unfocusedContainerColor = if (type == "Expense") Color(0xFFFF5252) else Color(0xFF4CAF50)
+                            )
+                        )
+                        ExposedDropdownMenu(
+                            expanded = expandedType,
+                            onDismissRequest = { expandedType = false }
+                        ) {
+                            typeOptions.forEach {
+                                DropdownMenuItem(
+                                    text = { Text(it) },
+                                    onClick = {
+                                        type = it
+                                        expandedType = false
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
+
+                // Category dropdown (full width)
+                ExposedDropdownMenuBox(
+                    expanded = expandedCategory,
+                    onExpandedChange = { expandedCategory = !expandedCategory }
+                ) {
+                    OutlinedTextField(
+                        value = category,
+                        onValueChange = {},
+                        readOnly = true,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .menuAnchor()
+                            .background(Color(0xFF1C3556), RoundedCornerShape(28.dp)),
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedCategory) },
+                        textStyle = TextStyle(color = Color.White),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = Color.White,
+                            unfocusedBorderColor = Color.Transparent,
+                            cursorColor = Color.White,
+                            focusedContainerColor = Color(0xFF1C3556),
+                            unfocusedContainerColor = Color(0xFF1C3556)
+                        )
+                    )
+                    ExposedDropdownMenu(
+                        expanded = expandedCategory,
+                        onDismissRequest = { expandedCategory = false }
+                    ) {
+                        categoryOptions.forEach {
+                            DropdownMenuItem(
+                                text = { Text(it) },
+                                onClick = {
+                                    category = it
+                                    expandedCategory = false
+                                }
+                            )
+                        }
+                    }
+                }
+
+                // Note field (full width)
+                OutlinedTextField(
+                    value = note,
+                    onValueChange = { note = it },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(80.dp)
+                        .background(Color(0xFF1C3556), RoundedCornerShape(28.dp)),
+                    placeholder = { Text("Note", color = Color.White) },
+                    textStyle = TextStyle(color = Color.White),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Color.White,
+                        unfocusedBorderColor = Color.Transparent,
+                        cursorColor = Color.White,
+                        focusedContainerColor = Color(0xFF1C3556),
+                        unfocusedContainerColor = Color(0xFF1C3556)
+                    )
+                )
+
+                // Date field (full width, calendar)
+                OutlinedTextField(
+                    value = formattedDate,
+                    onValueChange = {},
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(Color(0xFF1C3556), RoundedCornerShape(28.dp)),
+                    readOnly = true,
+                    trailingIcon = {
+                        IconButton(onClick = { showDatePicker = true }) {
+                            Icon(Icons.Default.DateRange, contentDescription = "Pick date", tint = Color.White)
+                        }
+                    },
+                    textStyle = TextStyle(color = Color.White),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Color.White,
+                        unfocusedBorderColor = Color.Transparent,
+                        cursorColor = Color.White,
+                        focusedContainerColor = Color(0xFF1C3556),
+                        unfocusedContainerColor = Color(0xFF1C3556)
+                    )
+                )
+                if (showDatePicker) {
+                    DatePickerDialog(
+                        onDismissRequest = { showDatePicker = false },
+                        confirmButton = {
+                            TextButton(onClick = { showDatePicker = false }) { Text("OK") }
+                        },
+                        dismissButton = {
+                            TextButton(onClick = { showDatePicker = false }) { Text("Cancel") }
+                        }
+                    ) {
+                        DatePicker(state = datePickerState)
+                    }
+                }
+
+                // Location field with trailing icon
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    OutlinedTextField(
+                        value = location,
+                        onValueChange = { location = it },
+                        modifier = Modifier
+                            .weight(1f)
+                            .background(Color(0xFF1C3556), RoundedCornerShape(28.dp)),
+                        placeholder = { Text("Location", color = Color.White) },
+                        textStyle = TextStyle(color = Color.White),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = Color.White,
+                            unfocusedBorderColor = Color.Transparent,
+                            cursorColor = Color.White,
+                            focusedContainerColor = Color(0xFF1C3556),
+                            unfocusedContainerColor = Color(0xFF1C3556)
+                        )
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    IconButton(
+                        onClick = { /* handle location */ },
+                        modifier = Modifier
+                            .size(44.dp)
+                            .background(Color(0xFF1C3556), CircleShape)
+                    ) {
+                        Icon(Icons.Default.LocationOn, contentDescription = "Pick location", tint = Color.White)
+                    }
+                }
+
+                // Upload button
+                Button(
+                    onClick = { /* handle upload */ },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(Color(0xFF1C3556), RoundedCornerShape(28.dp)),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1C3556)),
+                    shape = RoundedCornerShape(28.dp)
+                ) {
+                    Text("Upload photo/receipt", color = Color.White)
+                }
+
+                // Cancel and Save Buttons
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Button(
+                        onClick = onDismiss,
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF5252)),
+                        shape = RoundedCornerShape(28.dp)
+                    ) {
+                        Text("Cancel", color = Color.White)
+                    }
+                    Button(
+                        onClick = onSave,
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF3B82F6)),
+                        shape = RoundedCornerShape(28.dp)
+                    ) {
+                        Text("Save", color = Color.White)
+                    }
                 }
             }
         }
     }
 }
-
-@Composable
-fun BottomNavigationBar(selectedTab: Int, onTabSelected: (Int) -> Unit) {
-    NavigationBar(
-        containerColor = Color.White,
-        tonalElevation = 8.dp
-    ) {
-        NavigationBarItem(
-            icon = { Icon(Icons.Default.Home, contentDescription = "Home") },
-            label = {
-                Text(
-                    "Home",
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth()
-                )
-            },
-            selected = selectedTab == 0,
-            onClick = { onTabSelected(0) }
-        )
-        NavigationBarItem(
-            icon = {
-                Icon(
-                    painterResource(R.drawable.list),
-                    contentDescription = "Transaction List"
-                )
-            },
-            label = {
-                Text(
-                    "Transaction list",
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth()
-                )
-            },
-            selected = selectedTab == 1,
-            onClick = { onTabSelected(1) }
-        )
-        NavigationBarItem(
-            icon = { Icon(painterResource(R.drawable.barchart), contentDescription = "Analytics") },
-            label = {
-                Text(
-                    "Analytics",
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth()
-                )
-            },
-            selected = selectedTab == 2,
-            onClick = { onTabSelected(2) }
-        )
-        NavigationBarItem(
-            icon = { Icon(Icons.Default.Person, contentDescription = "Profile") },
-            label = {
-                Text(
-                    "Profile",
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth()
-                )
-            },
-            selected = selectedTab == 3,
-            onClick = { onTabSelected(3) }
-        )
-    }
-}
-
-
-
