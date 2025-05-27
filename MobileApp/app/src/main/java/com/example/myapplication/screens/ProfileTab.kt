@@ -1,21 +1,146 @@
 package com.example.myapplication.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
-import androidx.compose.material3.Text
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import com.google.firebase.auth.FirebaseAuth
 
 @Composable
-fun ProfileTab() {
-    Box(
-        Modifier
+fun ProfileTab(
+    navController: NavController,
+    onChangeCurrency: () -> Unit = {},
+    onSyncData: () -> Unit = {},
+    onBackupData: () -> Unit = {},
+    onLogout: () -> Unit = {}
+) {
+    val user = FirebaseAuth.getInstance().currentUser
+    val displayName = user?.displayName ?: "Username"
+    val email = user?.email ?: "Username@gmail.com"
+
+    Column(
+        modifier = Modifier
             .fillMaxSize()
-            .background(Color.White),
-        contentAlignment = Alignment.Center
+            .background(Color.White)
+            .padding(horizontal = 24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
     ) {
-        Text("Profile", color = Color.Black)
+        Text(
+            text = "Profile",
+            fontSize = 28.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color(0xFF0A2540),
+            modifier = Modifier.padding(bottom = 18.dp)
+        )
+        Box(
+            modifier = Modifier
+                .size(140.dp)
+                .clip(CircleShape)
+                .background(Color.White)
+                .border(6.dp, Color(0xFF222B45), CircleShape),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = Icons.Default.Person,
+                contentDescription = "Profile Image",
+                tint = Color(0xFF222B45),
+                modifier = Modifier.size(100.dp)
+            )
+        }
+        Spacer(modifier = Modifier.height(18.dp))
+        Text(
+            text = displayName,
+            fontSize = 22.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color.Black,
+            modifier = Modifier.padding(bottom = 4.dp)
+        )
+        Text(
+            text = email,
+            fontSize = 16.sp,
+            color = Color(0xFF222B45)
+        )
+        Spacer(modifier = Modifier.height(18.dp))
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Text(
+                text = "Currency preference: CAD",
+                fontSize = 15.sp
+            )
+            Spacer(modifier = Modifier.width(10.dp))
+            Button(
+                onClick = onChangeCurrency,
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF14213D)),
+                contentPadding = PaddingValues(horizontal = 18.dp, vertical = 6.dp),
+                shape = RoundedCornerShape(10.dp),
+                modifier = Modifier.height(36.dp)
+            ) {
+                Text("Change", fontSize = 14.sp, color = Color.White)
+            }
+        }
+        Spacer(modifier = Modifier.height(28.dp))
+        Button(
+            onClick = { navController.navigate("categories") },
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF14213D)),
+            shape = RoundedCornerShape(16.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(50.dp)
+        ) {
+            Text("Manage categories", color = Color.White, fontSize = 16.sp)
+        }
+
+Spacer(modifier = Modifier.height(16.dp))
+
+        Button(
+            onClick = onSyncData,
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF14213D)),
+            shape = RoundedCornerShape(16.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(50.dp)
+        ) {
+            Text("Sync data", color = Color.White, fontSize = 16.sp)
+        }
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Button(
+            onClick = onBackupData,
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF14213D)),
+            shape = RoundedCornerShape(16.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(50.dp)
+        ) {
+            Text("Back up data", color = Color.White, fontSize = 16.sp)
+        }
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Button(
+            onClick = onLogout,
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF2D2D)),
+            shape = RoundedCornerShape(16.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(50.dp)
+        ) {
+            Text("Log out", color = Color.White, fontSize = 16.sp)
+        }
     }
 }

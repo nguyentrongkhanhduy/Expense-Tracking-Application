@@ -34,10 +34,6 @@ import com.example.myapplication.viewmodel.AuthViewModel
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.FloatingActionButton
-import com.example.myapplication.screens.TransactionListTab
-import com.example.myapplication.screens.AnalyticsTab
-import com.example.myapplication.screens.ProfileTab
-import com.example.myapplication.screens.AddTransactionDialog
 
 data class Transaction(
     val date: String,
@@ -55,10 +51,7 @@ fun HomeScreen(
     val isSignedIn by viewModel.isSignedIn.collectAsState()
     var showAddDialog by remember { mutableStateOf(false) }
 
-    // Use the new Transaction data class with type
-    val balance = "$2500.00"
-    val expenses = "$1000.00"
-    val income = "$300.00"
+    // Example transaction list (replace with your data source)
     val transactions = listOf(
         Transaction("03/03/2024", "Apple Airpods", "299.99", "expense"),
         Transaction("03/01/2024", "Apples", "11.99", "expense"),
@@ -68,6 +61,10 @@ fun HomeScreen(
         Transaction("02/20/2024", "Gift", "50.00", "income"),
         Transaction("02/19/2024", "Coffee", "3.50", "expense"),
     )
+
+    val balance = "$2500.00"
+    val expenses = "$1000.00"
+    val income = "$300.00"
 
     var selectedTab by remember { mutableStateOf(0) }
 
@@ -81,15 +78,18 @@ fun HomeScreen(
 
     Scaffold(
         floatingActionButton = {
-            FloatingActionButton(
-                onClick = { showAddDialog = true },
-                containerColor = Color(0xFF1C3556)
-            ) {
-                Icon(
-                    painter = painterResource(R.drawable.add),
-                    contentDescription = "Add",
-                    tint = Color.White
-                )
+            // FAB only on Home tab
+            if (selectedTab == 0) {
+                FloatingActionButton(
+                    onClick = { showAddDialog = true },
+                    containerColor = Color(0xFF1C3556)
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.add),
+                        contentDescription = "Add",
+                        tint = Color.White
+                    )
+                }
             }
         },
         floatingActionButtonPosition = FabPosition.Center,
@@ -114,10 +114,11 @@ fun HomeScreen(
                 )
                 1 -> TransactionListTab()
                 2 -> AnalyticsTab()
-                3 -> ProfileTab()
+                3 -> ProfileTab(navController = navController)
             }
         }
     }
+
     if (showAddDialog) {
         AddTransactionDialog(
             onDismiss = { showAddDialog = false },
@@ -125,6 +126,7 @@ fun HomeScreen(
         )
     }
 }
+
 
 @Composable
 fun HomeTabContent(
@@ -241,10 +243,11 @@ fun RecentTransactionsList(
     transactions: List<Transaction>,
     modifier: Modifier = Modifier
 ) {
+
     LazyColumn(
         modifier = modifier
     ) {
-        items(transactions) { transaction ->
+        items(transactions.take(5)) { transaction ->
             val isIncome = transaction.type == "income"
             Box(
                 modifier = Modifier
