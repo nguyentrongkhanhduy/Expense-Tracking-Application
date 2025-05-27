@@ -1,6 +1,7 @@
 package com.example.myapplication.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -16,7 +17,7 @@ import com.example.myapplication.viewmodel.AuthViewModel
 @Composable
 fun AppNavHost() {
     val navController = rememberNavController()
-    val viewModel = AuthViewModel()
+    val viewModel: AuthViewModel = viewModel()
     NavHost(navController, startDestination = "splash") {
         composable("splash") { SplashScreen(navController) }
         composable("welcome") { WelcomeScreen(navController) }
@@ -37,6 +38,20 @@ fun AppNavHost() {
             )
         }
         composable("signup") { SignUpScreen(navController, viewModel) }
-        composable("home") { HomeScreen(navController, viewModel) }
+        composable(
+            route = "home?isGuest={isGuest}",
+            arguments = listOf(
+                navArgument("isGuest") {
+                    defaultValue = "false"
+                }
+            )
+        ) {backStackEntry ->
+            val isGuest = backStackEntry.arguments?.getString("isGuest").toBoolean()
+            HomeScreen(
+                navController =navController,
+                viewModel = viewModel,
+                isGuest = isGuest
+            )
+        }
     }
 }

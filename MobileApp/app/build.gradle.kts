@@ -3,6 +3,8 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.google.services)
+//    id("org.jetbrains.kotlin.kapt")
+    alias(libs.plugins.ksp)
 }
 
 android {
@@ -62,4 +64,10 @@ dependencies {
     implementation(libs.firebase.auth)
     implementation(libs.retrofit)
     implementation(libs.converter.gson)
+
+    // Room dependencies using KSP
+    implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.room.ktx)
+//    kapt(libs.androidx.room.compiler)
+    ksp(libs.androidx.room.compiler)
 }
