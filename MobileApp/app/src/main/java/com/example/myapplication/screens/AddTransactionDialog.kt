@@ -1,0 +1,333 @@
+package com.example.myapplication.screens
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+import java.text.SimpleDateFormat
+import java.util.*
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun AddTransactionDialog(
+    onDismiss: () -> Unit,
+    onSave: () -> Unit
+) {
+    var amount by remember { mutableStateOf("") }
+    var name by remember { mutableStateOf("") }
+    var type by remember { mutableStateOf("Expense") }
+    val typeOptions = listOf("Expense", "Income")
+    var expandedType by remember { mutableStateOf(false) }
+    var category by remember { mutableStateOf("Groceries") }
+    val categoryOptions = listOf("Groceries", "Food", "Bills")
+    var expandedCategory by remember { mutableStateOf(false) }
+    var note by remember { mutableStateOf("") }
+    var location by remember { mutableStateOf("") }
+
+    // Date picker state
+    val datePickerState = rememberDatePickerState()
+    var showDatePicker by remember { mutableStateOf(false) }
+    val formattedDate = datePickerState.selectedDateMillis?.let {
+        SimpleDateFormat("MM/dd/yyyy", Locale.getDefault()).format(Date(it))
+    } ?: "04/27/2024"
+
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        Card(
+            shape = RoundedCornerShape(28.dp),
+            modifier = Modifier
+                .padding(24.dp)
+                .fillMaxWidth(0.95f)
+                .wrapContentHeight()
+        ) {
+            Column(
+                modifier = Modifier
+                    .background(Color.White)
+                    .padding(24.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                // Top Bar
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    IconButton(onClick = onDismiss) {
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color(0xFF1C3556))
+                    }
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        "New Transaction",
+                        color = Color(0xFF1C3556),
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 22.sp
+                    )
+                }
+
+                OutlinedTextField(
+                    value = amount,
+                    onValueChange = { amount = it },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(Color(0xFF1C3556), RoundedCornerShape(28.dp)),
+                    placeholder = { Text("Amount", color = Color.White) },
+                    textStyle = TextStyle(color = Color.White, fontSize = 20.sp),
+                    singleLine = true,
+                    colors = TextFieldDefaults.outlinedTextFieldColors(
+                        containerColor = Color(0xFF1C3556),
+                        unfocusedBorderColor = Color.Transparent,
+                        focusedBorderColor = Color.White,
+                        cursorColor = Color.White
+                    )
+                )
+
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        "Name",
+                        color = Color(0xFF1C3556),
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.width(70.dp)
+                    )
+                    OutlinedTextField(
+                        value = name,
+                        onValueChange = { name = it },
+                        modifier = Modifier
+                            .weight(1f)
+                            .background(Color(0xFF1C3556), RoundedCornerShape(28.dp)),
+                        textStyle = TextStyle(color = Color.White),
+                        singleLine = true,
+                        colors = TextFieldDefaults.outlinedTextFieldColors(
+                            containerColor = Color(0xFF1C3556),
+                            unfocusedBorderColor = Color.Transparent,
+                            focusedBorderColor = Color.White,
+                            cursorColor = Color.White
+                        )
+                    )
+                }
+
+                // Type Row (label beside dropdown)
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        "Type",
+                        color = Color(0xFF1C3556),
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.width(70.dp)
+                    )
+                    ExposedDropdownMenuBox(
+                        expanded = expandedType,
+                        onExpandedChange = { expandedType = !expandedType }
+                    ) {
+                        OutlinedTextField(
+                            value = type,
+                            onValueChange = {},
+                            readOnly = true,
+                            modifier = Modifier
+                                .weight(1f)
+                                .menuAnchor()
+                                .background(
+                                    if (type == "Expense") Color(0xFFFF5252) else Color(0xFF4CAF50),
+                                    RoundedCornerShape(28.dp)
+                                ),
+                            trailingIcon = {
+                                ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedType)
+                            },
+                            textStyle = TextStyle(color = Color.White),
+                            colors = TextFieldDefaults.outlinedTextFieldColors(
+                                containerColor = if (type == "Expense") Color(0xFFFF5252) else Color(0xFF4CAF50),
+                                unfocusedBorderColor = Color.Transparent,
+                                focusedBorderColor = Color.White,
+                                cursorColor = Color.White
+                            )
+                        )
+                        ExposedDropdownMenu(
+                            expanded = expandedType,
+                            onDismissRequest = { expandedType = false }
+                        ) {
+                            typeOptions.forEach {
+                                DropdownMenuItem(
+                                    text = { Text(it) },
+                                    onClick = {
+                                        type = it
+                                        expandedType = false
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
+
+                // Category dropdown (full width)
+                ExposedDropdownMenuBox(
+                    expanded = expandedCategory,
+                    onExpandedChange = { expandedCategory = !expandedCategory }
+                ) {
+                    OutlinedTextField(
+                        value = category,
+                        onValueChange = {},
+                        readOnly = true,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .menuAnchor()
+                            .background(Color(0xFF1C3556), RoundedCornerShape(28.dp)),
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedCategory) },
+                        textStyle = TextStyle(color = Color.White),
+                        colors = TextFieldDefaults.outlinedTextFieldColors(
+                            containerColor = Color(0xFF1C3556),
+                            unfocusedBorderColor = Color.Transparent,
+                            focusedBorderColor = Color.White,
+                            cursorColor = Color.White
+                        )
+                    )
+                    ExposedDropdownMenu(
+                        expanded = expandedCategory,
+                        onDismissRequest = { expandedCategory = false }
+                    ) {
+                        categoryOptions.forEach {
+                            DropdownMenuItem(
+                                text = { Text(it) },
+                                onClick = {
+                                    category = it
+                                    expandedCategory = false
+                                }
+                            )
+                        }
+                    }
+                }
+
+                // Note field (full width)
+                OutlinedTextField(
+                    value = note,
+                    onValueChange = { note = it },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(80.dp)
+                        .background(Color(0xFF1C3556), RoundedCornerShape(28.dp)),
+                    placeholder = { Text("Note", color = Color.White) },
+                    textStyle = TextStyle(color = Color.White),
+                    colors = TextFieldDefaults.outlinedTextFieldColors(
+                        containerColor = Color(0xFF1C3556),
+                        unfocusedBorderColor = Color.Transparent,
+                        focusedBorderColor = Color.White,
+                        cursorColor = Color.White
+                    )
+                )
+
+                // Date field (full width, calendar)
+                OutlinedTextField(
+                    value = formattedDate,
+                    onValueChange = {},
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(Color(0xFF1C3556), RoundedCornerShape(28.dp)),
+                    readOnly = true,
+                    trailingIcon = {
+                        IconButton(onClick = { showDatePicker = true }) {
+                            Icon(Icons.Default.DateRange, contentDescription = "Pick date", tint = Color.White)
+                        }
+                    },
+                    textStyle = TextStyle(color = Color.White),
+                    colors = TextFieldDefaults.outlinedTextFieldColors(
+                        containerColor = Color(0xFF1C3556),
+                        unfocusedBorderColor = Color.Transparent,
+                        focusedBorderColor = Color.White,
+                        cursorColor = Color.White
+                    )
+                )
+                if (showDatePicker) {
+                    DatePickerDialog(
+                        onDismissRequest = { showDatePicker = false },
+                        confirmButton = {
+                            TextButton(onClick = { showDatePicker = false }) { Text("OK") }
+                        },
+                        dismissButton = {
+                            TextButton(onClick = { showDatePicker = false }) { Text("Cancel") }
+                        }
+                    ) {
+                        DatePicker(state = datePickerState)
+                    }
+                }
+
+                // Location field with trailing icon
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    OutlinedTextField(
+                        value = location,
+                        onValueChange = { location = it },
+                        modifier = Modifier
+                            .weight(1f)
+                            .background(Color(0xFF1C3556), RoundedCornerShape(28.dp)),
+                        placeholder = { Text("Location", color = Color.White) },
+                        textStyle = TextStyle(color = Color.White),
+                        colors = TextFieldDefaults.outlinedTextFieldColors(
+                            containerColor = Color(0xFF1C3556),
+                            unfocusedBorderColor = Color.Transparent,
+                            focusedBorderColor = Color.White,
+                            cursorColor = Color.White
+                        )
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    IconButton(
+                        onClick = { /* handle location */ },
+                        modifier = Modifier
+                            .size(44.dp)
+                            .background(Color(0xFF1C3556), CircleShape)
+                    ) {
+                        Icon(Icons.Default.LocationOn, contentDescription = "Pick location", tint = Color.White)
+                    }
+                }
+
+                // Upload button
+                Button(
+                    onClick = { /* handle upload */ },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(Color(0xFF1C3556), RoundedCornerShape(28.dp)),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1C3556)),
+                    shape = RoundedCornerShape(28.dp)
+                ) {
+                    Text("Upload photo/receipt", color = Color.White)
+                }
+
+                // Cancel and Save Buttons
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Button(
+                        onClick = onDismiss,
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF5252)),
+                        shape = RoundedCornerShape(28.dp)
+                    ) {
+                        Text("Cancel", color = Color.White)
+                    }
+                    Button(
+                        onClick = onSave,
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF3B82F6)),
+                        shape = RoundedCornerShape(28.dp)
+                    ) {
+                        Text("Save", color = Color.White)
+                    }
+                }
+            }
+        }
+    }
+}

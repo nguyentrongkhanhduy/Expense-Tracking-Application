@@ -1,15 +1,18 @@
 package com.example.myapplication.screens
 
+import com.example.myapplication.R
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
-import androidx.compose.material3.OutlinedTextField
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.runtime.setValue
+import androidx.compose.material3.Icon
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -17,162 +20,323 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.example.myapplication.data.local.repository.RepositoryProvider
+import com.example.myapplication.models.User
 import com.example.myapplication.viewmodel.AuthViewModel
-import com.example.myapplication.viewmodel.CategoryViewModel
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.FabPosition
+import androidx.compose.material3.FloatingActionButton
+import com.example.myapplication.screens.TransactionListTab
+import com.example.myapplication.screens.AnalyticsTab
+import com.example.myapplication.screens.ProfileTab
+import com.example.myapplication.screens.AddTransactionDialog
+
+data class Transaction(
+    val date: String,
+    val name: String,
+    val amount: String,
+    val type: String
+)
 
 @Composable
-fun HomeScreen(navController: NavController, viewModel: AuthViewModel, isGuest: Boolean = false) {
+fun HomeScreen(
+    navController: NavController,
+    viewModel: AuthViewModel
+) {
     val user by viewModel.user.collectAsState()
     val isSignedIn by viewModel.isSignedIn.collectAsState()
+    var showAddDialog by remember { mutableStateOf(false) }
 
-    val context = LocalContext.current
-    val categoryViewModel = remember {
-        CategoryViewModel(RepositoryProvider.getCategoryRepository(context))
-    }
+    // Use the new Transaction data class with type
+    val balance = "$2500.00"
+    val expenses = "$1000.00"
+    val income = "$300.00"
+    val transactions = listOf(
+        Transaction("03/03/2024", "Apple Airpods", "299.99", "expense"),
+        Transaction("03/01/2024", "Apples", "11.99", "expense"),
+        Transaction("02/26/2024", "Pay Check", "181.72", "income"),
+        Transaction("02/22/2024", "Tea Leaves", "5.99", "expense"),
+        Transaction("02/21/2024", "Groceries", "45.00", "expense"),
+        Transaction("02/20/2024", "Gift", "50.00", "income"),
+        Transaction("02/19/2024", "Coffee", "3.50", "expense"),
+    )
 
-    var showDialog by remember { mutableStateOf(false) }
+    var selectedTab by remember { mutableStateOf(0) }
 
     LaunchedEffect(isSignedIn) {
-        if (!isSignedIn && !isGuest) {
+        if (!isSignedIn) {
             navController.navigate("login?showGuest=true") {
                 popUpTo(0)
             }
         }
     }
 
-    LaunchedEffect(Unit) {
-        categoryViewModel.printCategories()
+    Scaffold(
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = { showAddDialog = true },
+                containerColor = Color(0xFF1C3556)
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.add),
+                    contentDescription = "Add",
+                    tint = Color.White
+                )
+            }
+        },
+        floatingActionButtonPosition = FabPosition.Center,
+        bottomBar = {
+            BottomNavigationBar(selectedTab) { selectedTab = it }
+        }
+    ) { innerPadding ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.White)
+                .padding(innerPadding),
+            contentAlignment = Alignment.TopCenter
+        ) {
+            when (selectedTab) {
+                0 -> HomeTabContent(
+                    user = user,
+                    balance = balance,
+                    expenses = expenses,
+                    income = income,
+                    transactions = transactions
+                )
+                1 -> TransactionListTab()
+                2 -> AnalyticsTab()
+                3 -> ProfileTab()
+            }
+        }
     }
+    if (showAddDialog) {
+        AddTransactionDialog(
+            onDismiss = { showAddDialog = false },
+            onSave = { /* handle save */ showAddDialog = false }
+        )
+    }
+}
 
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
+@Composable
+fun HomeTabContent(
+    user: User?,
+    balance: String,
+    expenses: String,
+    income: String,
+    transactions: List<Transaction>
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(top = 24.dp, start = 16.dp, end = 16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            if (user != null) {
+        // Balance Card
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(Color(0xFF1C3556), RoundedCornerShape(20.dp))
+                .padding(vertical = 24.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
-                    text = user!!.displayName,
-                    fontSize = 28.sp,
+                    text = "${user?.displayName ?: "David"}'s Balance",
+                    color = Color.White,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Medium
+                )
+                Text(
+                    text = balance,
+                    color = Color.White,
+                    fontSize = 32.sp,
                     fontWeight = FontWeight.Bold
                 )
-                Spacer(Modifier.height(32.dp))
-                Button(
-                    onClick = { viewModel.signOut() },
+            }
+        }
+
+        Spacer(Modifier.height(16.dp))
+
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(Color(0xFF2E4667), RoundedCornerShape(16.dp))
+                .padding(vertical = 12.dp, horizontal = 16.dp)
+        ) {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    "Overview",
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 16.sp,
+                    modifier = Modifier.padding(bottom = 4.dp)
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center
                 ) {
-                    Text("Log out")
-                }
-            } else {
-                Text("Guest mode (Local only)")
-                if (showDialog) {
-                    AddCategoryDialog(
-                        onDismiss = { showDialog = false },
-                        onSave = { type, title, icon, limit ->
-                            categoryViewModel.addCategory(
-                                com.example.myapplication.data.local.model.Category(
-                                    title = title,
-                                    icon = icon,
-                                    type = type,
-                                    limit = limit?.toDoubleOrNull()
-                                )
-                            )
-                        }
-                    )
-                }
-                Button(onClick = { showDialog = true }) {
-                    Text("Add new Category")
-                }
-                Button(onClick = {}) {
-                    Text("Add new Transaction")
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("Expenses", color = Color.White)
+                        Text(
+                            text = expenses,
+                            color = Color.Red,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(24.dp))
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("Income", color = Color.White)
+                        Text(
+                            text = income,
+                            color = Color(0xFF4CAF50),
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                 }
             }
         }
 
+
+        Spacer(Modifier.height(20.dp))
+
+        // Recent Transactions label
+        Text(
+            "Recent Transactions",
+            color = Color.Black,
+            fontWeight = FontWeight.Bold,
+            fontSize = 18.sp,
+            modifier = Modifier.align(Alignment.Start)
+        )
+        Spacer(Modifier.height(8.dp))
+
+        RecentTransactionsList(
+            transactions = transactions,
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f)
+        )
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddCategoryDialog(
-    onDismiss: () -> Unit,
-    onSave: (String, String, String, String?) -> Unit
+fun RecentTransactionsList(
+    transactions: List<Transaction>,
+    modifier: Modifier = Modifier
 ) {
-    var type by remember { mutableStateOf("") }
-    var title by remember { mutableStateOf("") }
-    var icon by remember { mutableStateOf("") }
-    var limit by remember { mutableStateOf("") }
-    var expanded by remember { mutableStateOf(false) }
-    val options = listOf("expense", "income")
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        confirmButton = {
-            Button(onClick = {
-                onSave(type, title, icon, limit.takeIf { it.isNotBlank() })
-                onDismiss()
-            }) {
-                Text("Save")
-            }
-        },
-        dismissButton = {
-            Button(
-                onClick = onDismiss,
-                colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
-            ) {
-                Text("Cancel")
-            }
-        },
-        title = { Text("New category", fontWeight = FontWeight.Bold) },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                ExposedDropdownMenuBox(
-                    expanded = expanded,
-                    onExpandedChange = { expanded = !expanded }
-                ) {
-                    OutlinedTextField(
-                        value = type,
-                        onValueChange = {},
-                        readOnly = true,
-                        label = { Text("Type") },
-                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                        modifier = Modifier.menuAnchor()
+    LazyColumn(
+        modifier = modifier
+    ) {
+        items(transactions) { transaction ->
+            val isIncome = transaction.type == "income"
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp)
+                    .background(
+                        if (isIncome) Color(0xFF4CAF50) else Color(0xFFFF5252),
+                        RoundedCornerShape(12.dp)
                     )
-                    ExposedDropdownMenu(
-                        expanded = expanded,
-                        onDismissRequest = { expanded = false }
-                    ) {
-                        options.forEach { selectionOption ->
-                            DropdownMenuItem(
-                                text = { Text(selectionOption) },
-                                onClick = {
-                                    type = selectionOption
-                                    expanded = false
-                                }
-                            )
-                        }
+                    .padding(16.dp)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column {
+                        Text(transaction.date, color = Color.White, fontWeight = FontWeight.SemiBold)
+                        Text(transaction.name, color = Color.White)
                     }
+                    Text(
+                        transaction.amount,
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold
+                    )
                 }
-                OutlinedTextField(value = title, onValueChange = { title = it }, label = { Text("Title") })
-                OutlinedTextField(value = icon, onValueChange = { icon = it }, label = { Text("Icon") })
-                OutlinedTextField(
-                    value = limit,
-                    onValueChange = { limit = it },
-                    label = { Text("Limit") },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-                )
             }
         }
-    )
+    }
 }
+
+@Composable
+fun BottomNavigationBar(selectedTab: Int, onTabSelected: (Int) -> Unit) {
+    NavigationBar(
+        containerColor = Color.White,
+        tonalElevation = 8.dp
+    ) {
+        NavigationBarItem(
+            icon = { Icon(Icons.Default.Home, contentDescription = "Home") },
+            label = {
+                Text(
+                    "Home",
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            },
+            selected = selectedTab == 0,
+            onClick = { onTabSelected(0) }
+        )
+        NavigationBarItem(
+            icon = {
+                Icon(
+                    painterResource(R.drawable.list),
+                    contentDescription = "Transaction List"
+                )
+            },
+            label = {
+                Text(
+                    "Transaction list",
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            },
+            selected = selectedTab == 1,
+            onClick = { onTabSelected(1) }
+        )
+        NavigationBarItem(
+            icon = { Icon(painterResource(R.drawable.barchart), contentDescription = "Analytics") },
+            label = {
+                Text(
+                    "Analytics",
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            },
+            selected = selectedTab == 2,
+            onClick = { onTabSelected(2) }
+        )
+        NavigationBarItem(
+            icon = { Icon(Icons.Default.Person, contentDescription = "Profile") },
+            label = {
+                Text(
+                    "Profile",
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            },
+            selected = selectedTab == 3,
+            onClick = { onTabSelected(3) }
+        )
+    }
+}
+
 
 
