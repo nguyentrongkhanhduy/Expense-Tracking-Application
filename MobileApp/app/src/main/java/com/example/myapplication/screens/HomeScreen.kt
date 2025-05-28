@@ -34,42 +34,40 @@ import com.example.myapplication.viewmodel.AuthViewModel
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.FloatingActionButton
-
-data class Transaction(
-    val date: String,
-    val name: String,
-    val amount: String,
-    val type: String
-)
+import com.example.myapplication.data.local.model.Transaction
+import com.example.myapplication.data.local.model.TransactionWithCategory
+import com.example.myapplication.screens.dialogs.AddTransactionDialog
+import com.example.myapplication.screens.tabs.AnalyticsTab
+import com.example.myapplication.screens.tabs.ProfileTab
+import com.example.myapplication.screens.tabs.TransactionListTab
+import com.example.myapplication.viewmodel.CategoryViewModel
+import com.example.myapplication.viewmodel.TransactionViewModel
 
 @Composable
 fun HomeScreen(
     navController: NavController,
-    viewModel: AuthViewModel
+    authViewModel: AuthViewModel,
+    transactionViewModel: TransactionViewModel,
+    categoryViewModel: CategoryViewModel,
+    isGuest: Boolean = false
 ) {
-    val user by viewModel.user.collectAsState()
-    val isSignedIn by viewModel.isSignedIn.collectAsState()
+    val user by authViewModel.user.collectAsState()
+    val isSignedIn by authViewModel.isSignedIn.collectAsState()
+    val categories by categoryViewModel.categories.collectAsState()
     var showAddDialog by remember { mutableStateOf(false) }
 
     // Example transaction list (replace with your data source)
-    val transactions = listOf(
-        Transaction("03/03/2024", "Apple Airpods", "299.99", "expense"),
-        Transaction("03/01/2024", "Apples", "11.99", "expense"),
-        Transaction("02/26/2024", "Pay Check", "181.72", "income"),
-        Transaction("02/22/2024", "Tea Leaves", "5.99", "expense"),
-        Transaction("02/21/2024", "Groceries", "45.00", "expense"),
-        Transaction("02/20/2024", "Gift", "50.00", "income"),
-        Transaction("02/19/2024", "Coffee", "3.50", "expense"),
-    )
+    val transactions by transactionViewModel.transactions.collectAsState()
+    val transactionsWithCategory by transactionViewModel.transactionsWithCategory.collectAsState()
 
-    val balance = "$2500.00"
-    val expenses = "$1000.00"
-    val income = "$300.00"
+    val expenses = transactions.filter { it.type == "expense" }.sumOf { it.amount }
+    val income = transactions.filter { it.type == "income" }.sumOf { it.amount }
+    val balance = income - expenses
 
     var selectedTab by remember { mutableStateOf(0) }
 
     LaunchedEffect(isSignedIn) {
-        if (!isSignedIn) {
+        if (!isSignedIn && !isGuest) {
             navController.navigate("login?showGuest=true") {
                 popUpTo(0)
             }
@@ -107,11 +105,12 @@ fun HomeScreen(
             when (selectedTab) {
                 0 -> HomeTabContent(
                     user = user,
-                    balance = balance,
-                    expenses = expenses,
-                    income = income,
-                    transactions = transactions
+                    balance = "$%.2f".format(balance),
+                    expenses = "$%.2f".format(expenses),
+                    income = "$%.2f".format(income),
+                    transactionsWithCategory = transactionsWithCategory
                 )
+
                 1 -> TransactionListTab()
                 2 -> AnalyticsTab()
                 3 -> ProfileTab(navController = navController)
@@ -122,7 +121,11 @@ fun HomeScreen(
     if (showAddDialog) {
         AddTransactionDialog(
             onDismiss = { showAddDialog = false },
-            onSave = { /* handle save */ showAddDialog = false }
+            onSave = {
+                transactionViewModel.addTransaction(it)
+                showAddDialog = false
+            },
+            categoryList = categories
         )
     }
 }
@@ -134,7 +137,7 @@ fun HomeTabContent(
     balance: String,
     expenses: String,
     income: String,
-    transactions: List<Transaction>
+    transactionsWithCategory: List<TransactionWithCategory>
 ) {
     Column(
         modifier = Modifier
@@ -152,7 +155,7 @@ fun HomeTabContent(
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
-                    text = "${user?.displayName ?: "David"}'s Balance",
+                    text = "${user?.displayName?.let { "$it's" } ?: "Your"} Balance",
                     color = Color.White,
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Medium
@@ -230,7 +233,7 @@ fun HomeTabContent(
         Spacer(Modifier.height(8.dp))
 
         RecentTransactionsList(
-            transactions = transactions,
+            transactions = transactionsWithCategory,
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f)
@@ -240,14 +243,17 @@ fun HomeTabContent(
 
 @Composable
 fun RecentTransactionsList(
-    transactions: List<Transaction>,
+    transactions: List<TransactionWithCategory>,
     modifier: Modifier = Modifier
 ) {
 
     LazyColumn(
         modifier = modifier
     ) {
-        items(transactions.take(5)) { transaction ->
+        items(transactions.take(5)) { transactionWithCategory ->
+            val transaction = transactionWithCategory.transaction
+            val category = transactionWithCategory.category
+
             val isIncome = transaction.type == "income"
             Box(
                 modifier = Modifier
@@ -265,11 +271,18 @@ fun RecentTransactionsList(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Column {
-                        Text(transaction.date, color = Color.White, fontWeight = FontWeight.SemiBold)
+                        val formattedDate = java.text.SimpleDateFormat("MM/dd/yyyy")
+                            .format(java.util.Date(transaction.date))
+                        Text(formattedDate, color = Color.White, fontWeight = FontWeight.SemiBold)
                         Text(transaction.name, color = Color.White)
                     }
                     Text(
-                        transaction.amount,
+                        text = "${category?.icon.orEmpty()} ${category?.title.orEmpty()}",
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        transaction.amount.toString(),
                         color = Color.White,
                         fontWeight = FontWeight.Bold
                     )

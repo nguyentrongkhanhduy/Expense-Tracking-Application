@@ -16,6 +16,8 @@ import com.example.myapplication.screens.WelcomeScreen
 import com.example.myapplication.viewmodel.AuthViewModel
 import com.example.myapplication.viewmodel.CategoryViewModel
 import com.example.myapplication.viewmodel.CategoryViewModelFactory
+import com.example.myapplication.viewmodel.TransactionViewModel
+import com.example.myapplication.viewmodel.TransactionViewModelFactory
 
 @Composable
 fun AppNavHost() {
@@ -24,6 +26,9 @@ fun AppNavHost() {
     val context = LocalContext.current
     val categoryViewModel: CategoryViewModel = viewModel(
         factory = CategoryViewModelFactory(context)
+    )
+    val transactionViewModel: TransactionViewModel = viewModel(
+        factory = TransactionViewModelFactory(context)
     )
 
     NavHost(navController, startDestination = "splash") {
@@ -48,8 +53,10 @@ fun AppNavHost() {
             val isGuest = backStackEntry.arguments?.getString("isGuest").toBoolean()
             HomeScreen(
                 navController = navController,
-                viewModel = authViewModel
-                // isGuest = isGuest // Uncomment if you use this param
+                authViewModel = authViewModel,
+                transactionViewModel = transactionViewModel,
+                categoryViewModel = categoryViewModel,
+                isGuest = isGuest // Uncomment if you use this param
             )
         }
         composable("categories") {

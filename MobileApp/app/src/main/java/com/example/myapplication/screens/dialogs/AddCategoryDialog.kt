@@ -1,4 +1,4 @@
-package com.example.myapplication.screens
+package com.example.myapplication.screens.dialogs
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*

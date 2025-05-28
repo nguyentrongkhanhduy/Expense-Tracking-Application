@@ -1,4 +1,4 @@
-package com.example.myapplication.screens
+package com.example.myapplication.screens.tabs
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
