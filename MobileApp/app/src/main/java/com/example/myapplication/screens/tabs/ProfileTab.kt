@@ -17,6 +17,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.example.myapplication.components.MyButton
+import com.example.myapplication.ui.theme.PrimaryBlue
+import com.example.myapplication.ui.theme.PrimaryRed
 import com.google.firebase.auth.FirebaseAuth
 
 @Composable
@@ -25,7 +28,7 @@ fun ProfileTab(
     onChangeCurrency: () -> Unit = {},
     onSyncData: () -> Unit = {},
     onBackupData: () -> Unit = {},
-    onLogout: () -> Unit = {}
+    onLogout: () -> Unit = {},
 ) {
     val user = FirebaseAuth.getInstance().currentUser
     val displayName = user?.displayName ?: "Username"
@@ -63,17 +66,20 @@ fun ProfileTab(
         }
         Spacer(modifier = Modifier.height(18.dp))
         Text(
-            text = displayName,
+            if (user != null) displayName else "Guest",
             fontSize = 22.sp,
             fontWeight = FontWeight.Bold,
             color = Color.Black,
             modifier = Modifier.padding(bottom = 4.dp)
         )
-        Text(
-            text = email,
-            fontSize = 16.sp,
-            color = Color(0xFF222B45)
-        )
+        if (user != null) {
+            Text(
+                text = email,
+                fontSize = 16.sp,
+                color = Color(0xFF222B45)
+            )
+        }
+
         Spacer(modifier = Modifier.height(18.dp))
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -86,7 +92,7 @@ fun ProfileTab(
             Spacer(modifier = Modifier.width(10.dp))
             Button(
                 onClick = onChangeCurrency,
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF14213D)),
+                colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue),
                 contentPadding = PaddingValues(horizontal = 18.dp, vertical = 6.dp),
                 shape = RoundedCornerShape(10.dp),
                 modifier = Modifier.height(36.dp)
@@ -95,52 +101,40 @@ fun ProfileTab(
             }
         }
         Spacer(modifier = Modifier.height(28.dp))
-        Button(
-            onClick = { navController.navigate("categories") },
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF14213D)),
-            shape = RoundedCornerShape(16.dp),
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(50.dp)
-        ) {
-            Text("Manage categories", color = Color.White, fontSize = 16.sp)
+        MyButton(onClick = { navController.navigate("categories") }) {
+            Text(
+                "Manage categories",
+                color = Color.White,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold
+            )
         }
 
-Spacer(modifier = Modifier.height(16.dp))
-
-        Button(
-            onClick = onSyncData,
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF14213D)),
-            shape = RoundedCornerShape(16.dp),
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(50.dp)
-        ) {
-            Text("Sync data", color = Color.White, fontSize = 16.sp)
-        }
         Spacer(modifier = Modifier.height(16.dp))
 
-        Button(
-            onClick = onBackupData,
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF14213D)),
-            shape = RoundedCornerShape(16.dp),
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(50.dp)
-        ) {
-            Text("Back up data", color = Color.White, fontSize = 16.sp)
-        }
-        Spacer(modifier = Modifier.height(16.dp))
+        if (user != null) {
+            MyButton(onClick = onSyncData) {
+                Text("Sync data", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+            }
+            Spacer(modifier = Modifier.height(16.dp))
 
-        Button(
-            onClick = onLogout,
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF2D2D)),
-            shape = RoundedCornerShape(16.dp),
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(50.dp)
-        ) {
-            Text("Log out", color = Color.White, fontSize = 16.sp)
+            MyButton(onClick = onBackupData) {
+                Text(
+                    "Back up data",
+                    color = Color.White,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+
+            MyButton(onClick = onLogout, backgroundColor = PrimaryRed) {
+                Text("Log out", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+            }
+        } else {
+            MyButton(onClick = { navController.navigate("login") }) {
+                Text("Log in", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+            }
         }
     }
 }
