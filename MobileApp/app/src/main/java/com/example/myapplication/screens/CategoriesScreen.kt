@@ -7,24 +7,26 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.example.myapplication.components.BackButton
 import com.example.myapplication.data.local.model.Category
+import com.example.myapplication.screens.dialogs.AddCategoryDialog
+import com.example.myapplication.screens.dialogs.EditCategoryDialog
+import com.example.myapplication.ui.theme.PrimaryBlue
+import com.example.myapplication.ui.theme.PrimaryGreen
+import com.example.myapplication.ui.theme.PrimaryRed
 import com.example.myapplication.viewmodel.CategoryViewModel
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CategoriesScreen(
     navController: NavController,
@@ -33,8 +35,6 @@ fun CategoriesScreen(
     var filter by remember { mutableStateOf("All") }
     val categories by viewModel.categories.collectAsState()
     val filterOptions = listOf("All", "Expense", "Income")
-    var expanded by remember { mutableStateOf(false) }
-
     var showAddDialog by remember { mutableStateOf(false) }
     var editingCategory by remember { mutableStateOf<Category?>(null) }
 
@@ -45,16 +45,7 @@ fun CategoriesScreen(
             .padding(horizontal = 18.dp)
     ) {
         // Top bar
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .padding(top = 12.dp)
-                .clickable { navController.popBackStack() }
-        ) {
-            Icon(Icons.Default.ArrowBack, contentDescription = "Back")
-            Spacer(modifier = Modifier.width(8.dp))
-            Text("Back", fontSize = 15.sp)
-        }
+        BackButton(onClick = { navController.popBackStack() })
         Spacer(modifier = Modifier.height(16.dp))
         Text(
             "Your categories",
@@ -64,42 +55,30 @@ fun CategoriesScreen(
             modifier = Modifier.align(Alignment.CenterHorizontally)
         )
         Spacer(modifier = Modifier.height(16.dp))
-        Box(
-            modifier = Modifier.align(Alignment.CenterHorizontally)
-        ) {
-            Button(
-                onClick = { expanded = true },
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF22304B)),
-                shape = RoundedCornerShape(20.dp),
-                modifier = Modifier
-                    .width(160.dp)
-                    .height(38.dp)
-            ) {
-                Text(filter, color = Color.White, fontWeight = FontWeight.Bold)
-                Icon(
-                    imageVector = Icons.Default.ArrowBack,
-                    contentDescription = null,
-                    modifier = Modifier
-                        .padding(start = 8.dp)
-                        .rotate(90f),
-                    tint = Color.White
-                )
-            }
-            DropdownMenu(
-                expanded = expanded,
-                onDismissRequest = { expanded = false }
-            ) {
-                filterOptions.forEach { option ->
-                    DropdownMenuItem(
-                        text = { Text(option) },
-                        onClick = {
-                            filter = option
-                            expanded = false
-                        }
-                    )
-                }
-            }
+
+        val currentFilterIndex = filterOptions.indexOf(filter)
+        val nextFilter = filterOptions[(currentFilterIndex + 1) % filterOptions.size]
+        val buttonColor = when (filter) {
+            "Expense" -> PrimaryRed
+            "Income" -> PrimaryGreen
+            else -> PrimaryBlue
         }
+
+        Button(
+            onClick = {
+                filter = nextFilter
+            },
+            colors = ButtonDefaults.buttonColors(containerColor = buttonColor),
+            shape = RoundedCornerShape(20.dp),
+            modifier = Modifier
+                .align(Alignment.CenterHorizontally)
+                .width(160.dp)
+                .height(38.dp)
+        ) {
+            Text(filter, color = Color.White, fontWeight = FontWeight.Bold)
+        }
+
+
         Spacer(modifier = Modifier.height(18.dp))
         LazyColumn(
             verticalArrangement = Arrangement.spacedBy(10.dp),

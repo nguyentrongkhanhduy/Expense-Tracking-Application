@@ -1,4 +1,4 @@
-package com.example.myapplication.screens
+package com.example.myapplication.screens.dialogs
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -18,6 +18,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.example.myapplication.data.local.model.Category
+import com.example.myapplication.data.local.model.Transaction
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -25,25 +27,28 @@ import java.util.*
 @Composable
 fun AddTransactionDialog(
     onDismiss: () -> Unit,
-    onSave: () -> Unit
+    onSave: (Transaction) -> Unit,
+    categoryList: List<Category>
 ) {
     var amount by remember { mutableStateOf("") }
     var name by remember { mutableStateOf("") }
     var type by remember { mutableStateOf("Expense") }
     val typeOptions = listOf("Expense", "Income")
     var expandedType by remember { mutableStateOf(false) }
-    var category by remember { mutableStateOf("Groceries") }
-    val categoryOptions = listOf("Groceries", "Food", "Bills")
-    var expandedCategory by remember { mutableStateOf(false) }
     var note by remember { mutableStateOf("") }
     var location by remember { mutableStateOf("") }
+
+    var categoryId by remember { mutableStateOf<Long?>(null) }
+    var expandedCategory by remember { mutableStateOf(false) }
+    val filteredCategories = categoryList.filter { it.type.equals(type, ignoreCase = true) }
+    val selectedCategory = filteredCategories.find { it.categoryId == categoryId }
 
     // Date picker state
     val datePickerState = rememberDatePickerState()
     var showDatePicker by remember { mutableStateOf(false) }
-    val formattedDate = datePickerState.selectedDateMillis?.let {
-        SimpleDateFormat("MM/dd/yyyy", Locale.getDefault()).format(Date(it))
-    } ?: "04/27/2024"
+    val formattedDate = SimpleDateFormat("MM/dd/yyyy", Locale.getDefault()).format(
+        Date(datePickerState.selectedDateMillis ?: System.currentTimeMillis())
+    )
 
     Dialog(
         onDismissRequest = onDismiss,
@@ -183,7 +188,7 @@ fun AddTransactionDialog(
                     onExpandedChange = { expandedCategory = !expandedCategory }
                 ) {
                     OutlinedTextField(
-                        value = category,
+                        value = selectedCategory?.let { "${it.icon} ${it.title}" } ?: "Select Category",
                         onValueChange = {},
                         readOnly = true,
                         modifier = Modifier
@@ -204,11 +209,11 @@ fun AddTransactionDialog(
                         expanded = expandedCategory,
                         onDismissRequest = { expandedCategory = false }
                     ) {
-                        categoryOptions.forEach {
+                        filteredCategories.forEach {
                             DropdownMenuItem(
-                                text = { Text(it) },
+                                text = { Text("${it.icon} ${it.title}") },
                                 onClick = {
-                                    category = it
+                                    categoryId = it.categoryId
                                     expandedCategory = false
                                 }
                             )
@@ -326,7 +331,19 @@ fun AddTransactionDialog(
                         Text("Cancel", color = Color.White)
                     }
                     Button(
-                        onClick = onSave,
+                        onClick = {
+                            val transaction = Transaction(
+                                name = name,
+                                type = type.lowercase(),
+                                amount = amount.toDoubleOrNull() ?: 0.0,
+                                categoryId = categoryId ?: if (type == "expense") -1L else -2L,
+                                date = datePickerState.selectedDateMillis ?: System.currentTimeMillis(),
+                                note = note,
+                                location = location,
+                                imageUrl = null // Add image URL support if available
+                            )
+                            onSave(transaction)
+                        },
                         modifier = Modifier.weight(1f),
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF3B82F6)),
                         shape = RoundedCornerShape(28.dp)

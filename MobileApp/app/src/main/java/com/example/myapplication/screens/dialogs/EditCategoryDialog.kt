@@ -1,4 +1,4 @@
-package com.example.myapplication.screens
+package com.example.myapplication.screens.dialogs
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -56,6 +56,7 @@ fun EditCategoryDialog(
     var limit by remember { mutableStateOf(initialCategory.limit?.toString() ?: "") }
     var expanded by remember { mutableStateOf(false) }
     val options = listOf("expense", "income")
+    val isEnable = initialCategory.categoryId > 0L
 
     Dialog(onDismissRequest = onDismiss) {
         Box(
@@ -76,7 +77,7 @@ fun EditCategoryDialog(
                 ExposedDropdownMenuBox(
                     expanded = expanded,
                     onExpandedChange = { expanded = !expanded },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
                 ) {
                     OutlinedTextField(
                         value = type,
@@ -168,7 +169,11 @@ fun EditCategoryDialog(
                             .clip(CircleShape)
                             .background(Color(0xFF22304B))
                     ) {
-                        Icon(Icons.Default.Add, contentDescription = "Generate Icon", tint = Color.White)
+                        Icon(
+                            Icons.Default.Add,
+                            contentDescription = "Generate Icon",
+                            tint = Color.White
+                        )
                     }
                 }
                 Spacer(Modifier.height(12.dp))
@@ -194,28 +199,30 @@ fun EditCategoryDialog(
                 )
                 Spacer(Modifier.height(20.dp))
                 // Buttons
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Button(
-                        onClick = onDelete,
-                        colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
-                        modifier = Modifier.weight(1f)
+                if (isEnable) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text("Delete")
-                    }
-                    Spacer(Modifier.width(12.dp))
-                    Button(
-                        onClick = {
-                            onSave(type, title, icon, limit.takeIf { it.isNotBlank() })
-                            onDismiss()
-                        },
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF5D9CFF)),
-                        modifier = Modifier.weight(1f),
-                        enabled = type.isNotBlank() && title.isNotBlank() && icon.isNotBlank()
-                    ) {
-                        Text("Save")
+                        Button(
+                            onClick = onDelete,
+                            colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text("Delete")
+                        }
+                        Spacer(Modifier.width(12.dp))
+                        Button(
+                            onClick = {
+                                onSave(type, title, icon, limit.takeIf { it.isNotBlank() })
+                                onDismiss()
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF5D9CFF)),
+                            modifier = Modifier.weight(1f),
+                            enabled = type.isNotBlank() && title.isNotBlank() && icon.isNotBlank()
+                        ) {
+                            Text("Save")
+                        }
                     }
                 }
             }
