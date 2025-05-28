@@ -12,18 +12,25 @@ import androidx.navigation.NavController
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.TextButton
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
 import androidx.navigation.compose.rememberNavController
 import com.example.myapplication.components.MyButton
+import com.example.myapplication.data.datastore.UserPreferences
 import com.example.myapplication.ui.theme.PrimaryBlue
 import com.example.myapplication.ui.theme.White
+import kotlinx.coroutines.launch
 
 @Composable
 fun WelcomeScreen(navController: NavController) {
+    val context = LocalContext.current
+    val couroutineScope = rememberCoroutineScope()
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -39,7 +46,12 @@ fun WelcomeScreen(navController: NavController) {
             color = PrimaryBlue
         )
         Spacer(Modifier.height(32.dp))
-        TextButton(onClick = { navController.navigate("home?isGuest=true") }) {
+        TextButton(onClick = {
+            couroutineScope.launch {
+                navController.navigate("home?isGuest=true")
+                UserPreferences.setGuestMode(context, true)
+            }
+        }) {
             Text("Continue as guest", color = PrimaryBlue, fontSize = 20.sp)
         }
         Spacer(Modifier.height(16.dp))
