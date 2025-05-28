@@ -34,10 +34,6 @@ import com.example.myapplication.viewmodel.AuthViewModel
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.FloatingActionButton
-import com.example.myapplication.screens.TransactionListTab
-import com.example.myapplication.screens.AnalyticsTab
-import com.example.myapplication.screens.ProfileTab
-import com.example.myapplication.screens.AddTransactionDialog
 
 data class Transaction(
     val date: String,
@@ -118,7 +114,7 @@ fun HomeScreen(
                 )
                 1 -> TransactionListTab()
                 2 -> AnalyticsTab()
-                3 -> ProfileTab()
+                3 -> ProfileTab(navController = navController)
             }
         }
     }
