@@ -2,6 +2,7 @@ package com.example.myapplication.screens
 
 import com.example.myapplication.R
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -22,7 +23,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -32,16 +32,22 @@ import androidx.navigation.NavController
 import com.example.myapplication.models.User
 import com.example.myapplication.viewmodel.AuthViewModel
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.FloatingActionButton
-import com.example.myapplication.data.local.model.Transaction
 import com.example.myapplication.data.local.model.TransactionWithCategory
+import com.example.myapplication.screens.dialogs.EditTransactionDialog
 import com.example.myapplication.screens.dialogs.AddTransactionDialog
 import com.example.myapplication.screens.tabs.AnalyticsTab
 import com.example.myapplication.screens.tabs.ProfileTab
 import com.example.myapplication.screens.tabs.TransactionListTab
 import com.example.myapplication.viewmodel.CategoryViewModel
 import com.example.myapplication.viewmodel.TransactionViewModel
+import com.example.myapplication.ui.theme.PrimaryBlue
+import com.example.myapplication.ui.theme.PrimaryRed
+import com.example.myapplication.ui.theme.PrimaryGreen
+import com.example.myapplication.ui.theme.White
 
 @Composable
 fun HomeScreen(
@@ -55,8 +61,8 @@ fun HomeScreen(
     val isSignedIn by authViewModel.isSignedIn.collectAsState()
     val categories by categoryViewModel.categories.collectAsState()
     var showAddDialog by remember { mutableStateOf(false) }
+    var editingTransaction by remember { mutableStateOf<TransactionWithCategory?>(null) }
 
-    // Example transaction list (replace with your data source)
     val transactions by transactionViewModel.transactions.collectAsState()
     val transactionsWithCategory by transactionViewModel.transactionsWithCategory.collectAsState()
 
@@ -76,21 +82,20 @@ fun HomeScreen(
 
     Scaffold(
         floatingActionButton = {
-            // FAB only on Home tab
             if (selectedTab == 0) {
                 FloatingActionButton(
                     onClick = { showAddDialog = true },
-                    containerColor = Color(0xFF1C3556)
+                    containerColor = PrimaryBlue
                 ) {
                     Icon(
                         painter = painterResource(R.drawable.add),
                         contentDescription = "Add",
-                        tint = Color.White
+                        tint = White
                     )
                 }
             }
         },
-        floatingActionButtonPosition = FabPosition.Center,
+        floatingActionButtonPosition = FabPosition.End,
         bottomBar = {
             BottomNavigationBar(selectedTab) { selectedTab = it }
         }
@@ -98,7 +103,7 @@ fun HomeScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color.White)
+                .background(White)
                 .padding(innerPadding),
             contentAlignment = Alignment.TopCenter
         ) {
@@ -108,10 +113,14 @@ fun HomeScreen(
                     balance = "$%.2f".format(balance),
                     expenses = "$%.2f".format(expenses),
                     income = "$%.2f".format(income),
-                    transactionsWithCategory = transactionsWithCategory
+                    transactionsWithCategory = transactionsWithCategory,
+                    onTransactionClick = { editingTransaction = it }
                 )
 
-                1 -> TransactionListTab()
+                1 -> TransactionListTab(
+                    transactionViewModel = transactionViewModel,
+                    categoryViewModel = categoryViewModel
+                )
                 2 -> AnalyticsTab()
                 3 -> ProfileTab(navController = navController)
             }
@@ -128,8 +137,23 @@ fun HomeScreen(
             categoryList = categories
         )
     }
-}
 
+    if (editingTransaction != null) {
+        EditTransactionDialog(
+            transaction = editingTransaction!!.transaction,
+            onDismiss = { editingTransaction = null },
+            onSave = { updatedTransaction ->
+                transactionViewModel.updateTransaction(updatedTransaction)
+                editingTransaction = null
+            },
+            onDelete = {
+                transactionViewModel.deleteTransaction(editingTransaction!!.transaction)
+                editingTransaction = null
+            },
+            categoryList = categories
+        )
+    }
+}
 
 @Composable
 fun HomeTabContent(
@@ -137,11 +161,13 @@ fun HomeTabContent(
     balance: String,
     expenses: String,
     income: String,
-    transactionsWithCategory: List<TransactionWithCategory>
+    transactionsWithCategory: List<TransactionWithCategory>,
+    onTransactionClick: (TransactionWithCategory) -> Unit
 ) {
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .verticalScroll(rememberScrollState())
             .padding(top = 24.dp, start = 16.dp, end = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -149,20 +175,20 @@ fun HomeTabContent(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(Color(0xFF1C3556), RoundedCornerShape(20.dp))
+                .background(PrimaryBlue, RoundedCornerShape(20.dp))
                 .padding(vertical = 24.dp),
             contentAlignment = Alignment.Center
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
                     text = "${user?.displayName?.let { "$it's" } ?: "Your"} Balance",
-                    color = Color.White,
+                    color = White,
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Medium
                 )
                 Text(
                     text = balance,
-                    color = Color.White,
+                    color = White,
                     fontSize = 32.sp,
                     fontWeight = FontWeight.Bold
                 )
@@ -174,7 +200,7 @@ fun HomeTabContent(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(Color(0xFF2E4667), RoundedCornerShape(16.dp))
+                .background(PrimaryBlue.copy(alpha = 0.85f), RoundedCornerShape(16.dp))
                 .padding(vertical = 12.dp, horizontal = 16.dp)
         ) {
             Column(
@@ -183,7 +209,7 @@ fun HomeTabContent(
             ) {
                 Text(
                     "Overview",
-                    color = Color.White,
+                    color = White,
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp,
                     modifier = Modifier.padding(bottom = 4.dp)
@@ -196,10 +222,10 @@ fun HomeTabContent(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text("Expenses", color = Color.White)
+                        Text("Expenses", color = White)
                         Text(
                             text = expenses,
-                            color = Color.Red,
+                            color = PrimaryRed,
                             fontWeight = FontWeight.Bold
                         )
                     }
@@ -208,10 +234,10 @@ fun HomeTabContent(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text("Income", color = Color.White)
+                        Text("Income", color = White)
                         Text(
                             text = income,
-                            color = Color(0xFF4CAF50),
+                            color = PrimaryGreen,
                             fontWeight = FontWeight.Bold
                         )
                     }
@@ -219,13 +245,11 @@ fun HomeTabContent(
             }
         }
 
-
         Spacer(Modifier.height(20.dp))
 
-        // Recent Transactions label
         Text(
             "Recent Transactions",
-            color = Color.Black,
+            color = PrimaryBlue,
             fontWeight = FontWeight.Bold,
             fontSize = 18.sp,
             modifier = Modifier.align(Alignment.Start)
@@ -236,7 +260,8 @@ fun HomeTabContent(
             transactions = transactionsWithCategory,
             modifier = Modifier
                 .fillMaxWidth()
-                .weight(1f)
+                .heightIn(max = 72.dp * 6),
+            onTransactionClick = onTransactionClick
         )
     }
 }
@@ -244,26 +269,26 @@ fun HomeTabContent(
 @Composable
 fun RecentTransactionsList(
     transactions: List<TransactionWithCategory>,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onTransactionClick: (TransactionWithCategory) -> Unit
 ) {
-
     LazyColumn(
         modifier = modifier
     ) {
-        items(transactions.take(5)) { transactionWithCategory ->
+        items(transactions) { transactionWithCategory ->
             val transaction = transactionWithCategory.transaction
             val category = transactionWithCategory.category
-
             val isIncome = transaction.type == "income"
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 4.dp)
                     .background(
-                        if (isIncome) Color(0xFF4CAF50) else Color(0xFFFF5252),
+                        if (isIncome) PrimaryGreen else PrimaryRed,
                         RoundedCornerShape(12.dp)
                     )
                     .padding(16.dp)
+                    .clickable { onTransactionClick(transactionWithCategory) }
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
@@ -273,17 +298,17 @@ fun RecentTransactionsList(
                     Column {
                         val formattedDate = java.text.SimpleDateFormat("MM/dd/yyyy")
                             .format(java.util.Date(transaction.date))
-                        Text(formattedDate, color = Color.White, fontWeight = FontWeight.SemiBold)
-                        Text(transaction.name, color = Color.White)
+                        Text(formattedDate, color = White, fontWeight = FontWeight.SemiBold)
+                        Text(transaction.name, color = White)
                     }
                     Text(
                         text = "${category?.icon.orEmpty()} ${category?.title.orEmpty()}",
-                        color = Color.White,
+                        color = White,
                         fontWeight = FontWeight.Bold
                     )
                     Text(
                         transaction.amount.toString(),
-                        color = Color.White,
+                        color = White,
                         fontWeight = FontWeight.Bold
                     )
                 }
@@ -295,7 +320,7 @@ fun RecentTransactionsList(
 @Composable
 fun BottomNavigationBar(selectedTab: Int, onTabSelected: (Int) -> Unit) {
     NavigationBar(
-        containerColor = Color.White,
+        containerColor = White,
         tonalElevation = 8.dp
     ) {
         NavigationBarItem(
@@ -353,6 +378,3 @@ fun BottomNavigationBar(selectedTab: Int, onTabSelected: (Int) -> Unit) {
         )
     }
 }
-
-
-

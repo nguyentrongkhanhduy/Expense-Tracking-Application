@@ -3,7 +3,6 @@ package com.example.myapplication.screens.dialogs
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -15,7 +14,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -29,34 +27,37 @@ import com.example.myapplication.data.local.model.Transaction
 import com.example.myapplication.ui.theme.PrimaryBlue
 import com.example.myapplication.ui.theme.PrimaryRed
 import com.example.myapplication.ui.theme.White
-import com.example.myapplication.ui.theme.ButtonBlue
 import java.text.SimpleDateFormat
 import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddTransactionDialog(
+fun EditTransactionDialog(
+    transaction: Transaction,
     onDismiss: () -> Unit,
     onSave: (Transaction) -> Unit,
+    onDelete: () -> Unit,
     categoryList: List<Category>
 ) {
-    var amount by remember { mutableStateOf("") }
-    var name by remember { mutableStateOf("") }
-    var type by remember { mutableStateOf("Expense") }
+    var amount by remember { mutableStateOf(transaction.amount.toString()) }
+    var name by remember { mutableStateOf(transaction.name) }
+    var type by remember { mutableStateOf(transaction.type.replaceFirstChar { it.uppercase() }) }
     val typeOptions = listOf("Expense", "Income")
     var expandedType by remember { mutableStateOf(false) }
-    var note by remember { mutableStateOf("") }
-    var location by remember { mutableStateOf("") }
+    var note by remember { mutableStateOf(transaction.note ?: "") }
+    var location by remember { mutableStateOf(transaction.location ?: "") }
 
-    var categoryId by remember { mutableStateOf<Long?>(null) }
+    var categoryId by remember { mutableStateOf<Long?>(transaction.categoryId) }
     var expandedCategory by remember { mutableStateOf(false) }
     val filteredCategories = categoryList.filter { it.type.equals(type, ignoreCase = true) }
     val selectedCategory = filteredCategories.find { it.categoryId == categoryId }
 
-    val datePickerState = rememberDatePickerState()
+    // Date picker state
+    val initialMillis = transaction.date
+    val datePickerState = rememberDatePickerState(initialSelectedDateMillis = initialMillis)
     var showDatePicker by remember { mutableStateOf(false) }
     val formattedDate = SimpleDateFormat("MM/dd/yyyy", Locale.getDefault()).format(
-        Date(datePickerState.selectedDateMillis ?: System.currentTimeMillis())
+        Date(datePickerState.selectedDateMillis ?: initialMillis)
     )
 
     Dialog(
@@ -64,16 +65,16 @@ fun AddTransactionDialog(
         properties = DialogProperties(usePlatformDefaultWidth = false)
     ) {
         Card(
-            shape = RoundedCornerShape(24.dp),
+            shape = RoundedCornerShape(28.dp),
             modifier = Modifier
-                .padding(20.dp)
-                .fillMaxWidth(0.97f)
+                .padding(24.dp)
+                .fillMaxWidth(0.95f)
                 .wrapContentHeight()
         ) {
             Column(
                 modifier = Modifier
                     .background(White)
-                    .padding(20.dp)
+                    .padding(24.dp)
                     .verticalScroll(rememberScrollState())
                     .imePadding(),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -86,15 +87,16 @@ fun AddTransactionDialog(
                     IconButton(onClick = onDismiss) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = PrimaryBlue)
                     }
+                    Spacer(Modifier.width(8.dp))
                     Text(
-                        "New Transaction",
+                        "Edit Transaction",
                         color = PrimaryBlue,
                         fontWeight = FontWeight.Bold,
                         fontSize = 22.sp,
                         modifier = Modifier.weight(1f),
                         textAlign = TextAlign.Center
                     )
-                    Spacer(Modifier.width(40.dp)) // For symmetry with back arrow
+                    Spacer(Modifier.width(40.dp)) // To balance the back arrow
                 }
 
                 OutlinedTextField(
@@ -237,36 +239,39 @@ fun AddTransactionDialog(
                     Text("Upload photo/receipt", color = White)
                 }
 
-                // Cancel and Save Buttons
+                // Action Buttons
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     Button(
-                        onClick = onDismiss,
+                        onClick = {
+                            onDelete()
+                            onDismiss()
+                        },
                         modifier = Modifier.weight(1f),
                         colors = ButtonDefaults.buttonColors(containerColor = PrimaryRed),
                         shape = RoundedCornerShape(20.dp),
                         elevation = ButtonDefaults.buttonElevation(4.dp)
                     ) {
-                        Text("Cancel", color = White, fontWeight = FontWeight.Bold)
+                        Text("Delete", color = White, fontWeight = FontWeight.Bold)
                     }
                     Button(
                         onClick = {
-                            val transaction = Transaction(
+                            val updatedTransaction = transaction.copy(
                                 name = name,
                                 type = type.lowercase(),
                                 amount = amount.toDoubleOrNull() ?: 0.0,
-                                categoryId = categoryId ?: if (type == "expense") -1L else -2L,
-                                date = datePickerState.selectedDateMillis ?: System.currentTimeMillis(),
+                                categoryId = categoryId ?: transaction.categoryId,
+                                date = datePickerState.selectedDateMillis ?: transaction.date,
                                 note = note,
-                                location = location,
-                                imageUrl = null // Add image URL support if available
+                                location = location
                             )
-                            onSave(transaction)
+                            onSave(updatedTransaction)
+                            onDismiss()
                         },
                         modifier = Modifier.weight(1f),
-                        colors = ButtonDefaults.buttonColors(containerColor = ButtonBlue),
+                        colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue),
                         shape = RoundedCornerShape(20.dp),
                         elevation = ButtonDefaults.buttonElevation(4.dp)
                     ) {

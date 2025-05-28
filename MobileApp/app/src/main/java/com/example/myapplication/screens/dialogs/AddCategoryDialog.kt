@@ -2,11 +2,14 @@ package com.example.myapplication.screens.dialogs
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -14,9 +17,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import com.example.myapplication.ui.theme.PrimaryBlue
+import com.example.myapplication.ui.theme.PrimaryRed
+import com.example.myapplication.ui.theme.White
+import com.example.myapplication.ui.theme.InputBlue
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -31,52 +40,60 @@ fun AddCategoryDialog(
     var expanded by remember { mutableStateOf(false) }
     val options = listOf("expense", "income")
 
-    Dialog (onDismissRequest = onDismiss) {
-        Box(
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            shape = RoundedCornerShape(28.dp),
             modifier = Modifier
-                .clip(RoundedCornerShape(24.dp))
-                .background(Color.White)
                 .padding(24.dp)
-                .width(300.dp)
+                .fillMaxWidth(0.95f)
+                .wrapContentHeight()
         ) {
             Column(
-                horizontalAlignment = Alignment.CenterHorizontally
+                modifier = Modifier
+                    .background(White)
+                    .padding(24.dp)
+                    .verticalScroll(rememberScrollState())
+                    .imePadding(),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                Text(
-                    "New category",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 20.sp,
-                    modifier = Modifier.padding(bottom = 18.dp)
-                )
+                // Top Bar with Back Arrow and Title
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    IconButton(onClick = onDismiss) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = "Back",
+                            tint = PrimaryBlue
+                        )
+                    }
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        "New Category",
+                        color = PrimaryBlue,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 22.sp,
+                        modifier = Modifier.weight(1f),
+                        textAlign = TextAlign.Center
+                    )
+                    Spacer(Modifier.width(40.dp)) // To balance the back arrow
+                }
 
-                // Type dropdown
+                // Type dropdown (default styling)
                 ExposedDropdownMenuBox(
                     expanded = expanded,
                     onExpandedChange = { expanded = !expanded },
-                    modifier = Modifier.fillMaxWidth()
                 ) {
                     OutlinedTextField(
                         value = type,
                         onValueChange = {},
                         readOnly = true,
                         label = { Text("Type") },
-                        trailingIcon = {
-                            ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
-                        },
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
                         modifier = Modifier
-                            .menuAnchor()
                             .fillMaxWidth()
-                            .background(Color(0xFF22304B), RoundedCornerShape(10.dp)),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            unfocusedContainerColor = Color(0xFF22304B),
-                            focusedContainerColor = Color(0xFF22304B),
-                            unfocusedTextColor = Color.White,
-                            focusedTextColor = Color.White,
-                            unfocusedLabelColor = Color.White,
-                            focusedLabelColor = Color.White,
-                            unfocusedBorderColor = Color.Transparent,
-                            focusedBorderColor = Color.Transparent
-                        )
+                            .menuAnchor()
                     )
                     ExposedDropdownMenu(
                         expanded = expanded,
@@ -93,115 +110,75 @@ fun AddCategoryDialog(
                         }
                     }
                 }
-                Spacer(Modifier.height(12.dp))
 
-                // Title
                 OutlinedTextField(
                     value = title,
                     onValueChange = { title = it },
                     label = { Text("Title") },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(Color(0xFF22304B), RoundedCornerShape(10.dp)),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        unfocusedContainerColor = Color(0xFF22304B),
-                        focusedContainerColor = Color(0xFF22304B),
-                        unfocusedTextColor = Color.White,
-                        focusedTextColor = Color.White,
-                        unfocusedLabelColor = Color.White,
-                        focusedLabelColor = Color.White,
-                        unfocusedBorderColor = Color.Transparent,
-                        focusedBorderColor = Color.Transparent
-                    )
+                    modifier = Modifier.fillMaxWidth()
                 )
-                Spacer(Modifier.height(12.dp))
 
-                // Icon with plus button
+                // Icon with plus button and space between (default styling)
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(Color(0xFF22304B), RoundedCornerShape(10.dp))
-                        .padding(end = 8.dp)
+                    modifier = Modifier.fillMaxWidth()
                 ) {
                     OutlinedTextField(
                         value = icon,
                         onValueChange = { icon = it },
                         label = { Text("Generate Icon") },
-                        modifier = Modifier
-                            .weight(1f)
-                            .background(Color.Transparent),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            unfocusedContainerColor = Color.Transparent,
-                            focusedContainerColor = Color.Transparent,
-                            unfocusedTextColor = Color.White,
-                            focusedTextColor = Color.White,
-                            unfocusedLabelColor = Color.White,
-                            focusedLabelColor = Color.White,
-                            unfocusedBorderColor = Color.Transparent,
-                            focusedBorderColor = Color.Transparent
-                        )
+                        modifier = Modifier.weight(1f)
                     )
+                    Spacer(modifier = Modifier.width(12.dp))
                     IconButton(
                         onClick = { /* Generate icon logic here */ },
                         modifier = Modifier
                             .size(36.dp)
                             .clip(CircleShape)
-                            .background(Color(0xFF22304B))
+                            .background(InputBlue)
                     ) {
-                        Icon(Icons.Default.Add, contentDescription = "Generate Icon", tint = Color.White)
+                        Icon(Icons.Default.Add, contentDescription = "Generate Icon", tint = White)
                     }
                 }
-                Spacer(Modifier.height(12.dp))
 
-                // Limit
                 OutlinedTextField(
                     value = limit,
                     onValueChange = { limit = it },
                     label = { Text("Limit") },
-                    keyboardOptions = KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(Color(0xFF22304B), RoundedCornerShape(10.dp)),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        unfocusedContainerColor = Color(0xFF22304B),
-                        focusedContainerColor = Color(0xFF22304B),
-                        unfocusedTextColor = Color.White,
-                        focusedTextColor = Color.White,
-                        unfocusedLabelColor = Color.White,
-                        focusedLabelColor = Color.White,
-                        unfocusedBorderColor = Color.Transparent,
-                        focusedBorderColor = Color.Transparent
-                    )
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    modifier = Modifier.fillMaxWidth()
                 )
-                Spacer(Modifier.height(20.dp))
 
                 // Buttons
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     Button(
                         onClick = onDismiss,
-                        colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
-                        modifier = Modifier.weight(1f)
+                        colors = ButtonDefaults.buttonColors(containerColor = PrimaryRed),
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(20.dp),
+                        elevation = ButtonDefaults.buttonElevation(4.dp)
                     ) {
-                        Text("Cancel")
+                        Text("Cancel", color = White, fontWeight = FontWeight.Bold)
                     }
-                    Spacer(Modifier.width(12.dp))
                     Button(
                         onClick = {
                             onSave(type, title, icon, limit.takeIf { it.isNotBlank() })
                             onDismiss()
                         },
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF5D9CFF)),
+                        colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue),
                         modifier = Modifier.weight(1f),
-                        enabled = type.isNotBlank() && title.isNotBlank() && icon.isNotBlank()
+                        shape = RoundedCornerShape(20.dp),
+                        enabled = type.isNotBlank() && title.isNotBlank() && icon.isNotBlank(),
+                        elevation = ButtonDefaults.buttonElevation(4.dp)
                     ) {
-                        Text("Save")
+                        Text("Save", color = White, fontWeight = FontWeight.Bold)
                     }
                 }
             }
         }
     }
 }
+

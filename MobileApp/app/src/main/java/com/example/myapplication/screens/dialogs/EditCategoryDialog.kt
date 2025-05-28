@@ -1,46 +1,31 @@
 package com.example.myapplication.screens.dialogs
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.example.myapplication.data.local.model.Category
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
+import com.example.myapplication.ui.theme.PrimaryBlue
+import com.example.myapplication.ui.theme.PrimaryRed
+import com.example.myapplication.ui.theme.InputBlue
+import com.example.myapplication.ui.theme.White
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -59,25 +44,45 @@ fun EditCategoryDialog(
     val isEnable = initialCategory.categoryId > 0L
 
     Dialog(onDismissRequest = onDismiss) {
-        Box(
+        Card(
+            shape = RoundedCornerShape(28.dp),
             modifier = Modifier
-                .clip(RoundedCornerShape(24.dp))
-                .background(Color.White)
                 .padding(24.dp)
-                .width(300.dp)
+                .fillMaxWidth(0.95f)
+                .wrapContentHeight()
         ) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(
-                    "Edit Category",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 20.sp,
-                    modifier = Modifier.padding(bottom = 18.dp)
-                )
+            Column(
+                modifier = Modifier
+                    .background(White)
+                    .padding(24.dp)
+                    .verticalScroll(rememberScrollState())
+                    .imePadding(),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                // Top Bar
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    IconButton(onClick = onDismiss) {
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = PrimaryBlue)
+                    }
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        "Edit Category",
+                        color = PrimaryBlue,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 22.sp,
+                        modifier = Modifier.weight(1f),
+                        textAlign = TextAlign.Center
+                    )
+                    Spacer(Modifier.width(40.dp)) // To balance the back arrow
+                }
+
                 // Type dropdown
                 ExposedDropdownMenuBox(
                     expanded = expanded,
                     onExpandedChange = { expanded = !expanded },
-                    modifier = Modifier.fillMaxWidth(),
                 ) {
                     OutlinedTextField(
                         value = type,
@@ -86,19 +91,8 @@ fun EditCategoryDialog(
                         label = { Text("Type") },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
                         modifier = Modifier
-                            .menuAnchor()
                             .fillMaxWidth()
-                            .background(Color(0xFF22304B), RoundedCornerShape(10.dp)),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            unfocusedContainerColor = Color(0xFF22304B),
-                            focusedContainerColor = Color(0xFF22304B),
-                            unfocusedTextColor = Color.White,
-                            focusedTextColor = Color.White,
-                            unfocusedLabelColor = Color.White,
-                            focusedLabelColor = Color.White,
-                            unfocusedBorderColor = Color.Transparent,
-                            focusedBorderColor = Color.Transparent
-                        )
+                            .menuAnchor()
                     )
                     ExposedDropdownMenu(
                         expanded = expanded,
@@ -115,113 +109,79 @@ fun EditCategoryDialog(
                         }
                     }
                 }
-                Spacer(Modifier.height(12.dp))
-                // Title
+
                 OutlinedTextField(
                     value = title,
                     onValueChange = { title = it },
                     label = { Text("Title") },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(Color(0xFF22304B), RoundedCornerShape(10.dp)),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        unfocusedContainerColor = Color(0xFF22304B),
-                        focusedContainerColor = Color(0xFF22304B),
-                        unfocusedTextColor = Color.White,
-                        focusedTextColor = Color.White,
-                        unfocusedLabelColor = Color.White,
-                        focusedLabelColor = Color.White,
-                        unfocusedBorderColor = Color.Transparent,
-                        focusedBorderColor = Color.Transparent
-                    )
+                    modifier = Modifier.fillMaxWidth()
                 )
-                Spacer(Modifier.height(12.dp))
+
                 // Icon with plus button
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(Color(0xFF22304B), RoundedCornerShape(10.dp))
-                        .padding(end = 8.dp)
+                    modifier = Modifier.fillMaxWidth()
                 ) {
                     OutlinedTextField(
                         value = icon,
                         onValueChange = { icon = it },
                         label = { Text("Generate Again") },
-                        modifier = Modifier
-                            .weight(1f)
-                            .background(Color.Transparent),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            unfocusedContainerColor = Color.Transparent,
-                            focusedContainerColor = Color.Transparent,
-                            unfocusedTextColor = Color.White,
-                            focusedTextColor = Color.White,
-                            unfocusedLabelColor = Color.White,
-                            focusedLabelColor = Color.White,
-                            unfocusedBorderColor = Color.Transparent,
-                            focusedBorderColor = Color.Transparent
-                        )
+                        modifier = Modifier.weight(1f)
                     )
+                    Spacer(modifier = Modifier.width(12.dp))
                     IconButton(
                         onClick = { /* Generate icon logic here */ },
                         modifier = Modifier
                             .size(36.dp)
                             .clip(CircleShape)
-                            .background(Color(0xFF22304B))
+                            .background(InputBlue)
                     ) {
                         Icon(
                             Icons.Default.Add,
                             contentDescription = "Generate Icon",
-                            tint = Color.White
+                            tint = White
                         )
                     }
                 }
-                Spacer(Modifier.height(12.dp))
-                // Limit
+
                 OutlinedTextField(
                     value = limit,
                     onValueChange = { limit = it },
                     label = { Text("Limit") },
-                    keyboardOptions = KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(Color(0xFF22304B), RoundedCornerShape(10.dp)),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        unfocusedContainerColor = Color(0xFF22304B),
-                        focusedContainerColor = Color(0xFF22304B),
-                        unfocusedTextColor = Color.White,
-                        focusedTextColor = Color.White,
-                        unfocusedLabelColor = Color.White,
-                        focusedLabelColor = Color.White,
-                        unfocusedBorderColor = Color.Transparent,
-                        focusedBorderColor = Color.Transparent
-                    )
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    modifier = Modifier.fillMaxWidth()
                 )
-                Spacer(Modifier.height(20.dp))
-                // Buttons
+
+                // Action Buttons
                 if (isEnable) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
                         Button(
-                            onClick = onDelete,
-                            colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
-                            modifier = Modifier.weight(1f)
+                            onClick = {
+                                onDelete()
+                                onDismiss()
+                            },
+                            modifier = Modifier.weight(1f),
+                            colors = ButtonDefaults.buttonColors(containerColor = PrimaryRed),
+                            shape = RoundedCornerShape(20.dp),
+                            elevation = ButtonDefaults.buttonElevation(4.dp)
                         ) {
-                            Text("Delete")
+                            Text("Delete", color = White, fontWeight = FontWeight.Bold)
                         }
-                        Spacer(Modifier.width(12.dp))
                         Button(
                             onClick = {
                                 onSave(type, title, icon, limit.takeIf { it.isNotBlank() })
                                 onDismiss()
                             },
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF5D9CFF)),
                             modifier = Modifier.weight(1f),
-                            enabled = type.isNotBlank() && title.isNotBlank() && icon.isNotBlank()
+                            colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue),
+                            shape = RoundedCornerShape(20.dp),
+                            enabled = type.isNotBlank() && title.isNotBlank() && icon.isNotBlank(),
+                            elevation = ButtonDefaults.buttonElevation(4.dp)
                         ) {
-                            Text("Save")
+                            Text("Save", color = White, fontWeight = FontWeight.Bold)
                         }
                     }
                 }
