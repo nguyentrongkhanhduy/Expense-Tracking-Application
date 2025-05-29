@@ -1,5 +1,6 @@
 [versions]
 agp = "8.7.3"
+coilCompose = "2.4.0"
 converterGson = "2.9.0"
 datastorePreferences = "1.1.7"
 foundation = "1.8.2"
@@ -24,6 +25,7 @@ androidx-foundation = { module = "androidx.compose.foundation:foundation", versi
 androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref = "roomRuntime" }
 androidx-room-ktx = { module = "androidx.room:room-ktx", version.ref = "roomRuntime" }
 androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "roomRuntime" }
+coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coilCompose" }
 converter-gson = { module = "com.squareup.retrofit2:converter-gson", version.ref = "converterGson" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }

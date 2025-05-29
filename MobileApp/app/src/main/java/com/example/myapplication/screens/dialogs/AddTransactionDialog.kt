@@ -3,11 +3,13 @@ package com.example.myapplication.screens.dialogs
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
 import android.net.Uri
 import android.provider.Settings
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -23,7 +25,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -34,13 +38,17 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.core.content.ContextCompat
+import coil.compose.rememberAsyncImagePainter
 import com.example.myapplication.data.local.model.Category
 import com.example.myapplication.data.local.model.Transaction
 import com.example.myapplication.ui.theme.PrimaryBlue
 import com.example.myapplication.ui.theme.PrimaryRed
 import com.example.myapplication.ui.theme.White
 import com.example.myapplication.ui.theme.ButtonBlue
+import com.example.myapplication.viewmodel.AuthViewModel
 import com.example.myapplication.viewmodel.LocationViewModel
+import java.io.File
+import java.io.FileOutputStream
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -50,14 +58,20 @@ fun AddTransactionDialog(
     onDismiss: () -> Unit,
     onSave: (Transaction) -> Unit,
     categoryList: List<Category>,
-    locationViewModel: LocationViewModel
+    locationViewModel: LocationViewModel,
+    authViewModel: AuthViewModel
 ) {
+    val user by authViewModel.user.collectAsState()
+
     var amount by remember { mutableStateOf("") }
     var name by remember { mutableStateOf("") }
     var type by remember { mutableStateOf("Expense") }
     val typeOptions = listOf("Expense", "Income")
     var expandedType by remember { mutableStateOf(false) }
     var note by remember { mutableStateOf("") }
+    var selectedImageBitmap by remember { mutableStateOf<Bitmap?>(null) }
+    var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
+    var imagePath by remember { mutableStateOf<String?>(null) }
 
     var categoryId by remember { mutableStateOf<Long?>(null) }
     var expandedCategory by remember { mutableStateOf(false) }
@@ -74,11 +88,11 @@ fun AddTransactionDialog(
     var manualLocation by remember { mutableStateOf("") }
     var hasUsedFetchedLocation by remember { mutableStateOf(false) }
     //reset the dialog location everytime opened
-    DisposableEffect (Unit) {
+    DisposableEffect(Unit) {
         locationViewModel.clearLocation()
         manualLocation = ""
         hasUsedFetchedLocation = false
-        onDispose {  }
+        onDispose { }
     }
     LaunchedEffect(locationFromVM, hasUsedFetchedLocation) {
         if (!locationFromVM.isNullOrEmpty() && !hasUsedFetchedLocation) {
@@ -107,6 +121,88 @@ fun AddTransactionDialog(
             }
         }
     )
+
+    var showImagePickerDialog by remember { mutableStateOf(false) }
+    val cameraPermission = android.Manifest.permission.CAMERA
+
+
+    val cameraLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicturePreview(),
+        onResult = { bitmap ->
+            val path = bitmap?.let { saveBitmapToInternalStorage(context, it) }
+            selectedImageBitmap = bitmap
+            selectedImageUri = null
+            imagePath = path
+        }
+    )
+
+    val galleryLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent(),
+        onResult = { uri ->
+            selectedImageUri = uri
+            selectedImageBitmap = null
+        }
+    )
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+        onResult = { isGranted ->
+            if (isGranted) {
+                showImagePickerDialog = true
+            } else {
+                Toast.makeText(
+                    context,
+                    "Camera permission denied. Please enable it in settings.",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+        }
+    )
+
+    if (showImagePickerDialog) {
+        AlertDialog(
+            onDismissRequest = { showImagePickerDialog = false },
+            confirmButton = {},
+            dismissButton = {},
+            containerColor = Color.White,
+            title = {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("Upload Photo/Receipt", fontWeight = FontWeight.Bold, color = Color.Black)
+                }
+            },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                    Button(
+                        onClick = {
+                            cameraLauncher.launch(null)
+                            showImagePickerDialog = false
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue),
+                        shape = RoundedCornerShape(16.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Take a Photo", color = Color.White)
+                    }
+                    Button(
+                        onClick = {
+                            galleryLauncher.launch("image/*")
+                            showImagePickerDialog = false
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue),
+                        shape = RoundedCornerShape(16.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Choose from Library", color = Color.White)
+                    }
+                }
+
+            }
+        )
+    }
 
     Dialog(
         onDismissRequest = onDismiss,
@@ -296,13 +392,50 @@ fun AddTransactionDialog(
                 )
 
                 // Upload button (optional)
-                Button(
-                    onClick = { /* handle upload */ },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue),
-                    shape = RoundedCornerShape(20.dp)
-                ) {
-                    Text("Upload photo/receipt", color = White)
+                if (user != null) {
+                    Button(
+                        onClick = {
+                            if (ContextCompat.checkSelfPermission(
+                                    context,
+                                    android.Manifest.permission.CAMERA
+                                )
+                                != PackageManager.PERMISSION_GRANTED
+                            ) {
+                                permissionLauncher.launch(android.Manifest.permission.CAMERA)
+                            } else {
+                                showImagePickerDialog = true
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue),
+                        shape = RoundedCornerShape(20.dp)
+                    ) {
+                        Text("Upload photo/receipt", color = White)
+                    }
+                }
+
+                selectedImageBitmap?.let {
+                    Image(
+                        bitmap = it.asImageBitmap(),
+                        contentDescription = "Selected Image",
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(200.dp)
+                            .padding(top = 8.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                    )
+                }
+
+                selectedImageUri?.let {
+                    Image(
+                        painter = rememberAsyncImagePainter(it),
+                        contentDescription = "Selected Image",
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(200.dp)
+                            .padding(top = 8.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                    )
                 }
 
                 // Cancel and Save Buttons
@@ -330,7 +463,7 @@ fun AddTransactionDialog(
                                     ?: System.currentTimeMillis(),
                                 note = note,
                                 location = locationFromVM ?: manualLocation,
-                                imageUrl = null // Add image URL support if available
+                                imageUrl = imagePath ?: selectedImageUri?.toString() // Add image URL support if available
                             )
                             onSave(transaction)
                         },
@@ -347,3 +480,17 @@ fun AddTransactionDialog(
     }
 }
 
+fun saveBitmapToInternalStorage(context: Context, bitmap: Bitmap): String? {
+    return try {
+        val filename = "receipt_${System.currentTimeMillis()}.jpg"
+        val file = File(context.filesDir, filename)
+        val outputStream = FileOutputStream(file)
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream)
+        outputStream.flush()
+        outputStream.close()
+        file.absolutePath // return file path
+    } catch (e: Exception) {
+        e.printStackTrace()
+        null
+    }
+}

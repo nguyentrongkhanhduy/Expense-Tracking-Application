@@ -139,7 +139,8 @@ fun HomeScreen(
                 showAddDialog = false
             },
             categoryList = categories,
-            locationViewModel = locationViewModel
+            locationViewModel = locationViewModel,
+            authViewModel = authViewModel
         )
     }
 
