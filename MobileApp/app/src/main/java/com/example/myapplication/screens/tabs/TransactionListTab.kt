@@ -27,17 +27,10 @@ import com.example.myapplication.screens.dialogs.EditTransactionDialog
 import com.example.myapplication.viewmodel.CategoryViewModel
 import com.example.myapplication.viewmodel.TransactionViewModel
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
-import com.example.myapplication.ui.theme.ButtonBlue
+import com.example.myapplication.screens.dialogs.CustomCategoryFilterDialog
+import com.example.myapplication.screens.dialogs.CustomDateRangeDialog
 import com.example.myapplication.ui.theme.PrimaryGreen
-import java.text.SimpleDateFormat
 import java.util.Calendar
-import java.util.Date
-import java.util.Locale
 
 
 @Composable
@@ -60,6 +53,10 @@ fun TransactionListTab(
     var startDate by remember { mutableStateOf<Long?>(null) }
     var endDate by remember { mutableStateOf<Long?>(null) }
 
+    var customCategoryFilterDialogExpanded by remember { mutableStateOf(false) }
+    var selectedCategoryTypeToFilter by remember { mutableStateOf<String>("") }
+    var selectedCategoryToFilter by remember { mutableStateOf<Long?>(null) }
+
     LaunchedEffect(selectedTab) {
         val calendar = Calendar.getInstance()
         val now = calendar.timeInMillis
@@ -69,6 +66,7 @@ fun TransactionListTab(
                 startDate = null
                 endDate = null
             }
+
             1 -> {
                 // Today
                 calendar.set(Calendar.HOUR_OF_DAY, 0)
@@ -116,8 +114,19 @@ fun TransactionListTab(
                 startDate = start
                 endDate = end
                 customDateDialogExpanded = false
-                // optionally trigger filter logic here
             }
+        )
+    }
+
+    if (customCategoryFilterDialogExpanded) {
+        CustomCategoryFilterDialog(
+            onDismiss = { customCategoryFilterDialogExpanded = false },
+            onConfirm = { type, categoryId ->
+                selectedCategoryTypeToFilter = type
+                selectedCategoryToFilter = categoryId
+                customCategoryFilterDialogExpanded = false
+            },
+            categoryList = categories
         )
     }
 
@@ -144,6 +153,18 @@ fun TransactionListTab(
             val start = startDate ?: Long.MIN_VALUE
             val end = endDate ?: Long.MAX_VALUE
             it.transaction.date in start..end
+        }
+        .filter {
+            if (selectedCategoryToFilter == null && selectedCategoryTypeToFilter.isNotBlank()) {
+                it.category?.type.equals(selectedCategoryTypeToFilter, ignoreCase = true)
+            } else if (selectedCategoryToFilter != null && selectedCategoryTypeToFilter.isNotBlank()) {
+                it.category?.type.equals(
+                    selectedCategoryTypeToFilter,
+                    ignoreCase = true
+                ) && it.category?.categoryId == selectedCategoryToFilter
+            } else {
+                true
+            }
         }
 
 
@@ -240,7 +261,7 @@ fun TransactionListTab(
             }
             Box(modifier = Modifier.weight(1f)) {
                 MyButton(
-                    onClick = {},
+                    onClick = { customCategoryFilterDialogExpanded = true },
                     backgroundColor = PrimaryBlue
                 ) {
                     Icon(
@@ -380,150 +401,3 @@ fun TransactionCard(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun CustomDateRangeDialog(
-    onDismiss: () -> Unit,
-    onConfirm: (start: Long, end: Long) -> Unit
-) {
-    val startDateState = rememberDatePickerState()
-    val endDateState = rememberDatePickerState()
-    val formattedStartDate = SimpleDateFormat("MM/dd/yyyy", Locale.getDefault()).format(
-        Date(startDateState.selectedDateMillis ?: System.currentTimeMillis())
-    )
-    val formattedEndDate = SimpleDateFormat("MM/dd/yyyy", Locale.getDefault()).format(
-        Date(endDateState.selectedDateMillis ?: System.currentTimeMillis())
-    )
-
-    var showStartPicker by remember { mutableStateOf(false) }
-    var showEndPicker by remember { mutableStateOf(false) }
-
-    Dialog(
-        onDismissRequest = onDismiss,
-        properties = DialogProperties(
-            usePlatformDefaultWidth = false,
-            decorFitsSystemWindows = false
-        ),
-
-        ) {
-        Card(
-            shape = RoundedCornerShape(24.dp),
-            modifier = Modifier
-                .padding(20.dp)
-                .fillMaxWidth(0.97f)
-                .wrapContentHeight()
-                .imePadding()
-        ) {
-            Column(
-                modifier = Modifier
-                    .background(White)
-                    .padding(20.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    IconButton(onClick = onDismiss) {
-                        Icon(
-                            Icons.Default.ArrowBack,
-                            contentDescription = "Back",
-                            tint = PrimaryBlue
-                        )
-                    }
-                    Text(
-                        "Custom Date",
-                        color = PrimaryBlue,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 22.sp,
-                        modifier = Modifier.weight(1f),
-                        textAlign = TextAlign.Center
-                    )
-                    Spacer(Modifier.width(40.dp))
-                }
-
-                OutlinedTextField(
-                    value = formattedStartDate,
-                    onValueChange = {},
-                    label = { Text("Date") },
-                    modifier = Modifier.fillMaxWidth(),
-                    readOnly = true,
-                    trailingIcon = {
-                        IconButton(onClick = { showStartPicker = true }) {
-                            Icon(Icons.Default.DateRange, contentDescription = "Pick date")
-                        }
-                    }
-                )
-                if (showStartPicker) {
-                    DatePickerDialog(
-                        onDismissRequest = { showStartPicker = false },
-                        confirmButton = {
-                            TextButton(onClick = { showStartPicker = false }) { Text("OK") }
-                        },
-                        dismissButton = {
-                            TextButton(onClick = { showStartPicker = false }) { Text("Cancel") }
-                        }
-                    ) {
-                        DatePicker(state = startDateState)
-                    }
-                }
-
-                OutlinedTextField(
-                    value = formattedEndDate,
-                    onValueChange = {},
-                    label = { Text("Date") },
-                    modifier = Modifier.fillMaxWidth(),
-                    readOnly = true,
-                    trailingIcon = {
-                        IconButton(onClick = { showEndPicker = true }) {
-                            Icon(Icons.Default.DateRange, contentDescription = "Pick date")
-                        }
-                    }
-                )
-                if (showEndPicker) {
-                    DatePickerDialog(
-                        onDismissRequest = { showEndPicker = false },
-                        confirmButton = {
-                            TextButton(onClick = { showEndPicker = false }) { Text("OK") }
-                        },
-                        dismissButton = {
-                            TextButton(onClick = { showEndPicker = false }) { Text("Cancel") }
-                        }
-                    ) {
-                        DatePicker(state = endDateState)
-                    }
-                }
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    Button(
-                        onClick = onDismiss,
-                        modifier = Modifier.weight(1f),
-                        colors = ButtonDefaults.buttonColors(containerColor = PrimaryRed),
-                        shape = RoundedCornerShape(20.dp),
-                        elevation = ButtonDefaults.buttonElevation(4.dp)
-                    ) {
-                        Text("Cancel", color = White, fontWeight = FontWeight.Bold)
-                    }
-                    Button(
-                        onClick = {
-                            onConfirm(
-                                startDateState.selectedDateMillis!!,
-                                endDateState.selectedDateMillis!!
-                            )
-                            onDismiss()
-                        },
-                        modifier = Modifier.weight(1f),
-                        colors = ButtonDefaults.buttonColors(containerColor = ButtonBlue),
-                        shape = RoundedCornerShape(20.dp),
-                        elevation = ButtonDefaults.buttonElevation(4.dp)
-                    ) {
-                        Text("Confirm", color = White, fontWeight = FontWeight.Bold)
-                    }
-                }
-            }
-        }
-    }
-}
