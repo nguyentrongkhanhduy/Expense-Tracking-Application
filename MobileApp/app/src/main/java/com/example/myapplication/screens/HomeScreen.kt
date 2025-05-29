@@ -36,6 +36,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.FloatingActionButton
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.myapplication.data.local.model.TransactionWithCategory
 import com.example.myapplication.screens.dialogs.EditTransactionDialog
 import com.example.myapplication.screens.dialogs.AddTransactionDialog
@@ -48,6 +49,7 @@ import com.example.myapplication.ui.theme.PrimaryBlue
 import com.example.myapplication.ui.theme.PrimaryRed
 import com.example.myapplication.ui.theme.PrimaryGreen
 import com.example.myapplication.ui.theme.White
+import com.example.myapplication.viewmodel.LocationViewModel
 
 @Composable
 fun HomeScreen(
@@ -71,6 +73,8 @@ fun HomeScreen(
     val balance = income - expenses
 
     var selectedTab by remember { mutableStateOf(0) }
+
+    val locationViewModel: LocationViewModel = viewModel()
 
     LaunchedEffect(isSignedIn) {
         if (!isSignedIn && !isGuest) {
@@ -134,7 +138,9 @@ fun HomeScreen(
                 transactionViewModel.addTransaction(it)
                 showAddDialog = false
             },
-            categoryList = categories
+            categoryList = categories,
+            locationViewModel = locationViewModel,
+            authViewModel = authViewModel
         )
     }
 
