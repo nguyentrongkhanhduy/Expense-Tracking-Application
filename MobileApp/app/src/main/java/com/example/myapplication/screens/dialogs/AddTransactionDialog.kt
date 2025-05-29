@@ -1,5 +1,13 @@
 package com.example.myapplication.screens.dialogs
 
+import android.content.Context
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.net.Uri
+import android.provider.Settings
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -16,6 +24,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -24,21 +33,24 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import androidx.core.content.ContextCompat
 import com.example.myapplication.data.local.model.Category
 import com.example.myapplication.data.local.model.Transaction
 import com.example.myapplication.ui.theme.PrimaryBlue
 import com.example.myapplication.ui.theme.PrimaryRed
 import com.example.myapplication.ui.theme.White
 import com.example.myapplication.ui.theme.ButtonBlue
+import com.example.myapplication.viewmodel.LocationViewModel
 import java.text.SimpleDateFormat
 import java.util.*
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun AddTransactionDialog(
     onDismiss: () -> Unit,
     onSave: (Transaction) -> Unit,
-    categoryList: List<Category>
+    categoryList: List<Category>,
+    locationViewModel: LocationViewModel
 ) {
     var amount by remember { mutableStateOf("") }
     var name by remember { mutableStateOf("") }
@@ -46,7 +58,6 @@ fun AddTransactionDialog(
     val typeOptions = listOf("Expense", "Income")
     var expandedType by remember { mutableStateOf(false) }
     var note by remember { mutableStateOf("") }
-    var location by remember { mutableStateOf("") }
 
     var categoryId by remember { mutableStateOf<Long?>(null) }
     var expandedCategory by remember { mutableStateOf(false) }
@@ -59,9 +70,50 @@ fun AddTransactionDialog(
         Date(datePickerState.selectedDateMillis ?: System.currentTimeMillis())
     )
 
+    val locationFromVM by locationViewModel.locationString.collectAsState()
+    var manualLocation by remember { mutableStateOf("") }
+    var hasUsedFetchedLocation by remember { mutableStateOf(false) }
+    //reset the dialog location everytime opened
+    DisposableEffect (Unit) {
+        locationViewModel.clearLocation()
+        manualLocation = ""
+        hasUsedFetchedLocation = false
+        onDispose {  }
+    }
+    LaunchedEffect(locationFromVM, hasUsedFetchedLocation) {
+        if (!locationFromVM.isNullOrEmpty() && !hasUsedFetchedLocation) {
+            manualLocation = locationFromVM as String
+            hasUsedFetchedLocation = true
+        }
+    }
+
+
+    val context = LocalContext.current
+    val launcher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+        onResult = { isGranted ->
+            if (isGranted) {
+                locationViewModel.fetchLocation()
+            } else {
+                Toast.makeText(
+                    context,
+                    "Permission denied. Please enable location in settings.",
+                    Toast.LENGTH_LONG
+                ).show()
+                val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+                val uri = Uri.fromParts("package", context.packageName, null)
+                intent.data = uri
+                context.startActivity(intent)
+            }
+        }
+    )
+
     Dialog(
         onDismissRequest = onDismiss,
-        properties = DialogProperties(usePlatformDefaultWidth = false)
+        properties = DialogProperties(
+            usePlatformDefaultWidth = false,
+            decorFitsSystemWindows = false
+        )
     ) {
         Card(
             shape = RoundedCornerShape(24.dp),
@@ -69,6 +121,7 @@ fun AddTransactionDialog(
                 .padding(20.dp)
                 .fillMaxWidth(0.97f)
                 .wrapContentHeight()
+                .imePadding()
         ) {
             Column(
                 modifier = Modifier
@@ -84,7 +137,11 @@ fun AddTransactionDialog(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     IconButton(onClick = onDismiss) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = PrimaryBlue)
+                        Icon(
+                            Icons.Default.ArrowBack,
+                            contentDescription = "Back",
+                            tint = PrimaryBlue
+                        )
                     }
                     Text(
                         "New Transaction",
@@ -152,7 +209,8 @@ fun AddTransactionDialog(
                     onExpandedChange = { expandedCategory = !expandedCategory }
                 ) {
                     OutlinedTextField(
-                        value = selectedCategory?.let { "${it.icon} ${it.title}" } ?: "Select Category",
+                        value = selectedCategory?.let { "${it.icon} ${it.title}" }
+                            ?: "Select Category",
                         onValueChange = {},
                         readOnly = true,
                         label = { Text("Category") },
@@ -214,13 +272,23 @@ fun AddTransactionDialog(
 
                 // Location field with trailing icon
                 OutlinedTextField(
-                    value = location,
-                    onValueChange = { location = it },
+                    value = manualLocation,
+                    onValueChange = { manualLocation = it },
                     label = { Text("Location") },
                     modifier = Modifier.fillMaxWidth(),
                     trailingIcon = {
                         IconButton(
-                            onClick = { /* handle location */ }
+                            onClick = {
+                                hasUsedFetchedLocation = false
+                                if (ContextCompat.checkSelfPermission(
+                                        context, android.Manifest.permission.ACCESS_FINE_LOCATION
+                                    ) == PackageManager.PERMISSION_GRANTED
+                                ) {
+                                    locationViewModel.fetchLocation()
+                                } else {
+                                    launcher.launch(android.Manifest.permission.ACCESS_FINE_LOCATION)
+                                }
+                            }
                         ) {
                             Icon(Icons.Default.LocationOn, contentDescription = "Pick location")
                         }
@@ -258,9 +326,10 @@ fun AddTransactionDialog(
                                 type = type.lowercase(),
                                 amount = amount.toDoubleOrNull() ?: 0.0,
                                 categoryId = categoryId ?: if (type == "expense") -1L else -2L,
-                                date = datePickerState.selectedDateMillis ?: System.currentTimeMillis(),
+                                date = datePickerState.selectedDateMillis
+                                    ?: System.currentTimeMillis(),
                                 note = note,
-                                location = location,
+                                location = locationFromVM ?: manualLocation,
                                 imageUrl = null // Add image URL support if available
                             )
                             onSave(transaction)
@@ -277,3 +346,4 @@ fun AddTransactionDialog(
         }
     }
 }
+

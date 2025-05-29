@@ -36,7 +36,7 @@ fun TransactionListTab(
     transactionViewModel: TransactionViewModel,
     categoryViewModel: CategoryViewModel
 ) {
-    var searchQuery by remember { mutableStateOf(TextFieldValue("Google")) }
+    var searchQuery by remember { mutableStateOf(TextFieldValue("")) }
     val tabTexts = listOf("All", "Today", "Week", "Month", "Custom")
     var selectedTab by remember { mutableIntStateOf(0) }
     val transactionsWithCategory by transactionViewModel.transactionsWithCategory.collectAsState()
@@ -71,10 +71,14 @@ fun TransactionListTab(
                     tint = PrimaryBlue
                 )
             },
-            placeholder = { Text("Search") },
+            placeholder = {
+                Text(
+                    text = "Search",
+                    color = Color.Gray
+                )
+            },
             modifier = Modifier
-                .fillMaxWidth()
-                .height(48.dp),
+                .fillMaxWidth(),
             shape = RoundedCornerShape(12.dp),
             singleLine = true,
             colors = OutlinedTextFieldDefaults.colors(
