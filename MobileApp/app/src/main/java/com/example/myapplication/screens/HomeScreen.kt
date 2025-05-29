@@ -57,6 +57,7 @@ fun HomeScreen(
     authViewModel: AuthViewModel,
     transactionViewModel: TransactionViewModel,
     categoryViewModel: CategoryViewModel,
+    locationViewModel: LocationViewModel,
     isGuest: Boolean = false
 ) {
     val user by authViewModel.user.collectAsState()
@@ -73,8 +74,6 @@ fun HomeScreen(
     val balance = income - expenses
 
     var selectedTab by remember { mutableStateOf(0) }
-
-    val locationViewModel: LocationViewModel = viewModel()
 
     LaunchedEffect(isSignedIn) {
         if (!isSignedIn && !isGuest) {
@@ -123,7 +122,8 @@ fun HomeScreen(
 
                 1 -> TransactionListTab(
                     transactionViewModel = transactionViewModel,
-                    categoryViewModel = categoryViewModel
+                    categoryViewModel = categoryViewModel,
+                    locationViewModel = locationViewModel
                 )
                 2 -> AnalyticsTab()
                 3 -> ProfileTab(navController = navController)
@@ -156,7 +156,8 @@ fun HomeScreen(
                 transactionViewModel.deleteTransaction(editingTransaction!!.transaction)
                 editingTransaction = null
             },
-            categoryList = categories
+            categoryList = categories,
+            locationViewModel = locationViewModel
         )
     }
 }

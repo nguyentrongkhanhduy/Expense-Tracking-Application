@@ -16,6 +16,7 @@ import com.example.myapplication.screens.WelcomeScreen
 import com.example.myapplication.viewmodel.AuthViewModel
 import com.example.myapplication.viewmodel.CategoryViewModel
 import com.example.myapplication.viewmodel.CategoryViewModelFactory
+import com.example.myapplication.viewmodel.LocationViewModel
 import com.example.myapplication.viewmodel.TransactionViewModel
 import com.example.myapplication.viewmodel.TransactionViewModelFactory
 
@@ -23,6 +24,7 @@ import com.example.myapplication.viewmodel.TransactionViewModelFactory
 fun AppNavHost() {
     val navController = rememberNavController()
     val authViewModel: AuthViewModel = viewModel()
+    val locationViewModel: LocationViewModel = viewModel()
     val context = LocalContext.current
     val categoryViewModel: CategoryViewModel = viewModel(
         factory = CategoryViewModelFactory(context)
@@ -56,6 +58,7 @@ fun AppNavHost() {
                 authViewModel = authViewModel,
                 transactionViewModel = transactionViewModel,
                 categoryViewModel = categoryViewModel,
+                locationViewModel = locationViewModel,
                 isGuest = isGuest // Uncomment if you use this param
             )
         }

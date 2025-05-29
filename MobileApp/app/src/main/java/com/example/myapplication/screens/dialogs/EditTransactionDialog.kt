@@ -1,5 +1,12 @@
 package com.example.myapplication.screens.dialogs
 
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.net.Uri
+import android.provider.Settings
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -11,9 +18,11 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.*
+import androidx.compose.material3.ModalBottomSheetDefaults.properties
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -22,11 +31,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import androidx.core.content.ContextCompat
 import com.example.myapplication.data.local.model.Category
 import com.example.myapplication.data.local.model.Transaction
 import com.example.myapplication.ui.theme.PrimaryBlue
 import com.example.myapplication.ui.theme.PrimaryRed
 import com.example.myapplication.ui.theme.White
+import com.example.myapplication.viewmodel.LocationViewModel
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -37,15 +48,15 @@ fun EditTransactionDialog(
     onDismiss: () -> Unit,
     onSave: (Transaction) -> Unit,
     onDelete: () -> Unit,
-    categoryList: List<Category>
-) {
+    categoryList: List<Category>,
+    locationViewModel: LocationViewModel,
+    ) {
     var amount by remember { mutableStateOf(transaction.amount.toString()) }
     var name by remember { mutableStateOf(transaction.name) }
     var type by remember { mutableStateOf(transaction.type.replaceFirstChar { it.uppercase() }) }
     val typeOptions = listOf("Expense", "Income")
     var expandedType by remember { mutableStateOf(false) }
     var note by remember { mutableStateOf(transaction.note ?: "") }
-    var location by remember { mutableStateOf(transaction.location ?: "") }
 
     var categoryId by remember { mutableStateOf<Long?>(transaction.categoryId) }
     var expandedCategory by remember { mutableStateOf(false) }
@@ -60,9 +71,56 @@ fun EditTransactionDialog(
         Date(datePickerState.selectedDateMillis ?: initialMillis)
     )
 
+    val newDate = datePickerState.selectedDateMillis ?: transaction.date
+    val finalDate = if (normalizeToDay(newDate) == normalizeToDay(transaction.date)) {
+        transaction.date
+    } else {
+        newDate
+    }
+
+    val locationFromVM by locationViewModel.locationString.collectAsState()
+    var location by remember { mutableStateOf(transaction.location ?: "") }
+    var hasUsedFetchedLocation by remember { mutableStateOf(false) }
+    //reset the dialog location everytime opened
+    DisposableEffect(Unit) {
+        locationViewModel.clearLocation()
+        location = transaction.location ?: ""
+        hasUsedFetchedLocation = false
+        onDispose { }
+    }
+    LaunchedEffect(locationFromVM, hasUsedFetchedLocation) {
+        if (!locationFromVM.isNullOrEmpty() && !hasUsedFetchedLocation) {
+            location = locationFromVM as String
+            hasUsedFetchedLocation = true
+        }
+    }
+
+    val context = LocalContext.current
+    val launcher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+        onResult = { isGranted ->
+            if (isGranted) {
+                locationViewModel.fetchLocation()
+            } else {
+                Toast.makeText(
+                    context,
+                    "Permission denied. Please enable location in settings.",
+                    Toast.LENGTH_LONG
+                ).show()
+                val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+                val uri = Uri.fromParts("package", context.packageName, null)
+                intent.data = uri
+                context.startActivity(intent)
+            }
+        }
+    )
+
     Dialog(
         onDismissRequest = onDismiss,
-        properties = DialogProperties(usePlatformDefaultWidth = false)
+        properties = DialogProperties(
+            usePlatformDefaultWidth = false,
+            decorFitsSystemWindows = false
+        )
     ) {
         Card(
             shape = RoundedCornerShape(28.dp),
@@ -70,6 +128,7 @@ fun EditTransactionDialog(
                 .padding(24.dp)
                 .fillMaxWidth(0.95f)
                 .wrapContentHeight()
+                .imePadding()
         ) {
             Column(
                 modifier = Modifier
@@ -222,7 +281,17 @@ fun EditTransactionDialog(
                     modifier = Modifier.fillMaxWidth(),
                     trailingIcon = {
                         IconButton(
-                            onClick = { /* handle location */ }
+                            onClick = {
+                                hasUsedFetchedLocation = false
+                                if (ContextCompat.checkSelfPermission(
+                                        context, android.Manifest.permission.ACCESS_FINE_LOCATION
+                                    ) == PackageManager.PERMISSION_GRANTED
+                                ) {
+                                    locationViewModel.fetchLocation()
+                                } else {
+                                    launcher.launch(android.Manifest.permission.ACCESS_FINE_LOCATION)
+                                }
+                            }
                         ) {
                             Icon(Icons.Default.LocationOn, contentDescription = "Pick location")
                         }
@@ -263,7 +332,7 @@ fun EditTransactionDialog(
                                 type = type.lowercase(),
                                 amount = amount.toDoubleOrNull() ?: 0.0,
                                 categoryId = categoryId ?: transaction.categoryId,
-                                date = datePickerState.selectedDateMillis ?: transaction.date,
+                                date = finalDate,
                                 note = note,
                                 location = location
                             )
@@ -281,4 +350,15 @@ fun EditTransactionDialog(
             }
         }
     }
+}
+
+fun normalizeToDay(timestamp: Long): Long {
+    val cal = Calendar.getInstance().apply {
+        timeInMillis = timestamp
+        set(Calendar.HOUR_OF_DAY, 0)
+        set(Calendar.MINUTE, 0)
+        set(Calendar.SECOND, 0)
+        set(Calendar.MILLISECOND, 0)
+    }
+    return cal.timeInMillis
 }
