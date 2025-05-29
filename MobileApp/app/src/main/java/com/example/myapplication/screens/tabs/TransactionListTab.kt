@@ -27,16 +27,19 @@ import com.example.myapplication.screens.dialogs.EditTransactionDialog
 import com.example.myapplication.viewmodel.CategoryViewModel
 import com.example.myapplication.viewmodel.TransactionViewModel
 import androidx.compose.foundation.lazy.items
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.myapplication.screens.dialogs.CustomCategoryFilterDialog
 import com.example.myapplication.screens.dialogs.CustomDateRangeDialog
 import com.example.myapplication.ui.theme.PrimaryGreen
+import com.example.myapplication.viewmodel.LocationViewModel
 import java.util.Calendar
 
 
 @Composable
 fun TransactionListTab(
     transactionViewModel: TransactionViewModel,
-    categoryViewModel: CategoryViewModel
+    categoryViewModel: CategoryViewModel,
+    locationViewModel: LocationViewModel
 ) {
     var searchQuery by remember { mutableStateOf(TextFieldValue("")) }
     val tabTexts = listOf("All", "Today", "Week", "Month", "Custom")
@@ -308,7 +311,8 @@ fun TransactionListTab(
                 transactionViewModel.deleteTransaction(editingTransaction!!.transaction)
                 editingTransaction = null
             },
-            categoryList = categories
+            categoryList = categories,
+            locationViewModel = locationViewModel
         )
     }
 }
