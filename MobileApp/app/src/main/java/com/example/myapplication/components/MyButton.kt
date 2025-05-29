@@ -19,15 +19,16 @@ fun MyButton(
     onClick: () -> Unit,
     enabled: Boolean = true,
     backgroundColor: androidx.compose.ui.graphics.Color = PrimaryBlue,
+    modifier: Modifier = Modifier,
     content: @Composable RowScope.() -> Unit
 ) {
     Button(
         onClick = onClick,
-        modifier = Modifier.fillMaxWidth().height(48.dp),
         enabled = enabled,
         shape = RoundedCornerShape(10.dp),
-        colors =  ButtonDefaults.buttonColors(containerColor = backgroundColor)
-        ) {
+        colors = ButtonDefaults.buttonColors(containerColor = backgroundColor),
+        modifier = modifier.fillMaxWidth().height(48.dp)
+    ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.Center,
