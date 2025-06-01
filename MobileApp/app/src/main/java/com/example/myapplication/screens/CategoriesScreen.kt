@@ -7,6 +7,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -18,13 +20,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.example.myapplication.components.BackButton
 import com.example.myapplication.data.local.model.Category
 import com.example.myapplication.screens.dialogs.AddCategoryDialog
 import com.example.myapplication.screens.dialogs.EditCategoryDialog
 import com.example.myapplication.ui.theme.PrimaryBlue
 import com.example.myapplication.ui.theme.PrimaryGreen
 import com.example.myapplication.ui.theme.PrimaryRed
+import com.example.myapplication.ui.theme.White
 import com.example.myapplication.viewmodel.CategoryViewModel
 
 @Composable
@@ -41,19 +43,32 @@ fun CategoriesScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.White)
+            .background(White)
             .padding(horizontal = 18.dp)
     ) {
-        // Top bar
-        BackButton(onClick = { navController.popBackStack() })
-        Spacer(modifier = Modifier.height(16.dp))
-        Text(
-            "Your categories",
-            fontWeight = FontWeight.Bold,
-            fontSize = 26.sp,
-            color = Color(0xFF0A2540),
-            modifier = Modifier.align(Alignment.CenterHorizontally)
-        )
+        // Top bar (replace with your own BackButton if needed)
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 16.dp)
+        ) {
+            IconButton(onClick = { navController.popBackStack() }) {
+                Icon(
+                    imageVector = Icons.Default.ArrowBack,
+                    contentDescription = "Back",
+                    tint = PrimaryBlue
+                )
+            }
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                "Your categories",
+                fontWeight = FontWeight.Bold,
+                fontSize = 26.sp,
+                color = Color(0xFF0A2540),
+                modifier = Modifier.align(Alignment.CenterVertically)
+            )
+        }
         Spacer(modifier = Modifier.height(16.dp))
 
         val currentFilterIndex = filterOptions.indexOf(filter)
@@ -77,7 +92,6 @@ fun CategoriesScreen(
         ) {
             Text(filter, color = Color.White, fontWeight = FontWeight.Bold)
         }
-
 
         Spacer(modifier = Modifier.height(18.dp))
         LazyColumn(
@@ -104,7 +118,10 @@ fun CategoriesScreen(
             contentAlignment = Alignment.Center
         ) {
             FloatingActionButton(
-                onClick = { showAddDialog = true },
+                onClick = {
+                    viewModel.resetInputFields()
+                    showAddDialog = true
+                },
                 containerColor = Color(0xFF22304B)
             ) {
                 Text("+", color = Color.White, fontSize = 32.sp)
@@ -114,6 +131,7 @@ fun CategoriesScreen(
 
     if (showAddDialog) {
         AddCategoryDialog(
+            viewModel = viewModel,
             onDismiss = { showAddDialog = false },
             onSave = { type, title, icon, limit ->
                 viewModel.addCategory(
@@ -130,6 +148,7 @@ fun CategoriesScreen(
 
     if (editingCategory != null) {
         EditCategoryDialog(
+            viewModel = viewModel,
             initialCategory = editingCategory!!,
             onDismiss = { editingCategory = null },
             onDelete = {
@@ -153,10 +172,10 @@ fun CategoriesScreen(
 
 @Composable
 fun CategoryCard(category: Category, onClick: () -> Unit) {
-    val (bgColor) = when (category.type.lowercase()) {
-        "expense" -> Pair(Color(0xFFFFB3B3), Color(0xFFFFD600))
-        "income" -> Pair(Color(0xFF7ED957), Color(0xFF5D5FEF))
-        else -> Pair(Color(0xFFE0E0E0), Color.Gray)
+    val bgColor = when (category.type.lowercase()) {
+        "expense" -> Color(0xFFFFB3B3)
+        "income" -> Color(0xFF7ED957)
+        else -> Color(0xFFE0E0E0)
     }
     val iconShape: Shape = when (category.icon) {
         "◆" -> RoundedCornerShape(6.dp)
@@ -220,3 +239,4 @@ fun CategoryCard(category: Category, onClick: () -> Unit) {
         )
     }
 }
+

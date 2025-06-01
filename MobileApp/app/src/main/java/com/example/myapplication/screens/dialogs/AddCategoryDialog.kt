@@ -26,19 +26,17 @@ import com.example.myapplication.ui.theme.PrimaryBlue
 import com.example.myapplication.ui.theme.PrimaryRed
 import com.example.myapplication.ui.theme.White
 import com.example.myapplication.ui.theme.InputBlue
+import com.example.myapplication.viewmodel.CategoryViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddCategoryDialog(
+    viewModel: CategoryViewModel,
     onDismiss: () -> Unit,
     onSave: (String, String, String, String?) -> Unit
 ) {
-    var type by remember { mutableStateOf("") }
-    var title by remember { mutableStateOf("") }
-    var icon by remember { mutableStateOf("") }
-    var limit by remember { mutableStateOf("") }
-    var expanded by remember { mutableStateOf(false) }
     val options = listOf("expense", "income")
+    var expanded by remember { mutableStateOf(false) }
 
     Dialog(onDismissRequest = onDismiss) {
         Card(
@@ -56,7 +54,7 @@ fun AddCategoryDialog(
                     .imePadding(),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // Top Bar with Back Arrow and Title
+                // Top Bar
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.fillMaxWidth()
@@ -77,20 +75,22 @@ fun AddCategoryDialog(
                         modifier = Modifier.weight(1f),
                         textAlign = TextAlign.Center
                     )
-                    Spacer(Modifier.width(40.dp)) // To balance the back arrow
+                    Spacer(Modifier.width(40.dp))
                 }
 
-                // Type dropdown (default styling)
+                // Type Dropdown
                 ExposedDropdownMenuBox(
                     expanded = expanded,
                     onExpandedChange = { expanded = !expanded },
                 ) {
                     OutlinedTextField(
-                        value = type,
+                        value = viewModel.inputType,
                         onValueChange = {},
                         readOnly = true,
                         label = { Text("Type") },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
+                        isError = viewModel.typeError != null,
+                        supportingText = { viewModel.typeError?.let { Text(it, color = Color.Red, fontSize = 12.sp) } },
                         modifier = Modifier
                             .fillMaxWidth()
                             .menuAnchor()
@@ -103,7 +103,8 @@ fun AddCategoryDialog(
                             DropdownMenuItem(
                                 text = { Text(selectionOption) },
                                 onClick = {
-                                    type = selectionOption
+                                    viewModel.inputType = selectionOption
+                                    viewModel.validateInputs()
                                     expanded = false
                                 }
                             )
@@ -112,21 +113,31 @@ fun AddCategoryDialog(
                 }
 
                 OutlinedTextField(
-                    value = title,
-                    onValueChange = { title = it },
+                    value = viewModel.inputTitle,
+                    onValueChange = {
+                        viewModel.inputTitle = it
+                        viewModel.validateInputs()
+                    },
                     label = { Text("Title") },
+                    isError = viewModel.titleError != null,
+                    supportingText = { viewModel.titleError?.let { Text(it, color = Color.Red, fontSize = 12.sp) } },
                     modifier = Modifier.fillMaxWidth()
                 )
 
-                // Icon with plus button and space between (default styling)
+                // Icon with plus button
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     OutlinedTextField(
-                        value = icon,
-                        onValueChange = { icon = it },
+                        value = viewModel.inputIcon,
+                        onValueChange = {
+                            viewModel.inputIcon = it
+                            viewModel.validateInputs()
+                        },
                         label = { Text("Generate Icon") },
+                        isError = viewModel.iconError != null,
+                        supportingText = { viewModel.iconError?.let { Text(it, color = Color.Red, fontSize = 12.sp) } },
                         modifier = Modifier.weight(1f)
                     )
                     Spacer(modifier = Modifier.width(12.dp))
@@ -142,10 +153,15 @@ fun AddCategoryDialog(
                 }
 
                 OutlinedTextField(
-                    value = limit,
-                    onValueChange = { limit = it },
+                    value = viewModel.inputLimit,
+                    onValueChange = {
+                        viewModel.inputLimit = it
+                        viewModel.validateInputs()
+                    },
                     label = { Text("Limit") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    isError = viewModel.limitError != null,
+                    supportingText = { viewModel.limitError?.let { Text(it, color = Color.Red, fontSize = 12.sp) } },
                     modifier = Modifier.fillMaxWidth()
                 )
 
@@ -165,13 +181,26 @@ fun AddCategoryDialog(
                     }
                     Button(
                         onClick = {
-                            onSave(type, title, icon, limit.takeIf { it.isNotBlank() })
-                            onDismiss()
+                            if (viewModel.validateInputs()) {
+                                onSave(
+                                    viewModel.inputType,
+                                    viewModel.inputTitle,
+                                    viewModel.inputIcon,
+                                    viewModel.inputLimit.takeIf { it.isNotBlank() }
+                                )
+                                onDismiss()
+                            }
                         },
                         colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue),
                         modifier = Modifier.weight(1f),
                         shape = RoundedCornerShape(20.dp),
-                        enabled = type.isNotBlank() && title.isNotBlank() && icon.isNotBlank(),
+                        enabled = viewModel.inputType.isNotBlank() &&
+                                viewModel.inputTitle.isNotBlank() &&
+                                viewModel.inputIcon.isNotBlank() &&
+                                viewModel.typeError == null &&
+                                viewModel.titleError == null &&
+                                viewModel.iconError == null &&
+                                viewModel.limitError == null,
                         elevation = ButtonDefaults.buttonElevation(4.dp)
                     ) {
                         Text("Save", color = White, fontWeight = FontWeight.Bold)
@@ -181,4 +210,3 @@ fun AddCategoryDialog(
         }
     }
 }
-
