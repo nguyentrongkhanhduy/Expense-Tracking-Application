@@ -18,10 +18,10 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.*
-import androidx.compose.material3.ModalBottomSheetDefaults.properties
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -38,63 +38,53 @@ import com.example.myapplication.ui.theme.PrimaryBlue
 import com.example.myapplication.ui.theme.PrimaryRed
 import com.example.myapplication.ui.theme.White
 import com.example.myapplication.viewmodel.LocationViewModel
+import com.example.myapplication.viewmodel.TransactionViewModel
 import java.text.SimpleDateFormat
 import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditTransactionDialog(
+    viewModel: TransactionViewModel,
     transaction: Transaction,
     onDismiss: () -> Unit,
     onSave: (Transaction) -> Unit,
     onDelete: () -> Unit,
     categoryList: List<Category>,
     locationViewModel: LocationViewModel,
-    ) {
-    var amount by remember { mutableStateOf(transaction.amount.toString()) }
-    var name by remember { mutableStateOf(transaction.name) }
-    var type by remember { mutableStateOf(transaction.type.replaceFirstChar { it.uppercase() }) }
+) {
+    // Prefill ViewModel state ONCE per transaction
+    LaunchedEffect(transaction.transactionId) {
+        viewModel.resetInputFields(
+            amount = transaction.amount.toString(),
+            name = transaction.name,
+            type = transaction.type.replaceFirstChar { it.uppercase() },
+            categoryId = transaction.categoryId,
+            note = transaction.note ?: "",
+            date = transaction.date,
+            location = transaction.location ?: "",
+            imagePath = transaction.imageUrl
+        )
+    }
+
     val typeOptions = listOf("Expense", "Income")
     var expandedType by remember { mutableStateOf(false) }
-    var note by remember { mutableStateOf(transaction.note ?: "") }
-
-    var categoryId by remember { mutableStateOf<Long?>(transaction.categoryId) }
     var expandedCategory by remember { mutableStateOf(false) }
-    val filteredCategories = categoryList.filter { it.type.equals(type, ignoreCase = true) }
-    val selectedCategory = filteredCategories.find { it.categoryId == categoryId }
+
+    val filteredCategories = categoryList.filter { it.type.equals(viewModel.inputType, ignoreCase = true) }
+    val selectedCategory = filteredCategories.find { it.categoryId == viewModel.inputCategoryId }
 
     // Date picker state
-    val initialMillis = transaction.date
-    val datePickerState = rememberDatePickerState(initialSelectedDateMillis = initialMillis)
+    val datePickerState = rememberDatePickerState(initialSelectedDateMillis = viewModel.inputDate)
     var showDatePicker by remember { mutableStateOf(false) }
-    val formattedDate = SimpleDateFormat("MM/dd/yyyy", Locale.getDefault()).format(
-        Date(datePickerState.selectedDateMillis ?: initialMillis)
-    )
-
-    val newDate = datePickerState.selectedDateMillis ?: transaction.date
-    val finalDate = if (normalizeToDay(newDate) == normalizeToDay(transaction.date)) {
-        transaction.date
-    } else {
-        newDate
+    val formattedDate = remember(viewModel.inputDate) {
+        SimpleDateFormat("MM/dd/yyyy", Locale.getDefault()).format(
+            Date(viewModel.inputDate ?: System.currentTimeMillis())
+        )
     }
 
+    // Location logic
     val locationFromVM by locationViewModel.locationString.collectAsState()
-    var location by remember { mutableStateOf(transaction.location ?: "") }
-    var hasUsedFetchedLocation by remember { mutableStateOf(false) }
-    //reset the dialog location everytime opened
-    DisposableEffect(Unit) {
-        locationViewModel.clearLocation()
-        location = transaction.location ?: ""
-        hasUsedFetchedLocation = false
-        onDispose { }
-    }
-    LaunchedEffect(locationFromVM, hasUsedFetchedLocation) {
-        if (!locationFromVM.isNullOrEmpty() && !hasUsedFetchedLocation) {
-            location = locationFromVM as String
-            hasUsedFetchedLocation = true
-        }
-    }
-
     val context = LocalContext.current
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission(),
@@ -114,6 +104,11 @@ fun EditTransactionDialog(
             }
         }
     )
+    LaunchedEffect(locationFromVM) {
+        if (!locationFromVM.isNullOrEmpty()) {
+            viewModel.inputLocation = locationFromVM.toString()
+        }
+    }
 
     Dialog(
         onDismissRequest = onDismiss,
@@ -155,25 +150,35 @@ fun EditTransactionDialog(
                         modifier = Modifier.weight(1f),
                         textAlign = TextAlign.Center
                     )
-                    Spacer(Modifier.width(40.dp)) // To balance the back arrow
+                    Spacer(Modifier.width(40.dp))
                 }
 
                 OutlinedTextField(
-                    value = amount,
-                    onValueChange = { amount = it },
+                    value = viewModel.inputAmount,
+                    onValueChange = {
+                        viewModel.inputAmount = it
+                        viewModel.validateInputs()
+                    },
                     modifier = Modifier.fillMaxWidth(),
                     placeholder = { Text("Amount") },
                     textStyle = TextStyle(fontSize = 20.sp),
                     singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    isError = viewModel.amountError != null,
+                    supportingText = { viewModel.amountError?.let { Text(it, color = Color.Red) } }
                 )
 
                 OutlinedTextField(
-                    value = name,
-                    onValueChange = { name = it },
+                    value = viewModel.inputName,
+                    onValueChange = {
+                        viewModel.inputName = it
+                        viewModel.validateInputs()
+                    },
                     label = { Text("Name") },
                     modifier = Modifier.fillMaxWidth(),
-                    singleLine = true
+                    singleLine = true,
+                    isError = viewModel.nameError != null,
+                    supportingText = { viewModel.nameError?.let { Text(it, color = Color.Red) } }
                 )
 
                 // Type Dropdown
@@ -182,11 +187,13 @@ fun EditTransactionDialog(
                     onExpandedChange = { expandedType = !expandedType }
                 ) {
                     OutlinedTextField(
-                        value = type,
+                        value = viewModel.inputType,
                         onValueChange = {},
                         readOnly = true,
                         label = { Text("Type") },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedType) },
+                        isError = viewModel.typeError != null,
+                        supportingText = { viewModel.typeError?.let { Text(it, color = Color.Red) } },
                         modifier = Modifier
                             .fillMaxWidth()
                             .menuAnchor()
@@ -195,11 +202,15 @@ fun EditTransactionDialog(
                         expanded = expandedType,
                         onDismissRequest = { expandedType = false }
                     ) {
-                        typeOptions.forEach {
+                        typeOptions.forEach { option ->
                             DropdownMenuItem(
-                                text = { Text(it) },
+                                text = { Text(option) },
                                 onClick = {
-                                    type = it
+                                    if (viewModel.inputType != option) {
+                                        viewModel.inputType = option
+                                        viewModel.inputCategoryId = null // Reset category!
+                                        viewModel.validateInputs()
+                                    }
                                     expandedType = false
                                 }
                             )
@@ -218,6 +229,8 @@ fun EditTransactionDialog(
                         readOnly = true,
                         label = { Text("Category") },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedCategory) },
+                        isError = viewModel.categoryError != null,
+                        supportingText = { viewModel.categoryError?.let { Text(it, color = Color.Red) } },
                         modifier = Modifier
                             .fillMaxWidth()
                             .menuAnchor()
@@ -230,7 +243,8 @@ fun EditTransactionDialog(
                             DropdownMenuItem(
                                 text = { Text("${it.icon} ${it.title}") },
                                 onClick = {
-                                    categoryId = it.categoryId
+                                    viewModel.inputCategoryId = it.categoryId
+                                    viewModel.validateInputs()
                                     expandedCategory = false
                                 }
                             )
@@ -239,14 +253,13 @@ fun EditTransactionDialog(
                 }
 
                 OutlinedTextField(
-                    value = note,
-                    onValueChange = { note = it },
+                    value = viewModel.inputNote,
+                    onValueChange = { viewModel.inputNote = it },
                     label = { Text("Note") },
                     modifier = Modifier.fillMaxWidth(),
                     maxLines = 3
                 )
 
-                // Date field with calendar icon
                 OutlinedTextField(
                     value = formattedDate,
                     onValueChange = {},
@@ -263,7 +276,10 @@ fun EditTransactionDialog(
                     DatePickerDialog(
                         onDismissRequest = { showDatePicker = false },
                         confirmButton = {
-                            TextButton(onClick = { showDatePicker = false }) { Text("OK") }
+                            TextButton(onClick = {
+                                showDatePicker = false
+                                viewModel.inputDate = datePickerState.selectedDateMillis
+                            }) { Text("OK") }
                         },
                         dismissButton = {
                             TextButton(onClick = { showDatePicker = false }) { Text("Cancel") }
@@ -273,16 +289,19 @@ fun EditTransactionDialog(
                     }
                 }
 
-                // Location field with trailing icon
                 OutlinedTextField(
-                    value = location,
-                    onValueChange = { location = it },
+                    value = viewModel.inputLocation,
+                    onValueChange = {
+                        viewModel.inputLocation = it
+                        viewModel.validateInputs()
+                    },
                     label = { Text("Location") },
                     modifier = Modifier.fillMaxWidth(),
+                    isError = viewModel.locationError != null,
+                    supportingText = { viewModel.locationError?.let { Text(it, color = Color.Red) } },
                     trailingIcon = {
                         IconButton(
                             onClick = {
-                                hasUsedFetchedLocation = false
                                 if (ContextCompat.checkSelfPermission(
                                         context, android.Manifest.permission.ACCESS_FINE_LOCATION
                                     ) == PackageManager.PERMISSION_GRANTED
@@ -298,15 +317,6 @@ fun EditTransactionDialog(
                     }
                 )
 
-                // Upload button (optional)
-                Button(
-                    onClick = { /* handle upload */ },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue),
-                    shape = RoundedCornerShape(20.dp)
-                ) {
-                    Text("Upload photo/receipt", color = White)
-                }
 
                 // Action Buttons
                 Row(
@@ -327,18 +337,22 @@ fun EditTransactionDialog(
                     }
                     Button(
                         onClick = {
-                            val updatedTransaction = transaction.copy(
-                                name = name,
-                                type = type.lowercase(),
-                                amount = amount.toDoubleOrNull() ?: 0.0,
-                                categoryId = categoryId ?: transaction.categoryId,
-                                date = finalDate,
-                                note = note,
-                                location = location
-                            )
-                            onSave(updatedTransaction)
-                            onDismiss()
+                            if (viewModel.validateInputs()) {
+                                val updatedTransaction = transaction.copy(
+                                    name = viewModel.inputName,
+                                    type = viewModel.inputType.lowercase(),
+                                    amount = viewModel.inputAmount.toDoubleOrNull() ?: 0.0,
+                                    categoryId = viewModel.inputCategoryId ?: transaction.categoryId,
+                                    date = viewModel.inputDate ?: transaction.date,
+                                    note = viewModel.inputNote,
+                                    location = viewModel.inputLocation
+                                )
+                                onSave(updatedTransaction)
+                                viewModel.resetInputFields()
+                                onDismiss()
+                            }
                         },
+                        enabled = viewModel.validateInputs(),
                         modifier = Modifier.weight(1f),
                         colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue),
                         shape = RoundedCornerShape(20.dp),
@@ -350,15 +364,4 @@ fun EditTransactionDialog(
             }
         }
     }
-}
-
-fun normalizeToDay(timestamp: Long): Long {
-    val cal = Calendar.getInstance().apply {
-        timeInMillis = timestamp
-        set(Calendar.HOUR_OF_DAY, 0)
-        set(Calendar.MINUTE, 0)
-        set(Calendar.SECOND, 0)
-        set(Calendar.MILLISECOND, 0)
-    }
-    return cal.timeInMillis
 }

@@ -36,7 +36,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.FloatingActionButton
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.myapplication.data.local.model.TransactionWithCategory
 import com.example.myapplication.screens.dialogs.EditTransactionDialog
 import com.example.myapplication.screens.dialogs.AddTransactionDialog
@@ -87,7 +86,10 @@ fun HomeScreen(
         floatingActionButton = {
             if (selectedTab == 0) {
                 FloatingActionButton(
-                    onClick = { showAddDialog = true },
+                    onClick = {
+                        transactionViewModel.resetInputFields()
+                        showAddDialog = true
+                              },
                     containerColor = PrimaryBlue
                 ) {
                     Icon(
@@ -123,7 +125,9 @@ fun HomeScreen(
                 1 -> TransactionListTab(
                     transactionViewModel = transactionViewModel,
                     categoryViewModel = categoryViewModel,
-                    locationViewModel = locationViewModel
+                    locationViewModel = locationViewModel,
+                    authViewModel = authViewModel,
+
                 )
                 2 -> AnalyticsTab()
                 3 -> ProfileTab(navController = navController)
@@ -133,6 +137,7 @@ fun HomeScreen(
 
     if (showAddDialog) {
         AddTransactionDialog(
+            viewModel = transactionViewModel,
             onDismiss = { showAddDialog = false },
             onSave = {
                 transactionViewModel.addTransaction(it)
@@ -157,7 +162,8 @@ fun HomeScreen(
                 editingTransaction = null
             },
             categoryList = categories,
-            locationViewModel = locationViewModel
+            locationViewModel = locationViewModel,
+            viewModel = transactionViewModel,
         )
     }
 }
