@@ -36,7 +36,9 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.ui.platform.LocalContext
 import com.example.myapplication.data.local.model.TransactionWithCategory
+import com.example.myapplication.helpers.removeFromInternalStorage
 import com.example.myapplication.screens.dialogs.EditTransactionDialog
 import com.example.myapplication.screens.dialogs.AddTransactionDialog
 import com.example.myapplication.screens.tabs.AnalyticsTab
@@ -158,6 +160,10 @@ fun HomeScreen(
                 editingTransaction = null
             },
             onDelete = {
+                val imagePath = editingTransaction!!.transaction.imageUrl
+                if (imagePath?.startsWith("bitmap:") == true) {
+                    removeFromInternalStorage(imagePath)
+                }
                 transactionViewModel.deleteTransaction(editingTransaction!!.transaction)
                 editingTransaction = null
             },

@@ -1,12 +1,7 @@
 package com.example.myapplication.screens.dialogs
 
-import android.content.Context
-import android.content.Intent
-import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.net.Uri
-import android.provider.Settings
-import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -36,10 +31,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import androidx.core.content.ContextCompat
 import coil.compose.rememberAsyncImagePainter
 import com.example.myapplication.data.local.model.Category
 import com.example.myapplication.data.local.model.Transaction
+import com.example.myapplication.helpers.rememberCameraPermissionHandler
+import com.example.myapplication.helpers.rememberLocationPermissionHandler
+import com.example.myapplication.helpers.saveBitmapToInternalStorage
 import com.example.myapplication.ui.theme.PrimaryBlue
 import com.example.myapplication.ui.theme.PrimaryRed
 import com.example.myapplication.ui.theme.White
@@ -47,8 +44,6 @@ import com.example.myapplication.ui.theme.ButtonBlue
 import com.example.myapplication.viewmodel.AuthViewModel
 import com.example.myapplication.viewmodel.LocationViewModel
 import com.example.myapplication.viewmodel.TransactionViewModel
-import java.io.File
-import java.io.FileOutputStream
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -72,11 +67,11 @@ fun AddTransactionDialog(
     var note by remember { mutableStateOf("") }
     var selectedImageBitmap by remember { mutableStateOf<Bitmap?>(null) }
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
-    var imagePath by remember { mutableStateOf<String?>(null) }
 
 //    var categoryId by remember { mutableStateOf<Long?>(null) }
     var expandedCategory by remember { mutableStateOf(false) }
-    val filteredCategories = categoryList.filter { it.type.equals(viewModel.inputType, ignoreCase = true) }
+    val filteredCategories =
+        categoryList.filter { it.type.equals(viewModel.inputType, ignoreCase = true) }
     val selectedCategory = filteredCategories.find { it.categoryId == viewModel.inputCategoryId }
 
     val datePickerState = rememberDatePickerState()
@@ -86,12 +81,10 @@ fun AddTransactionDialog(
     )
 
     val locationFromVM by locationViewModel.locationString.collectAsState()
-    var manualLocation by remember { mutableStateOf("") }
     var hasUsedFetchedLocation by remember { mutableStateOf(false) }
     //reset the dialog location everytime opened
     DisposableEffect(Unit) {
         locationViewModel.clearLocation()
-        manualLocation = ""
         hasUsedFetchedLocation = false
         onDispose { }
     }
@@ -104,106 +97,45 @@ fun AddTransactionDialog(
     }
 
 
-
     val context = LocalContext.current
-    val launcher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission(),
-        onResult = { isGranted ->
-            if (isGranted) {
-                locationViewModel.fetchLocation()
-            } else {
-                Toast.makeText(
-                    context,
-                    "Permission denied. Please enable location in settings.",
-                    Toast.LENGTH_LONG
-                ).show()
-                val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
-                val uri = Uri.fromParts("package", context.packageName, null)
-                intent.data = uri
-                context.startActivity(intent)
-            }
-        }
-    )
+    val locationPermissionHandler = rememberLocationPermissionHandler(locationViewModel)
 
     var showImagePickerDialog by remember { mutableStateOf(false) }
-    val cameraPermission = android.Manifest.permission.CAMERA
 
+
+    val cameraPermissionLauncher =
+        rememberCameraPermissionHandler(onSuccess = { showImagePickerDialog = true })
 
     val cameraLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicturePreview(),
         onResult = { bitmap ->
-            val path = bitmap?.let { saveBitmapToInternalStorage(context, it) }
-            selectedImageBitmap = bitmap
-            selectedImageUri = null
-            imagePath = path
+            if (bitmap != null) {
+                val path = bitmap.let { saveBitmapToInternalStorage(context, it)?.let { saved -> "bitmap:$saved" } }
+                selectedImageBitmap = bitmap
+                selectedImageUri = null
+                viewModel.inputImagePath = path
+            }
         }
     )
 
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent(),
         onResult = { uri ->
-            selectedImageUri = uri
-            selectedImageBitmap = null
-        }
-    )
-
-    val permissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission(),
-        onResult = { isGranted ->
-            if (isGranted) {
-                showImagePickerDialog = true
-            } else {
-                Toast.makeText(
-                    context,
-                    "Camera permission denied. Please enable it in settings.",
-                    Toast.LENGTH_LONG
-                ).show()
+            if (uri != null) {
+                val path = uri.toString().let { "uri:$it" }
+                selectedImageUri = uri
+                selectedImageBitmap = null
+                viewModel.inputImagePath = path
             }
         }
     )
 
     if (showImagePickerDialog) {
-        AlertDialog(
-            onDismissRequest = { showImagePickerDialog = false },
-            confirmButton = {},
-            dismissButton = {},
-            containerColor = Color.White,
-            title = {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text("Upload Photo/Receipt", fontWeight = FontWeight.Bold, color = Color.Black)
-                }
-            },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                    Button(
-                        onClick = {
-                            cameraLauncher.launch(null)
-                            showImagePickerDialog = false
-                        },
-                        colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue),
-                        shape = RoundedCornerShape(16.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text("Take a Photo", color = Color.White)
-                    }
-                    Button(
-                        onClick = {
-                            galleryLauncher.launch("image/*")
-                            showImagePickerDialog = false
-                        },
-                        colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue),
-                        shape = RoundedCornerShape(16.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text("Choose from Library", color = Color.White)
-                    }
-                }
-
-            }
+        ImagePickerDialog(
+            onDismiss = { showImagePickerDialog = false },
+            context = context,
+            cameraLauncher = cameraLauncher,
+            galleryLauncher = galleryLauncher
         )
     }
 
@@ -226,6 +158,7 @@ fun AddTransactionDialog(
                 modifier = Modifier
                     .background(White)
                     .padding(20.dp)
+                    .heightIn(min = 100.dp, max = 600.dp)
                     .verticalScroll(rememberScrollState())
                     .imePadding(),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -291,9 +224,18 @@ fun AddTransactionDialog(
                         readOnly = true,
                         label = { Text("Type") },
                         isError = viewModel.typeError != null,
-                        supportingText = { viewModel.typeError?.let { Text(it, color = Color.Red) } },
+                        supportingText = {
+                            viewModel.typeError?.let {
+                                Text(
+                                    it,
+                                    color = Color.Red
+                                )
+                            }
+                        },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedType) },
-                        modifier = Modifier.fillMaxWidth().menuAnchor()
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .menuAnchor()
                     )
                     ExposedDropdownMenu(
                         expanded = expandedType,
@@ -319,14 +261,24 @@ fun AddTransactionDialog(
                     onExpandedChange = { expandedCategory = !expandedCategory }
                 ) {
                     OutlinedTextField(
-                        value = selectedCategory?.let { "${it.icon} ${it.title}" } ?: "Select Category",
+                        value = selectedCategory?.let { "${it.icon} ${it.title}" }
+                            ?: "Select Category",
                         onValueChange = {},
                         readOnly = true,
                         label = { Text("Category") },
                         isError = viewModel.categoryError != null,
-                        supportingText = { viewModel.categoryError?.let { Text(it, color = Color.Red) } },
+                        supportingText = {
+                            viewModel.categoryError?.let {
+                                Text(
+                                    it,
+                                    color = Color.Red
+                                )
+                            }
+                        },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedCategory) },
-                        modifier = Modifier.fillMaxWidth().menuAnchor()
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .menuAnchor()
                     )
                     ExposedDropdownMenu(
                         expanded = expandedCategory,
@@ -390,20 +342,20 @@ fun AddTransactionDialog(
                     },
                     label = { Text("Location") },
                     isError = viewModel.locationError != null,
-                    supportingText = { viewModel.locationError?.let { Text(it, color = Color.Red) } },
+                    supportingText = {
+                        viewModel.locationError?.let {
+                            Text(
+                                it,
+                                color = Color.Red
+                            )
+                        }
+                    },
                     modifier = Modifier.fillMaxWidth(),
                     trailingIcon = {
                         IconButton(
                             onClick = {
                                 hasUsedFetchedLocation = false
-                                if (ContextCompat.checkSelfPermission(
-                                        context, android.Manifest.permission.ACCESS_FINE_LOCATION
-                                    ) == PackageManager.PERMISSION_GRANTED
-                                ) {
-                                    locationViewModel.fetchLocation()
-                                } else {
-                                    launcher.launch(android.Manifest.permission.ACCESS_FINE_LOCATION)
-                                }
+                                locationPermissionHandler()
                             }
                         ) {
                             Icon(Icons.Default.LocationOn, contentDescription = "Pick location")
@@ -412,27 +364,16 @@ fun AddTransactionDialog(
                 )
 
                 // Upload button (optional)
-                if (user != null) {
-                    Button(
-                        onClick = {
-                            if (ContextCompat.checkSelfPermission(
-                                    context,
-                                    android.Manifest.permission.CAMERA
-                                )
-                                != PackageManager.PERMISSION_GRANTED
-                            ) {
-                                permissionLauncher.launch(android.Manifest.permission.CAMERA)
-                            } else {
-                                showImagePickerDialog = true
-                            }
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue),
-                        shape = RoundedCornerShape(20.dp)
-                    ) {
-                        Text("Upload photo/receipt", color = White)
-                    }
+//                if (user != null) {
+                Button(
+                    onClick = cameraPermissionLauncher,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue),
+                    shape = RoundedCornerShape(20.dp)
+                ) {
+                    Text("Add photo/receipt", color = White)
                 }
+//                }
 
                 selectedImageBitmap?.let {
                     Image(
@@ -504,17 +445,3 @@ fun AddTransactionDialog(
     }
 }
 
-fun saveBitmapToInternalStorage(context: Context, bitmap: Bitmap): String? {
-    return try {
-        val filename = "receipt_${System.currentTimeMillis()}.jpg"
-        val file = File(context.filesDir, filename)
-        val outputStream = FileOutputStream(file)
-        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream)
-        outputStream.flush()
-        outputStream.close()
-        file.absolutePath // return file path
-    } catch (e: Exception) {
-        e.printStackTrace()
-        null
-    }
-}
