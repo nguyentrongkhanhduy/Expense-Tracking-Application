@@ -27,6 +27,7 @@ import com.example.myapplication.screens.dialogs.EditTransactionDialog
 import com.example.myapplication.viewmodel.CategoryViewModel
 import com.example.myapplication.viewmodel.TransactionViewModel
 import androidx.compose.foundation.lazy.items
+import com.example.myapplication.helpers.removeFromInternalStorage
 import com.example.myapplication.screens.dialogs.AddTransactionDialog
 import com.example.myapplication.screens.dialogs.CustomCategoryFilterDialog
 import com.example.myapplication.screens.dialogs.CustomDateRangeDialog
@@ -343,6 +344,10 @@ fun TransactionListTab(
                     editingTransaction = null
                 },
                 onDelete = {
+                    val imagePath = editingTransaction!!.transaction.imageUrl
+                    if (imagePath?.startsWith("bitmap:") == true) {
+                        removeFromInternalStorage(imagePath)
+                    }
                     transactionViewModel.deleteTransaction(editingTransaction!!.transaction)
                     editingTransaction = null
                 },
