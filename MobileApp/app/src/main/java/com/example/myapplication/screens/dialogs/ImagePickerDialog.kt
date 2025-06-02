@@ -29,7 +29,7 @@ fun ImagePickerDialog(
     onDismiss: () -> Unit,
     context: Context,
     cameraLauncher: ManagedActivityResultLauncher<Void?, Bitmap?>,
-    galleryLauncher: ManagedActivityResultLauncher<String, Uri?>,
+    galleryLauncher: ManagedActivityResultLauncher<Array<String>, Uri?>,
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -60,7 +60,7 @@ fun ImagePickerDialog(
                 }
                 Button(
                     onClick = {
-                        galleryLauncher.launch("image/*")
+                        galleryLauncher.launch(arrayOf("image/*"))
                         onDismiss()
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue),

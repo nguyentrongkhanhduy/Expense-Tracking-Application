@@ -1,5 +1,6 @@
 package com.example.myapplication.screens.dialogs
 
+import android.content.Intent
 import android.graphics.Bitmap
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -139,9 +140,14 @@ fun EditTransactionDialog(
     )
 
     val galleryLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent(),
+        contract = ActivityResultContracts.OpenDocument(),
         onResult = { uri ->
             if (uri != null) {
+                context.contentResolver.takePersistableUriPermission(
+                    uri,
+                    Intent.FLAG_GRANT_READ_URI_PERMISSION
+                )
+
                 val path = uri.toString().let { "uri:$it" }
                 selectedImageUri = uri
                 selectedImageBitmap = null
