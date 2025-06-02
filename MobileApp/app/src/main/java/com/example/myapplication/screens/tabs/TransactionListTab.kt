@@ -27,6 +27,7 @@ import com.example.myapplication.screens.dialogs.EditTransactionDialog
 import com.example.myapplication.viewmodel.CategoryViewModel
 import com.example.myapplication.viewmodel.TransactionViewModel
 import androidx.compose.foundation.lazy.items
+import androidx.compose.ui.platform.LocalContext
 import com.example.myapplication.helpers.removeFromInternalStorage
 import com.example.myapplication.screens.dialogs.AddTransactionDialog
 import com.example.myapplication.screens.dialogs.CustomCategoryFilterDialog
@@ -64,6 +65,8 @@ fun TransactionListTab(
     var selectedCategoryToFilter by remember { mutableStateOf<Long?>(null) }
 
     var showAddDialog by remember { mutableStateOf(false) }
+
+    val context = LocalContext.current
 
     LaunchedEffect(selectedTab) {
         val calendar = Calendar.getInstance()
@@ -328,6 +331,7 @@ fun TransactionListTab(
                 onSave = {
                     transactionViewModel.addTransaction(it)
                     showAddDialog = false
+                    transactionViewModel.checkAndNotifyBudget(context, it)
                 },
                 categoryList = categories,
                 locationViewModel = locationViewModel,
@@ -342,6 +346,7 @@ fun TransactionListTab(
                 onSave = { updatedTransaction ->
                     transactionViewModel.updateTransaction(updatedTransaction)
                     editingTransaction = null
+                    transactionViewModel.checkAndNotifyBudget(context, updatedTransaction)
                 },
                 onDelete = {
                     val imagePath = editingTransaction!!.transaction.imageUrl

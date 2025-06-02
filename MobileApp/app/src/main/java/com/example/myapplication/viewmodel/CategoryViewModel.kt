@@ -15,12 +15,12 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 class CategoryViewModel(
-    private val repository: CategoryRepository,
+    private val categoryRepository: CategoryRepository,
     private val transactionRepository: TransactionRepository
 ) : ViewModel() {
 
     // Category list state
-    private val _categories: StateFlow<List<Category>> = repository.getAllCategories()
+    private val _categories: StateFlow<List<Category>> = categoryRepository.getAllCategories()
         .map { it.sortedBy { cat -> cat.categoryId } }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
     val categories: StateFlow<List<Category>> = _categories
@@ -45,7 +45,7 @@ class CategoryViewModel(
 
     private fun initializeDefaults() {
         viewModelScope.launch {
-            repository.getAllCategories().collect { list ->
+            categoryRepository.getAllCategories().collect { list ->
                 if (list.isEmpty()) {
                     addCategory(Category(title = "Food", icon = "🍔", type = "expense"))
                     addCategory(Category(title = "Salary", icon = "💰", type = "income"))
@@ -100,7 +100,7 @@ class CategoryViewModel(
 
     fun addCategory(category: Category) {
         viewModelScope.launch {
-            repository.insertCategory(category)
+            categoryRepository.insertCategory(category)
         }
     }
 
@@ -112,13 +112,13 @@ class CategoryViewModel(
         viewModelScope.launch {
             val fallbackId = if (category.type == "expense") -1L else -2L
             transactionRepository.reassignCategory(category.categoryId, fallbackId)
-            repository.deleteCategory(category)
+            categoryRepository.deleteCategory(category)
         }
     }
 
     fun updateCategory(category: Category) {
         viewModelScope.launch {
-            repository.updateCategory(category)
+            categoryRepository.updateCategory(category)
         }
     }
 }
