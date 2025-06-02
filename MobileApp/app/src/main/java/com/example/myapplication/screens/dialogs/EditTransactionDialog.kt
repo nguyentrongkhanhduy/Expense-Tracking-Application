@@ -1,12 +1,5 @@
 package com.example.myapplication.screens.dialogs
 
-import android.content.Intent
-import android.content.pm.PackageManager
-import android.net.Uri
-import android.provider.Settings
-import android.widget.Toast
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -31,9 +24,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import androidx.core.content.ContextCompat
 import com.example.myapplication.data.local.model.Category
 import com.example.myapplication.data.local.model.Transaction
+import com.example.myapplication.helpers.rememberLocationPermissionHandler
 import com.example.myapplication.ui.theme.PrimaryBlue
 import com.example.myapplication.ui.theme.PrimaryRed
 import com.example.myapplication.ui.theme.White
@@ -71,7 +64,8 @@ fun EditTransactionDialog(
     var expandedType by remember { mutableStateOf(false) }
     var expandedCategory by remember { mutableStateOf(false) }
 
-    val filteredCategories = categoryList.filter { it.type.equals(viewModel.inputType, ignoreCase = true) }
+    val filteredCategories =
+        categoryList.filter { it.type.equals(viewModel.inputType, ignoreCase = true) }
     val selectedCategory = filteredCategories.find { it.categoryId == viewModel.inputCategoryId }
 
     // Date picker state
@@ -85,28 +79,20 @@ fun EditTransactionDialog(
 
     // Location logic
     val locationFromVM by locationViewModel.locationString.collectAsState()
-    val context = LocalContext.current
-    val launcher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission(),
-        onResult = { isGranted ->
-            if (isGranted) {
-                locationViewModel.fetchLocation()
-            } else {
-                Toast.makeText(
-                    context,
-                    "Permission denied. Please enable location in settings.",
-                    Toast.LENGTH_LONG
-                ).show()
-                val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
-                val uri = Uri.fromParts("package", context.packageName, null)
-                intent.data = uri
-                context.startActivity(intent)
-            }
-        }
-    )
-    LaunchedEffect(locationFromVM) {
-        if (!locationFromVM.isNullOrEmpty()) {
+    val locationPermissionHandler = rememberLocationPermissionHandler(locationViewModel)
+    var hasUsedFetchedLocation by remember { mutableStateOf(false) }
+
+    DisposableEffect(Unit) {
+        locationViewModel.clearLocation()
+        hasUsedFetchedLocation = false
+        onDispose { }
+    }
+
+    LaunchedEffect(locationFromVM, hasUsedFetchedLocation) {
+        if (!locationFromVM.isNullOrEmpty() && !hasUsedFetchedLocation) {
             viewModel.inputLocation = locationFromVM.toString()
+            viewModel.validateInputs()
+            hasUsedFetchedLocation = true
         }
     }
 
@@ -139,7 +125,11 @@ fun EditTransactionDialog(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     IconButton(onClick = onDismiss) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = PrimaryBlue)
+                        Icon(
+                            Icons.Default.ArrowBack,
+                            contentDescription = "Back",
+                            tint = PrimaryBlue
+                        )
                     }
                     Spacer(Modifier.width(8.dp))
                     Text(
@@ -193,7 +183,14 @@ fun EditTransactionDialog(
                         label = { Text("Type") },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedType) },
                         isError = viewModel.typeError != null,
-                        supportingText = { viewModel.typeError?.let { Text(it, color = Color.Red) } },
+                        supportingText = {
+                            viewModel.typeError?.let {
+                                Text(
+                                    it,
+                                    color = Color.Red
+                                )
+                            }
+                        },
                         modifier = Modifier
                             .fillMaxWidth()
                             .menuAnchor()
@@ -224,13 +221,21 @@ fun EditTransactionDialog(
                     onExpandedChange = { expandedCategory = !expandedCategory }
                 ) {
                     OutlinedTextField(
-                        value = selectedCategory?.let { "${it.icon} ${it.title}" } ?: "Select Category",
+                        value = selectedCategory?.let { "${it.icon} ${it.title}" }
+                            ?: "Select Category",
                         onValueChange = {},
                         readOnly = true,
                         label = { Text("Category") },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedCategory) },
                         isError = viewModel.categoryError != null,
-                        supportingText = { viewModel.categoryError?.let { Text(it, color = Color.Red) } },
+                        supportingText = {
+                            viewModel.categoryError?.let {
+                                Text(
+                                    it,
+                                    color = Color.Red
+                                )
+                            }
+                        },
                         modifier = Modifier
                             .fillMaxWidth()
                             .menuAnchor()
@@ -298,18 +303,19 @@ fun EditTransactionDialog(
                     label = { Text("Location") },
                     modifier = Modifier.fillMaxWidth(),
                     isError = viewModel.locationError != null,
-                    supportingText = { viewModel.locationError?.let { Text(it, color = Color.Red) } },
+                    supportingText = {
+                        viewModel.locationError?.let {
+                            Text(
+                                it,
+                                color = Color.Red
+                            )
+                        }
+                    },
                     trailingIcon = {
                         IconButton(
                             onClick = {
-                                if (ContextCompat.checkSelfPermission(
-                                        context, android.Manifest.permission.ACCESS_FINE_LOCATION
-                                    ) == PackageManager.PERMISSION_GRANTED
-                                ) {
-                                    locationViewModel.fetchLocation()
-                                } else {
-                                    launcher.launch(android.Manifest.permission.ACCESS_FINE_LOCATION)
-                                }
+                                hasUsedFetchedLocation = false
+                                locationPermissionHandler()
                             }
                         ) {
                             Icon(Icons.Default.LocationOn, contentDescription = "Pick location")
@@ -342,7 +348,8 @@ fun EditTransactionDialog(
                                     name = viewModel.inputName,
                                     type = viewModel.inputType.lowercase(),
                                     amount = viewModel.inputAmount.toDoubleOrNull() ?: 0.0,
-                                    categoryId = viewModel.inputCategoryId ?: transaction.categoryId,
+                                    categoryId = viewModel.inputCategoryId
+                                        ?: transaction.categoryId,
                                     date = viewModel.inputDate ?: transaction.date,
                                     note = viewModel.inputNote,
                                     location = viewModel.inputLocation

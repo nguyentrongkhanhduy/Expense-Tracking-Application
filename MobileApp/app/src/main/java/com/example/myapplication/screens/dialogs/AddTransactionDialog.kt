@@ -1,11 +1,9 @@
 package com.example.myapplication.screens.dialogs
 
 import android.content.Context
-import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.net.Uri
-import android.provider.Settings
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -40,6 +38,7 @@ import androidx.core.content.ContextCompat
 import coil.compose.rememberAsyncImagePainter
 import com.example.myapplication.data.local.model.Category
 import com.example.myapplication.data.local.model.Transaction
+import com.example.myapplication.helpers.rememberLocationPermissionHandler
 import com.example.myapplication.ui.theme.PrimaryBlue
 import com.example.myapplication.ui.theme.PrimaryRed
 import com.example.myapplication.ui.theme.White
@@ -86,12 +85,10 @@ fun AddTransactionDialog(
     )
 
     val locationFromVM by locationViewModel.locationString.collectAsState()
-    var manualLocation by remember { mutableStateOf("") }
     var hasUsedFetchedLocation by remember { mutableStateOf(false) }
     //reset the dialog location everytime opened
     DisposableEffect(Unit) {
         locationViewModel.clearLocation()
-        manualLocation = ""
         hasUsedFetchedLocation = false
         onDispose { }
     }
@@ -106,24 +103,7 @@ fun AddTransactionDialog(
 
 
     val context = LocalContext.current
-    val launcher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission(),
-        onResult = { isGranted ->
-            if (isGranted) {
-                locationViewModel.fetchLocation()
-            } else {
-                Toast.makeText(
-                    context,
-                    "Permission denied. Please enable location in settings.",
-                    Toast.LENGTH_LONG
-                ).show()
-                val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
-                val uri = Uri.fromParts("package", context.packageName, null)
-                intent.data = uri
-                context.startActivity(intent)
-            }
-        }
-    )
+    val locationPermissionHandler = rememberLocationPermissionHandler(locationViewModel)
 
     var showImagePickerDialog by remember { mutableStateOf(false) }
     val cameraPermission = android.Manifest.permission.CAMERA
@@ -396,14 +376,7 @@ fun AddTransactionDialog(
                         IconButton(
                             onClick = {
                                 hasUsedFetchedLocation = false
-                                if (ContextCompat.checkSelfPermission(
-                                        context, android.Manifest.permission.ACCESS_FINE_LOCATION
-                                    ) == PackageManager.PERMISSION_GRANTED
-                                ) {
-                                    locationViewModel.fetchLocation()
-                                } else {
-                                    launcher.launch(android.Manifest.permission.ACCESS_FINE_LOCATION)
-                                }
+                                locationPermissionHandler()
                             }
                         ) {
                             Icon(Icons.Default.LocationOn, contentDescription = "Pick location")
