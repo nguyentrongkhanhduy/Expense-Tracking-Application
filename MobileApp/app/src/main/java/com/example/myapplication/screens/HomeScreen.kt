@@ -76,6 +76,8 @@ fun HomeScreen(
 
     var selectedTab by remember { mutableStateOf(0) }
 
+    val context = LocalContext.current
+
     LaunchedEffect(isSignedIn) {
         if (!isSignedIn && !isGuest) {
             navController.navigate("login?showGuest=true") {
@@ -132,7 +134,12 @@ fun HomeScreen(
 
                 )
                 2 -> AnalyticsTab()
-                3 -> ProfileTab(navController = navController)
+                3 -> ProfileTab(navController = navController, onLogout = {
+                    authViewModel.signOut()
+                    navController.navigate("login?showGuestOption=true") {
+                        popUpTo(0)
+                    }
+                })
             }
         }
     }
@@ -144,6 +151,7 @@ fun HomeScreen(
             onSave = {
                 transactionViewModel.addTransaction(it)
                 showAddDialog = false
+                transactionViewModel.checkAndNotifyBudget(context, it)
             },
             categoryList = categories,
             locationViewModel = locationViewModel,
@@ -158,6 +166,7 @@ fun HomeScreen(
             onSave = { updatedTransaction ->
                 transactionViewModel.updateTransaction(updatedTransaction)
                 editingTransaction = null
+                transactionViewModel.checkAndNotifyBudget(context, updatedTransaction)
             },
             onDelete = {
                 val imagePath = editingTransaction!!.transaction.imageUrl

@@ -25,4 +25,7 @@ interface TransactionDao {
     @Transaction
     @Query("SELECT * FROM 'Transaction' ORDER BY date DESC")
     fun getAllTransactionsWithCategory(): Flow<List<TransactionWithCategory>>
+
+    @Query("SELECT SUM(amount) FROM 'Transaction' WHERE type = 'Expense' AND categoryId = :categoryId")
+    fun getTotalAmountForCategory(categoryId: Long): Double
 }
