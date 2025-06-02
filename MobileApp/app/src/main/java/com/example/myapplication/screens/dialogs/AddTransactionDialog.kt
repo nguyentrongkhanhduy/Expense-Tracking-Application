@@ -46,6 +46,7 @@ import com.example.myapplication.ui.theme.White
 import com.example.myapplication.ui.theme.ButtonBlue
 import com.example.myapplication.viewmodel.AuthViewModel
 import com.example.myapplication.viewmodel.LocationViewModel
+import com.example.myapplication.viewmodel.TransactionViewModel
 import java.io.File
 import java.io.FileOutputStream
 import java.text.SimpleDateFormat
@@ -54,6 +55,7 @@ import java.util.*
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun AddTransactionDialog(
+    viewModel: TransactionViewModel,
     onDismiss: () -> Unit,
     onSave: (Transaction) -> Unit,
     categoryList: List<Category>,
@@ -62,9 +64,9 @@ fun AddTransactionDialog(
 ) {
     val user by authViewModel.user.collectAsState()
 
-    var amount by remember { mutableStateOf("") }
-    var name by remember { mutableStateOf("") }
-    var type by remember { mutableStateOf("Expense") }
+//    var amount by remember { mutableStateOf("") }
+//    var name by remember { mutableStateOf("") }
+//    var type by remember { mutableStateOf("Expense") }
     val typeOptions = listOf("Expense", "Income")
     var expandedType by remember { mutableStateOf(false) }
     var note by remember { mutableStateOf("") }
@@ -72,10 +74,10 @@ fun AddTransactionDialog(
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
     var imagePath by remember { mutableStateOf<String?>(null) }
 
-    var categoryId by remember { mutableStateOf<Long?>(null) }
+//    var categoryId by remember { mutableStateOf<Long?>(null) }
     var expandedCategory by remember { mutableStateOf(false) }
-    val filteredCategories = categoryList.filter { it.type.equals(type, ignoreCase = true) }
-    val selectedCategory = filteredCategories.find { it.categoryId == categoryId }
+    val filteredCategories = categoryList.filter { it.type.equals(viewModel.inputType, ignoreCase = true) }
+    val selectedCategory = filteredCategories.find { it.categoryId == viewModel.inputCategoryId }
 
     val datePickerState = rememberDatePickerState()
     var showDatePicker by remember { mutableStateOf(false) }
@@ -95,10 +97,12 @@ fun AddTransactionDialog(
     }
     LaunchedEffect(locationFromVM, hasUsedFetchedLocation) {
         if (!locationFromVM.isNullOrEmpty() && !hasUsedFetchedLocation) {
-            manualLocation = locationFromVM as String
+            viewModel.inputLocation = locationFromVM.toString()
+            viewModel.validateInputs()
             hasUsedFetchedLocation = true
         }
     }
+
 
 
     val context = LocalContext.current
@@ -250,37 +254,46 @@ fun AddTransactionDialog(
                 }
 
                 OutlinedTextField(
-                    value = amount,
-                    onValueChange = { amount = it },
-                    modifier = Modifier.fillMaxWidth(),
+                    value = viewModel.inputAmount,
+                    onValueChange = {
+                        viewModel.inputAmount = it
+                        viewModel.validateInputs()
+                    },
                     placeholder = { Text("Amount") },
+                    isError = viewModel.amountError != null,
+                    supportingText = { viewModel.amountError?.let { Text(it, color = Color.Red) } },
+                    modifier = Modifier.fillMaxWidth(),
                     textStyle = TextStyle(fontSize = 20.sp),
                     singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 )
 
                 OutlinedTextField(
-                    value = name,
-                    onValueChange = { name = it },
+                    value = viewModel.inputName,
+                    onValueChange = {
+                        viewModel.inputName = it
+                        viewModel.validateInputs()
+                    },
                     label = { Text("Name") },
+                    isError = viewModel.nameError != null,
+                    supportingText = { viewModel.nameError?.let { Text(it, color = Color.Red) } },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
                 )
 
-                // Type Dropdown
                 ExposedDropdownMenuBox(
                     expanded = expandedType,
                     onExpandedChange = { expandedType = !expandedType }
                 ) {
                     OutlinedTextField(
-                        value = type,
+                        value = viewModel.inputType,
                         onValueChange = {},
                         readOnly = true,
                         label = { Text("Type") },
+                        isError = viewModel.typeError != null,
+                        supportingText = { viewModel.typeError?.let { Text(it, color = Color.Red) } },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedType) },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .menuAnchor()
+                        modifier = Modifier.fillMaxWidth().menuAnchor()
                     )
                     ExposedDropdownMenu(
                         expanded = expandedType,
@@ -290,7 +303,8 @@ fun AddTransactionDialog(
                             DropdownMenuItem(
                                 text = { Text(it) },
                                 onClick = {
-                                    type = it
+                                    viewModel.inputType = it  // update ViewModel state
+                                    viewModel.validateInputs() // optional: revalidate on change
                                     expandedType = false
                                 }
                             )
@@ -298,21 +312,21 @@ fun AddTransactionDialog(
                     }
                 }
 
+
                 // Category Dropdown
                 ExposedDropdownMenuBox(
                     expanded = expandedCategory,
                     onExpandedChange = { expandedCategory = !expandedCategory }
                 ) {
                     OutlinedTextField(
-                        value = selectedCategory?.let { "${it.icon} ${it.title}" }
-                            ?: "Select Category",
+                        value = selectedCategory?.let { "${it.icon} ${it.title}" } ?: "Select Category",
                         onValueChange = {},
                         readOnly = true,
                         label = { Text("Category") },
+                        isError = viewModel.categoryError != null,
+                        supportingText = { viewModel.categoryError?.let { Text(it, color = Color.Red) } },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedCategory) },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .menuAnchor()
+                        modifier = Modifier.fillMaxWidth().menuAnchor()
                     )
                     ExposedDropdownMenu(
                         expanded = expandedCategory,
@@ -322,13 +336,15 @@ fun AddTransactionDialog(
                             DropdownMenuItem(
                                 text = { Text("${it.icon} ${it.title}") },
                                 onClick = {
-                                    categoryId = it.categoryId
+                                    viewModel.inputCategoryId = it.categoryId
+                                    viewModel.validateInputs()
                                     expandedCategory = false
                                 }
                             )
                         }
                     }
                 }
+
 
                 OutlinedTextField(
                     value = note,
@@ -367,9 +383,14 @@ fun AddTransactionDialog(
 
                 // Location field with trailing icon
                 OutlinedTextField(
-                    value = manualLocation,
-                    onValueChange = { manualLocation = it },
+                    value = viewModel.inputLocation,
+                    onValueChange = {
+                        viewModel.inputLocation = it
+                        viewModel.validateInputs()
+                    },
                     label = { Text("Location") },
+                    isError = viewModel.locationError != null,
+                    supportingText = { viewModel.locationError?.let { Text(it, color = Color.Red) } },
                     modifier = Modifier.fillMaxWidth(),
                     trailingIcon = {
                         IconButton(
@@ -453,19 +474,23 @@ fun AddTransactionDialog(
                     }
                     Button(
                         onClick = {
-                            val transaction = Transaction(
-                                name = name,
-                                type = type.lowercase(),
-                                amount = amount.toDoubleOrNull() ?: 0.0,
-                                categoryId = categoryId ?: if (type == "expense") -1L else -2L,
-                                date = datePickerState.selectedDateMillis
-                                    ?: System.currentTimeMillis(),
-                                note = note,
-                                location = locationFromVM ?: manualLocation,
-                                imageUrl = imagePath ?: selectedImageUri?.toString() // Add image URL support if available
-                            )
-                            onSave(transaction)
+                            if (viewModel.validateInputs()) {
+                                val transaction = Transaction(
+                                    name = viewModel.inputName,
+                                    type = viewModel.inputType.lowercase(),
+                                    amount = viewModel.inputAmount.toDouble(),
+                                    categoryId = viewModel.inputCategoryId!!,
+                                    date = viewModel.inputDate ?: System.currentTimeMillis(),
+                                    note = viewModel.inputNote,
+                                    location = viewModel.inputLocation,
+                                    imageUrl = viewModel.inputImagePath,
+                                )
+                                onSave(transaction)
+                                viewModel.resetInputFields()
+                                onDismiss()
+                            }
                         },
+                        enabled = viewModel.validateInputs(),
                         modifier = Modifier.weight(1f),
                         colors = ButtonDefaults.buttonColors(containerColor = ButtonBlue),
                         shape = RoundedCornerShape(20.dp),

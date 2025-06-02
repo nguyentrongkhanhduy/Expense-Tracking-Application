@@ -27,10 +27,11 @@ import com.example.myapplication.screens.dialogs.EditTransactionDialog
 import com.example.myapplication.viewmodel.CategoryViewModel
 import com.example.myapplication.viewmodel.TransactionViewModel
 import androidx.compose.foundation.lazy.items
-import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.myapplication.screens.dialogs.AddTransactionDialog
 import com.example.myapplication.screens.dialogs.CustomCategoryFilterDialog
 import com.example.myapplication.screens.dialogs.CustomDateRangeDialog
 import com.example.myapplication.ui.theme.PrimaryGreen
+import com.example.myapplication.viewmodel.AuthViewModel
 import com.example.myapplication.viewmodel.LocationViewModel
 import java.util.Calendar
 
@@ -39,7 +40,8 @@ import java.util.Calendar
 fun TransactionListTab(
     transactionViewModel: TransactionViewModel,
     categoryViewModel: CategoryViewModel,
-    locationViewModel: LocationViewModel
+    locationViewModel: LocationViewModel,
+    authViewModel: AuthViewModel
 ) {
     var searchQuery by remember { mutableStateOf(TextFieldValue("")) }
     val tabTexts = listOf("All", "Today", "Week", "Month", "Custom")
@@ -59,6 +61,8 @@ fun TransactionListTab(
     var customCategoryFilterDialogExpanded by remember { mutableStateOf(false) }
     var selectedCategoryTypeToFilter by remember { mutableStateOf<String>("") }
     var selectedCategoryToFilter by remember { mutableStateOf<Long?>(null) }
+
+    var showAddDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(selectedTab) {
         val calendar = Calendar.getInstance()
@@ -170,153 +174,185 @@ fun TransactionListTab(
             }
         }
 
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(White)
-            .padding(horizontal = 24.dp, vertical = 18.dp)
-    ) {
-        // Title
-        Text(
-            text = "Transactions",
-            fontSize = 28.sp,
-            fontWeight = FontWeight.Bold,
-            color = PrimaryBlue,
+    Box(modifier = Modifier.fillMaxSize()) {
+        Column(
             modifier = Modifier
-                .align(Alignment.CenterHorizontally)
-                .padding(bottom = 18.dp)
-        )
-
-        // Search Bar as OutlinedTextField
-        OutlinedTextField(
-            value = searchQuery,
-            onValueChange = { searchQuery = it },
-            leadingIcon = {
-                Icon(
-                    imageVector = Icons.Default.Search,
-                    contentDescription = "Search",
-                    tint = PrimaryBlue
-                )
-            },
-            placeholder = {
-                Text(
-                    text = "Search",
-                    color = Color.Gray
-                )
-            },
-            modifier = Modifier
-                .fillMaxWidth(),
-            shape = RoundedCornerShape(12.dp),
-            singleLine = true,
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = PrimaryBlue,
-                unfocusedBorderColor = PrimaryBlue,
-                cursorColor = PrimaryBlue
-            )
-        )
-        Spacer(modifier = Modifier.height(18.dp))
-
-        // Custom Segmented Tab Row (NO CHECKMARK)
-        CustomSegmentedTabRow(
-            tabTexts = tabTexts,
-            selectedTab = selectedTab,
-            onTabSelected = { selectedTab = it }
-        )
-        Spacer(modifier = Modifier.height(12.dp))
-
-        // Sort and Filter Row
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                .fillMaxSize()
+                .background(White)
+                .padding(horizontal = 24.dp, vertical = 18.dp)
         ) {
-            Box(modifier = Modifier.weight(1f)) {
-                MyButton(
-                    onClick = { sortDropdownExpanded = true },
-                    backgroundColor = PrimaryBlue
-                ) {
+            // Title
+            Text(
+                text = "Transactions",
+                fontSize = 28.sp,
+                fontWeight = FontWeight.Bold,
+                color = PrimaryBlue,
+                modifier = Modifier
+                    .align(Alignment.CenterHorizontally)
+                    .padding(bottom = 18.dp)
+            )
+
+            // Search Bar as OutlinedTextField
+            OutlinedTextField(
+                value = searchQuery,
+                onValueChange = { searchQuery = it },
+                leadingIcon = {
                     Icon(
-                        painter = painterResource(id = R.drawable.sort),
-                        contentDescription = "Sort",
-                        tint = White
+                        imageVector = Icons.Default.Search,
+                        contentDescription = "Search",
+                        tint = PrimaryBlue
                     )
-                    Spacer(modifier = Modifier.width(6.dp))
+                },
+                placeholder = {
                     Text(
-                        text = selectedSortOption,
-                        color = White,
-                        fontWeight = FontWeight.Medium,
+                        text = "Search",
+                        color = Color.Gray
                     )
-                    DropdownMenu(
-                        expanded = sortDropdownExpanded,
-                        onDismissRequest = { sortDropdownExpanded = false }
+                },
+                modifier = Modifier
+                    .fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                singleLine = true,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = PrimaryBlue,
+                    unfocusedBorderColor = PrimaryBlue,
+                    cursorColor = PrimaryBlue
+                )
+            )
+            Spacer(modifier = Modifier.height(18.dp))
+
+            // Custom Segmented Tab Row (NO CHECKMARK)
+            CustomSegmentedTabRow(
+                tabTexts = tabTexts,
+                selectedTab = selectedTab,
+                onTabSelected = { selectedTab = it }
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Sort and Filter Row
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Box(modifier = Modifier.weight(1f)) {
+                    MyButton(
+                        onClick = { sortDropdownExpanded = true },
+                        backgroundColor = PrimaryBlue
                     ) {
-                        sortOptions.forEach {
-                            DropdownMenuItem(
-                                text = { Text(it) },
-                                onClick = {
-                                    selectedSortOption = it
-                                    sortDropdownExpanded = false
-                                }
-                            )
+                        Icon(
+                            painter = painterResource(id = R.drawable.sort),
+                            contentDescription = "Sort",
+                            tint = White
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = selectedSortOption,
+                            color = White,
+                            fontWeight = FontWeight.Medium,
+                        )
+                        DropdownMenu(
+                            expanded = sortDropdownExpanded,
+                            onDismissRequest = { sortDropdownExpanded = false }
+                        ) {
+                            sortOptions.forEach {
+                                DropdownMenuItem(
+                                    text = { Text(it) },
+                                    onClick = {
+                                        selectedSortOption = it
+                                        sortDropdownExpanded = false
+                                    }
+                                )
+                            }
                         }
                     }
                 }
-            }
-            Box(modifier = Modifier.weight(1f)) {
-                MyButton(
-                    onClick = { customCategoryFilterDialogExpanded = true },
-                    backgroundColor = PrimaryBlue
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.filter),
-                        contentDescription = "Filter",
-                        tint = White
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(
-                        text = "Filter",
-                        color = White,
-                        fontWeight = FontWeight.Medium
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
+                Box(modifier = Modifier.weight(1f)) {
+                    MyButton(
+                        onClick = { customCategoryFilterDialogExpanded = true },
+                        backgroundColor = PrimaryBlue
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.filter),
+                            contentDescription = "Filter",
+                            tint = White
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = "Filter",
+                            color = White,
+                            fontWeight = FontWeight.Medium
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                    }
                 }
             }
-        }
-        Spacer(modifier = Modifier.height(18.dp))
+            Spacer(modifier = Modifier.height(18.dp))
 
-        LazyColumn(
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-            modifier = Modifier.fillMaxSize()
-        ) {
-            items(filteredTransactions) { transactionWithCategory ->
-                TransactionCard(
-                    transactionWithCategory = transactionWithCategory,
-                    onClick = { editingTransaction = transactionWithCategory }
-                )
+            LazyColumn(
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier.fillMaxSize()
+            ) {
+                items(filteredTransactions) { transactionWithCategory ->
+                    TransactionCard(
+                        transactionWithCategory = transactionWithCategory,
+                        onClick = { editingTransaction = transactionWithCategory }
+                    )
+                }
             }
+
+        }
+        // --- FAB overlays content, bottom end ---
+        FloatingActionButton(
+            onClick = {
+                transactionViewModel.resetInputFields() // Reset fields before showing dialog!
+                showAddDialog = true
+            },
+            containerColor = PrimaryBlue,
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(24.dp)
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.add),
+                contentDescription = "Add",
+                tint = White
+            )
         }
 
-    }
-
-    // Edit dialog
-    if (editingTransaction != null) {
-        EditTransactionDialog(
-            transaction = editingTransaction!!.transaction,
-            onDismiss = { editingTransaction = null },
-            onSave = { updatedTransaction ->
-                transactionViewModel.updateTransaction(updatedTransaction)
-                editingTransaction = null
-            },
-            onDelete = {
-                transactionViewModel.deleteTransaction(editingTransaction!!.transaction)
-                editingTransaction = null
-            },
-            categoryList = categories,
-            locationViewModel = locationViewModel
-        )
+        // --- AddTransactionDialog ---
+        if (showAddDialog) {
+            AddTransactionDialog(
+                viewModel = transactionViewModel,
+                onDismiss = { showAddDialog = false },
+                onSave = {
+                    transactionViewModel.addTransaction(it)
+                    showAddDialog = false
+                },
+                categoryList = categories,
+                locationViewModel = locationViewModel,
+                authViewModel = authViewModel
+            )
+        }
+        // Edit dialog
+        if (editingTransaction != null) {
+            EditTransactionDialog(
+                transaction = editingTransaction!!.transaction,
+                onDismiss = { editingTransaction = null },
+                onSave = { updatedTransaction ->
+                    transactionViewModel.updateTransaction(updatedTransaction)
+                    editingTransaction = null
+                },
+                onDelete = {
+                    transactionViewModel.deleteTransaction(editingTransaction!!.transaction)
+                    editingTransaction = null
+                },
+                categoryList = categories,
+                locationViewModel = locationViewModel,
+                viewModel = transactionViewModel,
+            )
+        }
     }
 }
-
 
 @Composable
 fun CustomSegmentedTabRow(
