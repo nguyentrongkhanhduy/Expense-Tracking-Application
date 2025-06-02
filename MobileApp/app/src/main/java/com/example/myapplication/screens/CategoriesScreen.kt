@@ -46,27 +46,40 @@ fun CategoriesScreen(
             .background(White)
             .padding(horizontal = 18.dp)
     ) {
-        // Top bar (replace with your own BackButton if needed)
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
+
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(top = 16.dp)
+                .height(56.dp)
         ) {
-            IconButton(onClick = { navController.popBackStack() }) {
+            IconButton(
+                onClick = {
+                    navController.previousBackStackEntry
+                        ?.savedStateHandle
+                        ?.set("selectedTab", 3)
+                    navController.popBackStack()
+                },
+                modifier = Modifier.align(Alignment.CenterStart)
+            ) {
                 Icon(
                     imageVector = Icons.Default.ArrowBack,
                     contentDescription = "Back",
                     tint = PrimaryBlue
                 )
             }
-            Spacer(modifier = Modifier.width(8.dp))
             Text(
                 "Your categories",
                 fontWeight = FontWeight.Bold,
                 fontSize = 26.sp,
                 color = Color(0xFF0A2540),
-                modifier = Modifier.align(Alignment.CenterVertically)
+                modifier = Modifier.align(Alignment.Center)
+            )
+            // Optional: Invisible box to balance layout
+            Box(
+                modifier = Modifier
+                    .size(48.dp)
+                    .align(Alignment.CenterEnd)
             )
         }
         Spacer(modifier = Modifier.height(16.dp))
@@ -148,7 +161,6 @@ fun CategoriesScreen(
 
     if (editingCategory != null) {
         EditCategoryDialog(
-            viewModel = viewModel,
             initialCategory = editingCategory!!,
             onDismiss = { editingCategory = null },
             onDelete = {
@@ -169,6 +181,7 @@ fun CategoriesScreen(
         )
     }
 }
+
 
 @Composable
 fun CategoryCard(category: Category, onClick: () -> Unit) {
@@ -239,4 +252,3 @@ fun CategoryCard(category: Category, onClick: () -> Unit) {
         )
     }
 }
-

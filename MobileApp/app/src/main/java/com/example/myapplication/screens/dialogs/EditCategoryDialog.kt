@@ -12,6 +12,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -22,16 +23,16 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import com.example.myapplication.data.local.model.Category
 import com.example.myapplication.ui.theme.PrimaryBlue
 import com.example.myapplication.ui.theme.PrimaryRed
 import com.example.myapplication.ui.theme.White
-import com.example.myapplication.viewmodel.CategoryViewModel
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditCategoryDialog(
-    viewModel: CategoryViewModel,
     initialCategory: Category,
     onDismiss: () -> Unit,
     onDelete: () -> Unit,
@@ -41,17 +42,16 @@ fun EditCategoryDialog(
     var expanded by remember { mutableStateOf(false) }
     val isEnable = initialCategory.categoryId > 0L
 
-    // Prefill fields only once when dialog is shown
-    LaunchedEffect(initialCategory.categoryId) {
-        viewModel.resetInputFields(
-            type = initialCategory.type,
-            title = initialCategory.title,
-            icon = initialCategory.icon,
-            limit = initialCategory.limit?.toString() ?: ""
-        )
-    }
+    // Local state for dialog fields, initialized from initialCategory
+    var type by rememberSaveable(initialCategory.categoryId) { mutableStateOf(initialCategory.type) }
+    var title by rememberSaveable(initialCategory.categoryId) { mutableStateOf(initialCategory.title) }
+    var icon by rememberSaveable(initialCategory.categoryId) { mutableStateOf(initialCategory.icon) }
+    var limit by rememberSaveable(initialCategory.categoryId) { mutableStateOf(initialCategory.limit?.toString() ?: "") }
 
-    Dialog(onDismissRequest = onDismiss) {
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
         Card(
             shape = RoundedCornerShape(28.dp),
             modifier = Modifier
@@ -93,13 +93,11 @@ fun EditCategoryDialog(
                     onExpandedChange = { expanded = !expanded },
                 ) {
                     OutlinedTextField(
-                        value = viewModel.inputType,
+                        value = type,
                         onValueChange = {},
                         readOnly = true,
                         label = { Text("Type") },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
-                        isError = viewModel.typeError != null,
-                        supportingText = { viewModel.typeError?.let { Text(it, color = Color.Red, fontSize = 12.sp) } },
                         modifier = Modifier
                             .fillMaxWidth()
                             .menuAnchor()
@@ -112,8 +110,7 @@ fun EditCategoryDialog(
                             DropdownMenuItem(
                                 text = { Text(selectionOption) },
                                 onClick = {
-                                    viewModel.inputType = selectionOption
-                                    viewModel.validateInputs()
+                                    type = selectionOption
                                     expanded = false
                                 }
                             )
@@ -122,14 +119,9 @@ fun EditCategoryDialog(
                 }
 
                 OutlinedTextField(
-                    value = viewModel.inputTitle,
-                    onValueChange = {
-                        viewModel.inputTitle = it
-                        viewModel.validateInputs()
-                    },
+                    value = title,
+                    onValueChange = { title = it },
                     label = { Text("Title") },
-                    isError = viewModel.titleError != null,
-                    supportingText = { viewModel.titleError?.let { Text(it, color = Color.Red, fontSize = 12.sp) } },
                     modifier = Modifier.fillMaxWidth()
                 )
 
@@ -138,14 +130,9 @@ fun EditCategoryDialog(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     OutlinedTextField(
-                        value = viewModel.inputIcon,
-                        onValueChange = {
-                            viewModel.inputIcon = it
-                            viewModel.validateInputs()
-                        },
+                        value = icon,
+                        onValueChange = { icon = it },
                         label = { Text("Icon (emoji or symbol)") },
-                        isError = viewModel.iconError != null,
-                        supportingText = { viewModel.iconError?.let { Text(it, color = Color.Red, fontSize = 12.sp) } },
                         modifier = Modifier.weight(1f)
                     )
                     Spacer(modifier = Modifier.width(12.dp))
@@ -160,17 +147,11 @@ fun EditCategoryDialog(
                     }
                 }
 
-
                 OutlinedTextField(
-                    value = viewModel.inputLimit,
-                    onValueChange = {
-                        viewModel.inputLimit = it
-                        viewModel.validateInputs()
-                    },
+                    value = limit,
+                    onValueChange = { limit = it },
                     label = { Text("Limit") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    isError = viewModel.limitError != null,
-                    supportingText = { viewModel.limitError?.let { Text(it, color = Color.Red, fontSize = 12.sp) } },
                     modifier = Modifier.fillMaxWidth()
                 )
 
@@ -193,26 +174,18 @@ fun EditCategoryDialog(
                         }
                         Button(
                             onClick = {
-                                if (viewModel.validateInputs()) {
-                                    onSave(
-                                        viewModel.inputType,
-                                        viewModel.inputTitle,
-                                        viewModel.inputIcon,
-                                        viewModel.inputLimit.takeIf { it.isNotBlank() }
-                                    )
-                                    onDismiss()
-                                }
+                                onSave(
+                                    type,
+                                    title,
+                                    icon,
+                                    limit.takeIf { it.isNotBlank() }
+                                )
+                                onDismiss()
                             },
                             modifier = Modifier.weight(1f),
                             colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue),
                             shape = RoundedCornerShape(20.dp),
-                            enabled = viewModel.inputType.isNotBlank() &&
-                                    viewModel.inputTitle.isNotBlank() &&
-                                    viewModel.inputIcon.isNotBlank() &&
-                                    viewModel.typeError == null &&
-                                    viewModel.titleError == null &&
-                                    viewModel.iconError == null &&
-                                    viewModel.limitError == null,
+                            enabled = type.isNotBlank() && title.isNotBlank() && icon.isNotBlank(),
                             elevation = ButtonDefaults.buttonElevation(4.dp)
                         ) {
                             Text("Save", color = White, fontWeight = FontWeight.Bold)

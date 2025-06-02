@@ -15,6 +15,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -167,15 +168,12 @@ fun EditTransactionDialog(
 
     Dialog(
         onDismissRequest = onDismiss,
-        properties = DialogProperties(
-            usePlatformDefaultWidth = false,
-            decorFitsSystemWindows = false
-        )
+        properties = DialogProperties(usePlatformDefaultWidth = false)
     ) {
         Card(
-            shape = RoundedCornerShape(28.dp),
+            shape = RoundedCornerShape(24.dp),
             modifier = Modifier
-                .padding(24.dp)
+                .padding(20.dp)
                 .fillMaxWidth(0.95f)
                 .wrapContentHeight()
                 .imePadding()
@@ -183,13 +181,12 @@ fun EditTransactionDialog(
             Column(
                 modifier = Modifier
                     .background(White)
-                    .padding(24.dp)
-                    .heightIn(min = 100.dp, max = 600.dp)
+                    .padding(20.dp)
                     .verticalScroll(rememberScrollState())
                     .imePadding(),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // Top Bar
+                // Top Bar with Back and Delete
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.fillMaxWidth()
@@ -201,7 +198,6 @@ fun EditTransactionDialog(
                             tint = PrimaryBlue
                         )
                     }
-                    Spacer(Modifier.width(8.dp))
                     Text(
                         "Edit Transaction",
                         color = PrimaryBlue,
@@ -210,7 +206,18 @@ fun EditTransactionDialog(
                         modifier = Modifier.weight(1f),
                         textAlign = TextAlign.Center
                     )
-                    Spacer(Modifier.width(40.dp))
+                    IconButton(
+                        onClick = {
+                            onDelete()
+                            onDismiss()
+                        }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Delete,
+                            contentDescription = "Delete Transaction",
+                            tint = PrimaryRed
+                        )
+                    }
                 }
 
                 OutlinedTextField(
@@ -432,16 +439,13 @@ fun EditTransactionDialog(
                     horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     Button(
-                        onClick = {
-                            onDelete()
-                            onDismiss()
-                        },
+                        onClick = onDismiss,
                         modifier = Modifier.weight(1f),
                         colors = ButtonDefaults.buttonColors(containerColor = PrimaryRed),
                         shape = RoundedCornerShape(20.dp),
                         elevation = ButtonDefaults.buttonElevation(4.dp)
                     ) {
-                        Text("Delete", color = White, fontWeight = FontWeight.Bold)
+                        Text("Cancel", color = White, fontWeight = FontWeight.Bold)
                     }
                     Button(
                         onClick = {

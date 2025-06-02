@@ -59,17 +59,12 @@ fun AddTransactionDialog(
     authViewModel: AuthViewModel
 ) {
     val user by authViewModel.user.collectAsState()
-
-//    var amount by remember { mutableStateOf("") }
-//    var name by remember { mutableStateOf("") }
-//    var type by remember { mutableStateOf("Expense") }
     val typeOptions = listOf("Expense", "Income")
     var expandedType by remember { mutableStateOf(false) }
     var note by remember { mutableStateOf("") }
     var selectedImageBitmap by remember { mutableStateOf<Bitmap?>(null) }
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
 
-//    var categoryId by remember { mutableStateOf<Long?>(null) }
     var expandedCategory by remember { mutableStateOf(false) }
     val filteredCategories =
         categoryList.filter { it.type.equals(viewModel.inputType, ignoreCase = true) }
@@ -156,7 +151,7 @@ fun AddTransactionDialog(
             shape = RoundedCornerShape(24.dp),
             modifier = Modifier
                 .padding(20.dp)
-                .fillMaxWidth(0.97f)
+                .fillMaxWidth(0.95f)
                 .wrapContentHeight()
                 .imePadding()
         ) {
