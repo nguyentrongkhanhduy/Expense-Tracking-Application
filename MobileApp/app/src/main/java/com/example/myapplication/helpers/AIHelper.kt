@@ -1,0 +1,54 @@
+package com.example.myapplication.helpers
+
+import okhttp3.*
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import org.json.JSONArray
+import org.json.JSONObject
+import java.io.IOException
+
+const val HF_API_TOKEN = "/* THIS IS WHERE YOU PUT THE ACCESS TOKEN */"
+
+fun askHuggingFace(question: String, onResult: (String) -> Unit) {
+    val client = OkHttpClient.Builder()
+        .connectTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
+        .readTimeout(60, java.util.concurrent.TimeUnit.SECONDS)
+        .writeTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
+        .build()
+
+    val url = "https://api-inference.huggingface.co/models/HuggingFaceH4/zephyr-7b-beta"
+
+    val json = JSONObject().apply {
+        put("inputs", question)
+    }
+    val body = RequestBody.create(
+        "application/json".toMediaTypeOrNull(), json.toString()
+    )
+    val request = Request.Builder()
+        .url(url)
+        .header("Authorization", "Bearer $HF_API_TOKEN")
+        .post(body)
+        .build()
+    client.newCall(request).enqueue(object : Callback {
+        override fun onFailure(call: Call, e: IOException) {
+            onResult("Failed: ${e.message}")
+        }
+        override fun onResponse(call: Call, response: Response) {
+            val bodyString = response.body?.string()
+            if (response.code == 403) {
+                onResult("Error: 403 Forbidden. Check your Hugging Face API token and model access.")
+                return
+            }
+            if (bodyString != null) {
+                try {
+                    val arr = JSONArray(bodyString)
+                    val aiReply = arr.getJSONObject(0).getString("generated_text")
+                    onResult(aiReply.trim())
+                } catch (e: Exception) {
+                    onResult("Unexpected response: $bodyString")
+                }
+            } else {
+                onResult("No response from AI.")
+            }
+        }
+    })
+}
