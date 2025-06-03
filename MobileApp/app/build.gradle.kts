@@ -1,5 +1,3 @@
-import org.gradle.internal.impldep.org.jsoup.nodes.Entities.EscapeMode.extended
-
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -75,5 +73,8 @@ dependencies {
     implementation(libs.play.services.location)
 
     implementation(libs.coil.compose)
+
+    //Android Chart: https://github.com/AppDevNext/AndroidChart
+    implementation(libs.androidchart)
 
 }

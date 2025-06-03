@@ -106,7 +106,12 @@ fun AddTransactionDialog(
         contract = ActivityResultContracts.TakePicturePreview(),
         onResult = { bitmap ->
             if (bitmap != null) {
-                val path = bitmap.let { saveBitmapToInternalStorage(context, it)?.let { saved -> "bitmap:$saved" } }
+                val path = bitmap.let {
+                    saveBitmapToInternalStorage(
+                        context,
+                        it
+                    )?.let { saved -> "bitmap:$saved" }
+                }
                 selectedImageBitmap = bitmap
                 selectedImageUri = null
                 viewModel.inputImagePath = path
@@ -324,7 +329,10 @@ fun AddTransactionDialog(
                     DatePickerDialog(
                         onDismissRequest = { showDatePicker = false },
                         confirmButton = {
-                            TextButton(onClick = { showDatePicker = false }) { Text("OK") }
+                            TextButton(onClick = {
+                                showDatePicker = false
+                                viewModel.inputDate = datePickerState.selectedDateMillis
+                            }) { Text("OK") }
                         },
                         dismissButton = {
                             TextButton(onClick = { showDatePicker = false }) { Text("Cancel") }

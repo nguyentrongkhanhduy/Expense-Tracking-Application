@@ -11,6 +11,7 @@ import com.example.myapplication.data.local.model.TransactionWithCategory
 import com.example.myapplication.data.local.repository.CategoryRepository
 import com.example.myapplication.data.local.repository.TransactionRepository
 import com.example.myapplication.helpers.sendBudgetExceededNotification
+import com.github.mikephil.charting.data.PieEntry
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
@@ -128,5 +129,112 @@ class TransactionViewModel(
                 )
             }
         }
+    }
+
+    fun getTotalSpendingAndEarning(startDate: Long? = null, endDate: Long? = null): List<PieEntry> {
+        val totalSpending = transactionsWithCategory.value
+            .filter {
+                it.transaction.type.lowercase() == "expense" &&
+                        (startDate == null || it.transaction.date >= startDate) &&
+                        (endDate == null || it.transaction.date <= endDate)
+            }
+            .sumOf { it.transaction.amount }
+
+        val totalEarning = transactionsWithCategory.value
+            .filter {
+                it.transaction.type.lowercase() == "income" &&
+                        (startDate == null || it.transaction.date >= startDate) &&
+                        (endDate == null || it.transaction.date <= endDate)
+            }
+            .sumOf { it.transaction.amount }
+
+        return listOf(
+            PieEntry(totalSpending.toFloat(), "Spending"),
+            PieEntry(totalEarning.toFloat(), "Earning")
+        )
+    }
+
+    fun getSpendingByCategory(startDate: Long? = null, endDate: Long? = null): List<PieEntry> {
+        val spendingByCategory = mutableMapOf<String, Float>()
+
+        transactionsWithCategory.value.forEach { transactionWithCategory ->
+            val categoryName = transactionWithCategory.category?.title ?: "Unknown"
+            val transaction = transactionWithCategory.transaction
+
+            if (
+                transaction.type.lowercase() == "expense" &&
+                (startDate == null || transaction.date >= startDate) &&
+                (endDate == null || transaction.date <= endDate)
+            ) {
+                spendingByCategory[categoryName] =
+                    (spendingByCategory[categoryName] ?: 0f) + transaction.amount.toFloat()
+            }
+        }
+
+        return spendingByCategory.map { (categoryName, amount) ->
+            PieEntry(amount, categoryName)
+        }
+    }
+
+    fun getEarningByCategory(startDate: Long? = null, endDate: Long? = null): List<PieEntry> {
+        val earningByCategory = mutableMapOf<String, Float>()
+
+        transactionsWithCategory.value.forEach { transactionWithCategory ->
+            val categoryName = transactionWithCategory.category?.title ?: "Unknown"
+            val transaction = transactionWithCategory.transaction
+
+            if (
+                transaction.type.lowercase() == "income" &&
+                (startDate == null || transaction.date >= startDate) &&
+                (endDate == null || transaction.date <= endDate)
+            ) {
+                earningByCategory[categoryName] =
+                    (earningByCategory[categoryName] ?: 0f) + transaction.amount.toFloat()
+            }
+        }
+
+        return earningByCategory.map { (categoryName, amount) ->
+            PieEntry(amount, categoryName)
+        }
+    }
+
+    fun getBalance(startDate: Long? = null, endDate: Long? = null): Double {
+        val totalSpending = transactionsWithCategory.value
+            .filter {
+                it.transaction.type.lowercase() == "expense" &&
+                        (startDate == null || it.transaction.date >= startDate) &&
+                        (endDate == null || it.transaction.date <= endDate)
+            }
+            .sumOf { it.transaction.amount }
+
+        val totalEarning = transactionsWithCategory.value
+            .filter {
+                it.transaction.type.lowercase() == "income" &&
+                        (startDate == null || it.transaction.date >= startDate) &&
+                        (endDate == null || it.transaction.date <= endDate)
+            }
+            .sumOf { it.transaction.amount }
+
+        return totalEarning - totalSpending
+    }
+
+    fun getTotalSpend(startDate: Long? = null, endDate: Long? = null): Double {
+        return transactionsWithCategory.value
+            .filter {
+                it.transaction.type.lowercase() == "expense" &&
+                        (startDate == null || it.transaction.date >= startDate) &&
+                        (endDate == null || it.transaction.date <= endDate)
+            }
+            .sumOf { it.transaction.amount }
+    }
+
+    fun getTotalEarn(startDate: Long? = null, endDate: Long? = null): Double {
+        return transactionsWithCategory.value
+            .filter {
+                it.transaction.type.lowercase() == "income" &&
+                        (startDate == null || it.transaction.date >= startDate) &&
+                        (endDate == null || it.transaction.date <= endDate)
+            }
+            .sumOf { it.transaction.amount }
     }
 }

@@ -144,7 +144,11 @@ fun HomeScreen(
                     authViewModel = authViewModel,
 
                 )
-                2 -> AnalyticsTab()
+                2 -> AnalyticsTab(
+                    transactionViewModel = transactionViewModel,
+                    categoryViewModel = categoryViewModel,
+                    authViewModel = authViewModel
+                )
                 3 -> ProfileTab(navController = navController, onLogout = {
                     authViewModel.signOut()
                     navController.navigate("login?showGuestOption=true") {

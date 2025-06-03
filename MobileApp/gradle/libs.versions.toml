@@ -1,5 +1,6 @@
 [versions]
 agp = "8.7.3"
+androidchart = "3.1.0.27"
 coilCompose = "2.4.0"
 converterGson = "2.9.0"
 datastorePreferences = "1.1.7"
@@ -19,6 +20,7 @@ retrofit = "2.9.0"
 roomRuntime = "2.7.1"
 
 [libraries]
+androidchart = { module = "com.github.AppDevNext:AndroidChart", version.ref = "androidchart" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "datastorePreferences" }
 androidx-foundation = { module = "androidx.compose.foundation:foundation", version.ref = "foundation" }

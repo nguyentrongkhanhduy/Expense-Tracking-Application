@@ -28,6 +28,7 @@ import com.example.myapplication.viewmodel.CategoryViewModel
 import com.example.myapplication.viewmodel.TransactionViewModel
 import androidx.compose.foundation.lazy.items
 import androidx.compose.ui.platform.LocalContext
+import com.example.myapplication.components.CustomSegmentedTabRow
 import com.example.myapplication.helpers.removeFromInternalStorage
 import com.example.myapplication.screens.dialogs.AddTransactionDialog
 import com.example.myapplication.screens.dialogs.CustomCategoryFilterDialog
@@ -36,7 +37,6 @@ import com.example.myapplication.ui.theme.PrimaryGreen
 import com.example.myapplication.viewmodel.AuthViewModel
 import com.example.myapplication.viewmodel.LocationViewModel
 import java.util.Calendar
-
 
 @Composable
 fun TransactionListTab(
@@ -360,49 +360,6 @@ fun TransactionListTab(
                 locationViewModel = locationViewModel,
                 viewModel = transactionViewModel,
             )
-        }
-    }
-}
-
-@Composable
-fun CustomSegmentedTabRow(
-    tabTexts: List<String>,
-    selectedTab: Int,
-    onTabSelected: (Int) -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(40.dp)
-            .background(Color(0xFFE5E7EB), RoundedCornerShape(20.dp)),
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        tabTexts.forEachIndexed { idx, txt ->
-            Button(
-                onClick = { onTabSelected(idx) },
-                shape = when (idx) {
-                    0 -> RoundedCornerShape(topStart = 20.dp, bottomStart = 20.dp)
-                    tabTexts.lastIndex -> RoundedCornerShape(topEnd = 20.dp, bottomEnd = 20.dp)
-                    else -> RoundedCornerShape(0.dp)
-                },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = if (selectedTab == idx) PrimaryBlue else Color.Transparent,
-                    contentColor = if (selectedTab == idx) White else PrimaryBlue
-                ),
-                border = if (selectedTab == idx) null else ButtonDefaults.outlinedButtonBorder,
-                elevation = null,
-                contentPadding = PaddingValues(0.dp),
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxHeight()
-            ) {
-                Text(
-                    text = txt,
-                    fontWeight = FontWeight.Medium,
-                    fontSize = 14.sp,
-                    color = if (selectedTab == idx) White else PrimaryBlue
-                )
-            }
         }
     }
 }
