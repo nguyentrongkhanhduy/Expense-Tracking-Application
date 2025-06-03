@@ -144,7 +144,7 @@ fun HomeScreen(
                     transactionViewModel.resetInputFields()
                     showAddDialog = true
                 },
-                containerColor = Color.Transparent,
+                containerColor = PrimaryBlue,
                 elevation = FloatingActionButtonDefaults.elevation(),
                 shape = CircleShape,
                 modifier = Modifier.fillMaxSize()
