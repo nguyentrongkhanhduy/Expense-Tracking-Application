@@ -36,6 +36,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.platform.LocalContext
 import com.example.myapplication.data.local.model.TransactionWithCategory
 import com.example.myapplication.helpers.removeFromInternalStorage
@@ -59,7 +60,8 @@ fun HomeScreen(
     transactionViewModel: TransactionViewModel,
     categoryViewModel: CategoryViewModel,
     locationViewModel: LocationViewModel,
-    isGuest: Boolean = false
+    isGuest: Boolean = false,
+    initialTab: Int = 0
 ) {
     val user by authViewModel.user.collectAsState()
     val isSignedIn by authViewModel.isSignedIn.collectAsState()
@@ -74,7 +76,7 @@ fun HomeScreen(
     val income = transactions.filter { it.type == "income" }.sumOf { it.amount }
     val balance = income - expenses
 
-    var selectedTab by remember { mutableStateOf(0) }
+    var selectedTab by rememberSaveable { mutableStateOf(initialTab) }
 
     val context = LocalContext.current
 
@@ -83,6 +85,14 @@ fun HomeScreen(
             navController.navigate("login?showGuest=true") {
                 popUpTo(0)
             }
+        }
+    }
+    val currentBackStackEntry = navController.currentBackStackEntry
+    LaunchedEffect(currentBackStackEntry) {
+        val selectedTabResult = currentBackStackEntry?.savedStateHandle?.get<Int>("selectedTab")
+        if (selectedTabResult != null) {
+            selectedTab = selectedTabResult
+            currentBackStackEntry.savedStateHandle.remove<Int>("selectedTab")
         }
     }
 
@@ -116,6 +126,7 @@ fun HomeScreen(
                 .padding(innerPadding),
             contentAlignment = Alignment.TopCenter
         ) {
+
             when (selectedTab) {
                 0 -> HomeTabContent(
                     user = user,
@@ -196,9 +207,18 @@ fun HomeTabContent(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(top = 24.dp, start = 16.dp, end = 16.dp),
+            .padding(horizontal = 24.dp, vertical = 18.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        Text(
+            text = "Dashboard",
+            fontSize = 28.sp,
+            fontWeight = FontWeight.Bold,
+            color = PrimaryBlue,
+            modifier = Modifier
+                .align(Alignment.CenterHorizontally)
+                .padding(bottom = 18.dp)
+        )
         // Balance Card
         Box(
             modifier = Modifier

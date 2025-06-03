@@ -3,6 +3,7 @@ package com.example.myapplication.navigation
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -49,24 +50,36 @@ fun AppNavHost() {
         }
         composable("signup") { SignUpScreen(navController, authViewModel) }
         composable(
-            route = "home?isGuest={isGuest}",
-            arguments = listOf(navArgument("isGuest") { defaultValue = "false" })
+            route = "home?isGuest={isGuest}&selectedTab={selectedTab}",
+            arguments = listOf(
+                navArgument("isGuest") { defaultValue = "false" },
+                navArgument("selectedTab") {
+                    type = NavType.IntType
+                    defaultValue = 0 }
+            )
         ) { backStackEntry ->
             val isGuest = backStackEntry.arguments?.getString("isGuest").toBoolean()
+            val selectedTab = backStackEntry.arguments?.getString("selectedTab")?.toIntOrNull() ?: 0
             HomeScreen(
                 navController = navController,
                 authViewModel = authViewModel,
                 transactionViewModel = transactionViewModel,
                 categoryViewModel = categoryViewModel,
                 locationViewModel = locationViewModel,
-                isGuest = isGuest // Uncomment if you use this param
+                isGuest = isGuest,
+                initialTab = selectedTab
             )
         }
-        composable("categories") {
+
+        composable(
+            route = "categories?fromTab={fromTab}",
+            arguments = listOf(navArgument("fromTab") { defaultValue = "0" })
+        ) { backStackEntry ->
             CategoriesScreen(
                 navController = navController,
-                viewModel = categoryViewModel
+                viewModel = categoryViewModel,
             )
         }
+
     }
 }

@@ -101,7 +101,7 @@ fun ProfileTab(
             }
         }
         Spacer(modifier = Modifier.height(28.dp))
-        MyButton(onClick = { navController.navigate("categories") }) {
+        MyButton(onClick = { navController.navigate("categories?fromTab=3") }) {
             Text(
                 "Manage categories",
                 color = Color.White,
@@ -109,6 +109,7 @@ fun ProfileTab(
                 fontWeight = FontWeight.Bold
             )
         }
+
 
         Spacer(modifier = Modifier.height(16.dp))
 
