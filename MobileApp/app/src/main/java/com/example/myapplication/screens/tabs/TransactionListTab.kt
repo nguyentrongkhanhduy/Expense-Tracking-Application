@@ -305,23 +305,6 @@ fun TransactionListTab(
             }
 
         }
-        // --- FAB overlays content, bottom end ---
-        FloatingActionButton(
-            onClick = {
-                transactionViewModel.resetInputFields() // Reset fields before showing dialog!
-                showAddDialog = true
-            },
-            containerColor = PrimaryBlue,
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(24.dp)
-        ) {
-            Icon(
-                painter = painterResource(R.drawable.add),
-                contentDescription = "Add",
-                tint = White
-            )
-        }
 
         // --- AddTransactionDialog ---
         if (showAddDialog) {

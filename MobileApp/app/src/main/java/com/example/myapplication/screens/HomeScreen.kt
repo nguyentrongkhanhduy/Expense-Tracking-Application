@@ -6,14 +6,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.runtime.setValue
 import androidx.compose.material3.Icon
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -25,7 +19,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -33,11 +26,14 @@ import com.example.myapplication.models.User
 import com.example.myapplication.viewmodel.AuthViewModel
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.FabPosition
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import com.example.myapplication.components.CustomBottomBar
 import com.example.myapplication.data.local.model.TransactionWithCategory
 import com.example.myapplication.helpers.removeFromInternalStorage
 import com.example.myapplication.screens.dialogs.EditTransactionDialog
@@ -52,6 +48,7 @@ import com.example.myapplication.ui.theme.PrimaryRed
 import com.example.myapplication.ui.theme.PrimaryGreen
 import com.example.myapplication.ui.theme.White
 import com.example.myapplication.viewmodel.LocationViewModel
+import androidx.compose.material3.FloatingActionButtonDefaults
 
 @Composable
 fun HomeScreen(
@@ -96,65 +93,68 @@ fun HomeScreen(
         }
     }
 
-    Scaffold(
-        floatingActionButton = {
-            if (selectedTab == 0) {
-                FloatingActionButton(
-                    onClick = {
-                        transactionViewModel.resetInputFields()
-                        showAddDialog = true
-                              },
-                    containerColor = PrimaryBlue
-                ) {
-                    Icon(
-                        painter = painterResource(R.drawable.add),
-                        contentDescription = "Add",
-                        tint = White
-                    )
+    Box(Modifier.fillMaxSize()) {
+        // Main content
+        when (selectedTab) {
+            0 -> HomeTabContent(
+                user = user,
+                balance = "$%.2f".format(balance),
+                expenses = "$%.2f".format(expenses),
+                income = "$%.2f".format(income),
+                transactionsWithCategory = transactionsWithCategory,
+                onTransactionClick = { editingTransaction = it }
+            )
+            1 -> TransactionListTab(
+                transactionViewModel = transactionViewModel,
+                categoryViewModel = categoryViewModel,
+                locationViewModel = locationViewModel,
+                authViewModel = authViewModel,
+            )
+            2 -> AnalyticsTab(
+                transactionViewModel = transactionViewModel,
+                categoryViewModel = categoryViewModel,
+                authViewModel = authViewModel
+            )
+            3 -> ProfileTab(navController = navController, onLogout = {
+                authViewModel.signOut()
+                navController.navigate("login?showGuestOption=true") {
+                    popUpTo(0)
                 }
-            }
-        },
-        floatingActionButtonPosition = FabPosition.End,
-        bottomBar = {
-            BottomNavigationBar(selectedTab) { selectedTab = it }
+            })
         }
-    ) { innerPadding ->
+
+        // Custom bottom bar with cutout
+        CustomBottomBar(
+            selectedTab = selectedTab,
+            onTabSelected = { selectedTab = it },
+            modifier = Modifier.align(Alignment.BottomCenter)
+        )
+
         Box(
             modifier = Modifier
-                .fillMaxSize()
-                .background(White)
-                .padding(innerPadding),
-            contentAlignment = Alignment.TopCenter
+                .align(Alignment.BottomCenter)
+                .offset(y = (-40).dp)
+                .size(80.dp)
+                .clip(CircleShape)
+                .background(PrimaryBlue),
+            contentAlignment = Alignment.Center
         ) {
-
-            when (selectedTab) {
-                0 -> HomeTabContent(
-                    user = user,
-                    balance = "$%.2f".format(balance),
-                    expenses = "$%.2f".format(expenses),
-                    income = "$%.2f".format(income),
-                    transactionsWithCategory = transactionsWithCategory,
-                    onTransactionClick = { editingTransaction = it }
+            FloatingActionButton(
+                onClick = {
+                    transactionViewModel.resetInputFields()
+                    showAddDialog = true
+                },
+                containerColor = Color.Transparent,
+                elevation = FloatingActionButtonDefaults.elevation(),
+                shape = CircleShape,
+                modifier = Modifier.fillMaxSize()
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.add),
+                    contentDescription = "Add",
+                    tint = White,
+                    modifier = Modifier.size(40.dp)
                 )
-
-                1 -> TransactionListTab(
-                    transactionViewModel = transactionViewModel,
-                    categoryViewModel = categoryViewModel,
-                    locationViewModel = locationViewModel,
-                    authViewModel = authViewModel,
-
-                )
-                2 -> AnalyticsTab(
-                    transactionViewModel = transactionViewModel,
-                    categoryViewModel = categoryViewModel,
-                    authViewModel = authViewModel
-                )
-                3 -> ProfileTab(navController = navController, onLogout = {
-                    authViewModel.signOut()
-                    navController.navigate("login?showGuestOption=true") {
-                        popUpTo(0)
-                    }
-                })
             }
         }
     }
@@ -197,6 +197,79 @@ fun HomeScreen(
         )
     }
 }
+
+//@Composable
+//fun CustomBottomBar(
+//    selectedTab: Int,
+//    onTabSelected: (Int) -> Unit,
+//    modifier: Modifier = Modifier
+//) {
+//    val cornerRadius = with(LocalDensity.current) { 20.dp.toPx() }
+//    val dockRadius = with(LocalDensity.current) { 38.dp.toPx() }
+//    Box(
+//        modifier = modifier
+//            .fillMaxWidth()
+//            .height(64.dp)
+//            .clip(BottomNavShape(cornerRadius, dockRadius))
+//            .background(White)
+//    ) {
+//        Row(
+//            Modifier
+//                .fillMaxWidth()
+//                .padding(horizontal = 40.dp),
+//            horizontalArrangement = Arrangement.SpaceBetween,
+//            verticalAlignment = Alignment.CenterVertically
+//        ) {
+//            // Left two nav items
+//            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+//                Icon(
+//                    Icons.Default.Home,
+//                    contentDescription = "Home",
+//                    modifier = Modifier
+//                        .size(28.dp)
+//                        .clickable { onTabSelected(0) },
+//                    tint = if (selectedTab == 0) PrimaryBlue else Color.Gray
+//                )
+//                Text("Home", fontSize = 12.sp)
+//            }
+//            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+//                Icon(
+//                    painterResource(R.drawable.list),
+//                    contentDescription = "Transaction List",
+//                    modifier = Modifier
+//                        .size(28.dp)
+//                        .clickable { onTabSelected(1) },
+//                    tint = if (selectedTab == 1) PrimaryBlue else Color.Gray
+//                )
+//                Text("Transaction list", fontSize = 12.sp)
+//            }
+//            Spacer(Modifier.width(64.dp)) // Space for the FAB cutout
+//            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+//                Icon(
+//                    painterResource(R.drawable.barchart),
+//                    contentDescription = "Analytics",
+//                    modifier = Modifier
+//                        .size(28.dp)
+//                        .clickable { onTabSelected(2) },
+//                    tint = if (selectedTab == 2) PrimaryBlue else Color.Gray
+//                )
+//                Text("Analytics", fontSize = 12.sp)
+//            }
+//            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+//                Icon(
+//                    Icons.Default.Person,
+//                    contentDescription = "Profile",
+//                    modifier = Modifier
+//                        .size(28.dp)
+//                        .clickable { onTabSelected(3) },
+//                    tint = if (selectedTab == 3) PrimaryBlue else Color.Gray
+//                )
+//                Text("Profile", fontSize = 12.sp)
+//            }
+//        }
+//    }
+//}
+
 
 @Composable
 fun HomeTabContent(
@@ -369,64 +442,68 @@ fun RecentTransactionsList(
     }
 }
 
-@Composable
-fun BottomNavigationBar(selectedTab: Int, onTabSelected: (Int) -> Unit) {
-    NavigationBar(
-        containerColor = White,
-        tonalElevation = 8.dp
-    ) {
-        NavigationBarItem(
-            icon = { Icon(Icons.Default.Home, contentDescription = "Home") },
-            label = {
-                Text(
-                    "Home",
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth()
-                )
-            },
-            selected = selectedTab == 0,
-            onClick = { onTabSelected(0) }
-        )
-        NavigationBarItem(
-            icon = {
-                Icon(
-                    painterResource(R.drawable.list),
-                    contentDescription = "Transaction List"
-                )
-            },
-            label = {
-                Text(
-                    "Transaction list",
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth()
-                )
-            },
-            selected = selectedTab == 1,
-            onClick = { onTabSelected(1) }
-        )
-        NavigationBarItem(
-            icon = { Icon(painterResource(R.drawable.barchart), contentDescription = "Analytics") },
-            label = {
-                Text(
-                    "Analytics",
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth()
-                )
-            },
-            selected = selectedTab == 2,
-            onClick = { onTabSelected(2) }
-        )
-        NavigationBarItem(
-            icon = { Icon(Icons.Default.Person, contentDescription = "Profile") },
-            label = {
-                Text(
-                    "Profile",
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth()
-                )
-            },
-            selected = selectedTab == 3,
-            onClick = { onTabSelected(3) }
-        )
-    }
-}
+
+//@Composable
+//fun BottomNavigationBar(selectedTab: Int, onTabSelected: (Int) -> Unit) {
+//    NavigationBar(
+//        containerColor = White,
+//        tonalElevation = 8.dp
+//    ) {
+//        NavigationBarItem(
+//            icon = { Icon(Icons.Default.Home, contentDescription = "Home") },
+//            label = {
+//                Text(
+//                    "Home",
+//                    textAlign = TextAlign.Center,
+//                    modifier = Modifier.fillMaxWidth()
+//                )
+//            },
+//            selected = selectedTab == 0,
+//            onClick = { onTabSelected(0) }
+//        )
+//        NavigationBarItem(
+//            icon = {
+//                Icon(
+//                    painterResource(R.drawable.list),
+//                    contentDescription = "Transaction List"
+//                )
+//            },
+//            label = {
+//                Text(
+//                    "Transaction list",
+//                    textAlign = TextAlign.Center,
+//                    modifier = Modifier.fillMaxWidth()
+//                )
+//            },
+//            selected = selectedTab == 1,
+//            onClick = { onTabSelected(1) }
+//        )
+//
+//        Spacer(Modifier.width(64.dp)) // This reserves space for the FAB
+//
+//        NavigationBarItem(
+//            icon = { Icon(painterResource(R.drawable.barchart), contentDescription = "Analytics") },
+//            label = {
+//                Text(
+//                    "Analytics",
+//                    textAlign = TextAlign.Center,
+//                    modifier = Modifier.fillMaxWidth()
+//                )
+//            },
+//            selected = selectedTab == 2,
+//            onClick = { onTabSelected(2) }
+//        )
+//        NavigationBarItem(
+//            icon = { Icon(Icons.Default.Person, contentDescription = "Profile") },
+//            label = {
+//                Text(
+//                    "Profile",
+//                    textAlign = TextAlign.Center,
+//                    modifier = Modifier.fillMaxWidth()
+//                )
+//            },
+//            selected = selectedTab == 3,
+//            onClick = { onTabSelected(3) }
+//        )
+//    }
+//}
