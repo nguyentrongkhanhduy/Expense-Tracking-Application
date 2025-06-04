@@ -2,6 +2,7 @@ package com.example.myapplication.screens.tabs
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -11,6 +12,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
@@ -32,6 +34,7 @@ import com.example.myapplication.ui.theme.White
 import com.example.myapplication.viewmodel.AuthViewModel
 import com.example.myapplication.viewmodel.CategoryViewModel
 import com.example.myapplication.viewmodel.TransactionViewModel
+import com.github.mikephil.charting.charts.PieChart
 import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.PieData
 import com.github.mikephil.charting.data.PieDataSet
@@ -72,7 +75,10 @@ fun AnalyticsTab(
         val calendar = Calendar.getInstance()
         val now = calendar.timeInMillis
         when (selectedTimeTab) {
-            0 -> { startDate = null; endDate = null }
+            0 -> {
+                startDate = null; endDate = null
+            }
+
             1 -> {
                 calendar.set(Calendar.HOUR_OF_DAY, 0)
                 calendar.set(Calendar.MINUTE, 0)
@@ -81,6 +87,7 @@ fun AnalyticsTab(
                 startDate = calendar.timeInMillis
                 endDate = now
             }
+
             2 -> {
                 calendar.set(Calendar.DAY_OF_WEEK, calendar.firstDayOfWeek)
                 calendar.set(Calendar.HOUR_OF_DAY, 0)
@@ -90,6 +97,7 @@ fun AnalyticsTab(
                 startDate = calendar.timeInMillis
                 endDate = now
             }
+
             3 -> {
                 calendar.set(Calendar.DAY_OF_MONTH, 1)
                 calendar.set(Calendar.HOUR_OF_DAY, 0)
@@ -99,7 +107,10 @@ fun AnalyticsTab(
                 startDate = calendar.timeInMillis
                 endDate = now
             }
-            4 -> { customDateDialogExpanded = true }
+
+            4 -> {
+                customDateDialogExpanded = true
+            }
         }
     }
 
@@ -112,17 +123,21 @@ fun AnalyticsTab(
                 entries = transactionViewModel.getTotalSpendingAndEarning(startDate, endDate)
                     .toMutableList()
             }
+
             1 -> {
                 selectedType = "Spending"
                 centerText = "Total"
                 total = transactionViewModel.getTotalSpend(startDate, endDate)
-                entries = transactionViewModel.getSpendingByCategory(startDate, endDate).toMutableList()
+                entries =
+                    transactionViewModel.getSpendingByCategory(startDate, endDate).toMutableList()
             }
+
             2 -> {
                 selectedType = "Earning"
                 centerText = "Total"
                 total = transactionViewModel.getTotalEarn(startDate, endDate)
-                entries = transactionViewModel.getEarningByCategory(startDate, endDate).toMutableList()
+                entries =
+                    transactionViewModel.getEarningByCategory(startDate, endDate).toMutableList()
             }
         }
     }
@@ -157,7 +172,6 @@ fun AnalyticsTab(
                 color = PrimaryBlue,
                 modifier = Modifier
                     .align(Alignment.CenterHorizontally)
-                    .padding(bottom = 18.dp)
             )
             Spacer(modifier = Modifier.height(18.dp))
 
@@ -175,12 +189,13 @@ fun AnalyticsTab(
             )
             Spacer(modifier = Modifier.height(18.dp))
 
+            //Pie chart
             AndroidView(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(250.dp),
                 factory = { context ->
-                    val pieChart = com.github.mikephil.charting.charts.PieChart(context)
+                    val pieChart = PieChart(context)
                     pieChart.setUsePercentValues(false)
                     pieChart.setDrawEntryLabels(true)
                     pieChart.setEntryLabelTextSize(14f)
@@ -221,6 +236,76 @@ fun AnalyticsTab(
                     pieChart.invalidate()
                 }
             )
+            Spacer(modifier = Modifier.height(18.dp))
+
+            if (selectedType == "Spending" || selectedType == "Earning") {
+                val list = if (selectedType == "Spending")
+                    transactionViewModel.getSpendingWithLimitByCategory(startDate, endDate)
+                else
+                    transactionViewModel.getEarningWithTotalByCategory(startDate, endDate)
+
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(max = 250.dp)
+                ) {
+                    items(list.size) { index ->
+                        val (labelWithLimit, amount) = list[index]
+                        val parts = labelWithLimit.split("|")
+                        val category = parts.getOrNull(0) ?: "Unknown"
+                        val limit = parts.getOrNull(1)?.toDoubleOrNull()
+
+                        Column(modifier = Modifier.padding(vertical = 6.dp)) {
+                            Row(
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text(
+                                    text = category,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 16.sp,
+                                    color = PrimaryBlue
+                                )
+
+                                Row {
+                                    Text(
+                                        text = "$$amount",
+                                        fontSize = 14.sp,
+                                        color = PrimaryBlue
+                                    )
+
+                                    val effectiveLimit = if (limit != null && limit > 0) limit else total
+                                    Text(
+                                        text = buildString {
+                                            append(" of $$effectiveLimit")
+                                            if (limit == null || limit == 0.0) append(" (total)")
+                                        },
+                                        fontSize = 14.sp,
+                                        color = PrimaryBlue
+                                    )
+                                }
+                            }
+
+                            val denominator = limit?.takeIf { it > 0 } ?: total.takeIf { it > 0 } ?: 1.0
+                            val progress = (amount / denominator).coerceIn(0.0, 1.0)
+
+                            LinearProgressIndicator(
+                                progress = { progress.toFloat() },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(20.dp)
+                                    .clip(RoundedCornerShape(8.dp)),
+                                color = PrimaryBlue,
+                                trackColor = Color.LightGray,
+                            )
+                        }
+                    }
+                }
+            }
+
+            if (selectedType == "Comparison") {
+
+            }
         }
 
         // --- Smaller FAB ---
@@ -313,7 +398,10 @@ fun AnalyticsTab(
                                 modifier = Modifier
                                     .padding(top = 18.dp)
                                     .fillMaxWidth()
-                                    .background(Color(0xFFF7F9FA), shape = RoundedCornerShape(12.dp))
+                                    .background(
+                                        Color(0xFFF7F9FA),
+                                        shape = RoundedCornerShape(12.dp)
+                                    )
                                     .padding(16.dp)
                             ) {
                                 Text(
@@ -327,11 +415,22 @@ fun AnalyticsTab(
                                     val trimmed = line.trim()
                                     if (trimmed.startsWith("-") || trimmed.startsWith("*")) {
                                         Row(Modifier.padding(bottom = 4.dp)) {
-                                            Text("• ", fontWeight = FontWeight.Bold, color = PrimaryBlue)
-                                            Text(trimmed.removePrefix("-").removePrefix("*").trim(), color = Color.DarkGray)
+                                            Text(
+                                                "• ",
+                                                fontWeight = FontWeight.Bold,
+                                                color = PrimaryBlue
+                                            )
+                                            Text(
+                                                trimmed.removePrefix("-").removePrefix("*").trim(),
+                                                color = Color.DarkGray
+                                            )
                                         }
                                     } else if (trimmed.isNotEmpty()) {
-                                        Text(trimmed, color = Color.DarkGray, modifier = Modifier.padding(bottom = 8.dp))
+                                        Text(
+                                            trimmed,
+                                            color = Color.DarkGray,
+                                            modifier = Modifier.padding(bottom = 8.dp)
+                                        )
                                     }
                                 }
                             }
