@@ -28,6 +28,7 @@ import com.example.myapplication.viewmodel.CategoryViewModel
 import com.example.myapplication.viewmodel.TransactionViewModel
 import androidx.compose.foundation.lazy.items
 import androidx.compose.ui.platform.LocalContext
+import com.example.myapplication.components.AdBanner
 import com.example.myapplication.components.CustomSegmentedTabRow
 import com.example.myapplication.helpers.removeFromInternalStorage
 import com.example.myapplication.screens.dialogs.AddTransactionDialog
@@ -182,9 +183,15 @@ fun TransactionListTab(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(White)
                 .padding(horizontal = 24.dp, vertical = 18.dp)
         ) {
+            AdBanner(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp)
+            )
+            Spacer(Modifier.height(10.dp))
+
             // Title
             Text(
                 text = "Transactions",
@@ -294,6 +301,7 @@ fun TransactionListTab(
 
             LazyColumn(
                 verticalArrangement = Arrangement.spacedBy(12.dp),
+                contentPadding = PaddingValues(bottom = 80.dp), // Add enough bottom padding
                 modifier = Modifier.fillMaxSize()
             ) {
                 items(filteredTransactions) { transactionWithCategory ->
@@ -305,7 +313,7 @@ fun TransactionListTab(
             }
 
         }
-
+    }
         // --- AddTransactionDialog ---
         if (showAddDialog) {
             AddTransactionDialog(
@@ -345,7 +353,7 @@ fun TransactionListTab(
             )
         }
     }
-}
+
 
 @Composable
 fun TransactionCard(

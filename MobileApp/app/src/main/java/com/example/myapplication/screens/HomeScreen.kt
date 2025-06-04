@@ -1,5 +1,6 @@
 package com.example.myapplication.screens
 
+import android.R.attr.bottom
 import com.example.myapplication.R
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -31,7 +32,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import com.example.myapplication.components.CustomBottomBar
 import com.example.myapplication.data.local.model.TransactionWithCategory
@@ -49,6 +49,7 @@ import com.example.myapplication.ui.theme.PrimaryGreen
 import com.example.myapplication.ui.theme.White
 import com.example.myapplication.viewmodel.LocationViewModel
 import androidx.compose.material3.FloatingActionButtonDefaults
+import com.example.myapplication.components.AdBanner
 
 @Composable
 fun HomeScreen(
@@ -109,6 +110,8 @@ fun HomeScreen(
                 categoryViewModel = categoryViewModel,
                 locationViewModel = locationViewModel,
                 authViewModel = authViewModel,
+
+
             )
             2 -> AnalyticsTab(
                 transactionViewModel = transactionViewModel,
@@ -133,8 +136,8 @@ fun HomeScreen(
         Box(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .offset(y = (-40).dp)
-                .size(80.dp)
+                .offset(y = (-28).dp)
+                .size(56.dp)
                 .clip(CircleShape)
                 .background(PrimaryBlue),
             contentAlignment = Alignment.Center
@@ -153,7 +156,7 @@ fun HomeScreen(
                     painter = painterResource(R.drawable.add),
                     contentDescription = "Add",
                     tint = White,
-                    modifier = Modifier.size(40.dp)
+                    modifier = Modifier.size(32.dp)
                 )
             }
         }
@@ -198,78 +201,6 @@ fun HomeScreen(
     }
 }
 
-//@Composable
-//fun CustomBottomBar(
-//    selectedTab: Int,
-//    onTabSelected: (Int) -> Unit,
-//    modifier: Modifier = Modifier
-//) {
-//    val cornerRadius = with(LocalDensity.current) { 20.dp.toPx() }
-//    val dockRadius = with(LocalDensity.current) { 38.dp.toPx() }
-//    Box(
-//        modifier = modifier
-//            .fillMaxWidth()
-//            .height(64.dp)
-//            .clip(BottomNavShape(cornerRadius, dockRadius))
-//            .background(White)
-//    ) {
-//        Row(
-//            Modifier
-//                .fillMaxWidth()
-//                .padding(horizontal = 40.dp),
-//            horizontalArrangement = Arrangement.SpaceBetween,
-//            verticalAlignment = Alignment.CenterVertically
-//        ) {
-//            // Left two nav items
-//            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-//                Icon(
-//                    Icons.Default.Home,
-//                    contentDescription = "Home",
-//                    modifier = Modifier
-//                        .size(28.dp)
-//                        .clickable { onTabSelected(0) },
-//                    tint = if (selectedTab == 0) PrimaryBlue else Color.Gray
-//                )
-//                Text("Home", fontSize = 12.sp)
-//            }
-//            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-//                Icon(
-//                    painterResource(R.drawable.list),
-//                    contentDescription = "Transaction List",
-//                    modifier = Modifier
-//                        .size(28.dp)
-//                        .clickable { onTabSelected(1) },
-//                    tint = if (selectedTab == 1) PrimaryBlue else Color.Gray
-//                )
-//                Text("Transaction list", fontSize = 12.sp)
-//            }
-//            Spacer(Modifier.width(64.dp)) // Space for the FAB cutout
-//            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-//                Icon(
-//                    painterResource(R.drawable.barchart),
-//                    contentDescription = "Analytics",
-//                    modifier = Modifier
-//                        .size(28.dp)
-//                        .clickable { onTabSelected(2) },
-//                    tint = if (selectedTab == 2) PrimaryBlue else Color.Gray
-//                )
-//                Text("Analytics", fontSize = 12.sp)
-//            }
-//            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-//                Icon(
-//                    Icons.Default.Person,
-//                    contentDescription = "Profile",
-//                    modifier = Modifier
-//                        .size(28.dp)
-//                        .clickable { onTabSelected(3) },
-//                    tint = if (selectedTab == 3) PrimaryBlue else Color.Gray
-//                )
-//                Text("Profile", fontSize = 12.sp)
-//            }
-//        }
-//    }
-//}
-
 
 @Composable
 fun HomeTabContent(
@@ -287,6 +218,12 @@ fun HomeTabContent(
             .padding(horizontal = 24.dp, vertical = 18.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        AdBanner(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(50.dp)
+        )
+        Spacer(Modifier.height(10.dp))
         Text(
             text = "Dashboard",
             fontSize = 28.sp,
@@ -385,7 +322,7 @@ fun HomeTabContent(
             transactions = transactionsWithCategory,
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(max = 72.dp * 6),
+                .weight(1f),
             onTransactionClick = onTransactionClick
         )
     }
@@ -398,7 +335,8 @@ fun RecentTransactionsList(
     onTransactionClick: (TransactionWithCategory) -> Unit
 ) {
     LazyColumn(
-        modifier = modifier
+        modifier = modifier,
+        contentPadding = PaddingValues(bottom = 80.dp)
     ) {
         items(transactions) { transactionWithCategory ->
             val transaction = transactionWithCategory.transaction
@@ -441,69 +379,3 @@ fun RecentTransactionsList(
         }
     }
 }
-
-
-//@Composable
-//fun BottomNavigationBar(selectedTab: Int, onTabSelected: (Int) -> Unit) {
-//    NavigationBar(
-//        containerColor = White,
-//        tonalElevation = 8.dp
-//    ) {
-//        NavigationBarItem(
-//            icon = { Icon(Icons.Default.Home, contentDescription = "Home") },
-//            label = {
-//                Text(
-//                    "Home",
-//                    textAlign = TextAlign.Center,
-//                    modifier = Modifier.fillMaxWidth()
-//                )
-//            },
-//            selected = selectedTab == 0,
-//            onClick = { onTabSelected(0) }
-//        )
-//        NavigationBarItem(
-//            icon = {
-//                Icon(
-//                    painterResource(R.drawable.list),
-//                    contentDescription = "Transaction List"
-//                )
-//            },
-//            label = {
-//                Text(
-//                    "Transaction list",
-//                    textAlign = TextAlign.Center,
-//                    modifier = Modifier.fillMaxWidth()
-//                )
-//            },
-//            selected = selectedTab == 1,
-//            onClick = { onTabSelected(1) }
-//        )
-//
-//        Spacer(Modifier.width(64.dp)) // This reserves space for the FAB
-//
-//        NavigationBarItem(
-//            icon = { Icon(painterResource(R.drawable.barchart), contentDescription = "Analytics") },
-//            label = {
-//                Text(
-//                    "Analytics",
-//                    textAlign = TextAlign.Center,
-//                    modifier = Modifier.fillMaxWidth()
-//                )
-//            },
-//            selected = selectedTab == 2,
-//            onClick = { onTabSelected(2) }
-//        )
-//        NavigationBarItem(
-//            icon = { Icon(Icons.Default.Person, contentDescription = "Profile") },
-//            label = {
-//                Text(
-//                    "Profile",
-//                    textAlign = TextAlign.Center,
-//                    modifier = Modifier.fillMaxWidth()
-//                )
-//            },
-//            selected = selectedTab == 3,
-//            onClick = { onTabSelected(3) }
-//        )
-//    }
-//}

@@ -12,7 +12,9 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.geometry.RoundRect
 
 class BottomNavShape(
+    private val cornerRadius: Float,
     private val dockRadius: Float,
+    private val dockVerticalOffset: Float = 8f
 ) : Shape {
     override fun createOutline(
         size: Size,
@@ -20,21 +22,25 @@ class BottomNavShape(
         density: Density
     ) = androidx.compose.ui.graphics.Outline.Generic(
         Path().apply {
+            // Main bar with rounded top corners
             addRoundRect(
                 RoundRect(
                     left = 0f,
                     top = 0f,
                     right = size.width,
                     bottom = size.height,
-                    topLeftCornerRadius = CornerRadius(0f, 0f),
-                    topRightCornerRadius = CornerRadius(0f, 0f),
-                    bottomRightCornerRadius = CornerRadius(0f, 0f),
-                    bottomLeftCornerRadius = CornerRadius(0f, 0f)
+                    topLeftCornerRadius = CornerRadius(cornerRadius, cornerRadius),
+                    topRightCornerRadius = CornerRadius(cornerRadius, cornerRadius),
+                    bottomLeftCornerRadius = CornerRadius(0f, 0f),
+                    bottomRightCornerRadius = CornerRadius(0f, 0f)
                 )
             )
+            // Cutout: a semicircle, slightly deeper than before
+            val fabCenterX = size.width / 2
+            val fabCenterY = -dockRadius + dockVerticalOffset // Dips into the bar
             addOval(
                 Rect(
-                    Offset(size.width / 2 - dockRadius, -dockRadius),
+                    Offset(fabCenterX - dockRadius, fabCenterY),
                     Size(dockRadius * 2, dockRadius * 2)
                 )
             )

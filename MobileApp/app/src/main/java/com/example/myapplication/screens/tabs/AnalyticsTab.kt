@@ -24,6 +24,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.example.myapplication.R
+import com.example.myapplication.components.AdBanner
 import com.example.myapplication.components.CustomSegmentedTabRow
 import com.example.myapplication.helpers.askHuggingFace
 import com.example.myapplication.screens.dialogs.CustomDateRangeDialog
@@ -165,6 +166,12 @@ fun AnalyticsTab(
                 .background(White)
                 .padding(horizontal = 24.dp, vertical = 18.dp)
         ) {
+            AdBanner(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp)
+            )
+            Spacer(Modifier.height(10.dp))
             Text(
                 text = "Analytics",
                 fontSize = 28.sp,
@@ -308,7 +315,7 @@ fun AnalyticsTab(
             }
         }
 
-        // --- Smaller FAB ---
+        // --- FAB ---
         FloatingActionButton(
             onClick = { aiDialogVisible = true },
             containerColor = PrimaryBlue,
