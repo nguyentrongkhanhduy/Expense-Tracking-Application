@@ -4,9 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.ripple
@@ -64,7 +61,7 @@ fun CustomBottomBar(
                     ) { onTabSelected(0) }
             ) {
                 Icon(
-                    Icons.Default.Home,
+                    painterResource(R.drawable.home),
                     contentDescription = "Home",
                     modifier = Modifier.size(32.dp),
                     tint = if (selectedTab == 0) PrimaryBlue else Color.Gray
@@ -152,7 +149,7 @@ fun CustomBottomBar(
                     ) { onTabSelected(3) }
             ) {
                 Icon(
-                    Icons.Default.Person,
+                    painterResource(R.drawable.profile),
                     contentDescription = "Profile",
                     modifier = Modifier.size(32.dp),
                     tint = if (selectedTab == 3) PrimaryBlue else Color.Gray

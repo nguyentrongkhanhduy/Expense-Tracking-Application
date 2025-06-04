@@ -41,7 +41,6 @@ import com.example.myapplication.helpers.saveBitmapToInternalStorage
 import com.example.myapplication.ui.theme.PrimaryBlue
 import com.example.myapplication.ui.theme.PrimaryRed
 import com.example.myapplication.ui.theme.White
-import com.example.myapplication.ui.theme.ButtonBlue
 import com.example.myapplication.viewmodel.AuthViewModel
 import com.example.myapplication.viewmodel.LocationViewModel
 import com.example.myapplication.viewmodel.TransactionViewModel
@@ -442,7 +441,7 @@ fun AddTransactionDialog(
                         },
                         enabled = viewModel.validateInputs(),
                         modifier = Modifier.weight(1f),
-                        colors = ButtonDefaults.buttonColors(containerColor = ButtonBlue),
+                        colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue),
                         shape = RoundedCornerShape(20.dp),
                         elevation = ButtonDefaults.buttonElevation(4.dp)
                     ) {

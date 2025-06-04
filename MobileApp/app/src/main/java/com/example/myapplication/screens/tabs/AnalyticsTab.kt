@@ -2,26 +2,32 @@ package com.example.myapplication.screens.tabs
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableDoubleStateOf
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+import com.example.myapplication.R
 import com.example.myapplication.components.CustomSegmentedTabRow
+import com.example.myapplication.helpers.askHuggingFace
 import com.example.myapplication.screens.dialogs.CustomDateRangeDialog
 import com.example.myapplication.ui.theme.COMBINED_COLORS
 import com.example.myapplication.ui.theme.PrimaryBlue
+import com.example.myapplication.ui.theme.PrimaryRed
 import com.example.myapplication.ui.theme.White
 import com.example.myapplication.viewmodel.AuthViewModel
 import com.example.myapplication.viewmodel.CategoryViewModel
@@ -57,18 +63,17 @@ fun AnalyticsTab(
     var total by remember { mutableDoubleStateOf(0.0) }
     var entries by remember { mutableStateOf<List<PieEntry>>(mutableListOf()) }
 
+    // --- AI Assistant State ---
+    var aiDialogVisible by remember { mutableStateOf(false) }
+    var aiResponse by remember { mutableStateOf<String?>(null) }
+    var aiLoading by remember { mutableStateOf(false) }
+
     LaunchedEffect(selectedTimeTab) {
         val calendar = Calendar.getInstance()
         val now = calendar.timeInMillis
-
         when (selectedTimeTab) {
-            0 -> {
-                startDate = null
-                endDate = null
-            }
-
+            0 -> { startDate = null; endDate = null }
             1 -> {
-                // Today
                 calendar.set(Calendar.HOUR_OF_DAY, 0)
                 calendar.set(Calendar.MINUTE, 0)
                 calendar.set(Calendar.SECOND, 0)
@@ -76,9 +81,7 @@ fun AnalyticsTab(
                 startDate = calendar.timeInMillis
                 endDate = now
             }
-
             2 -> {
-                // Week
                 calendar.set(Calendar.DAY_OF_WEEK, calendar.firstDayOfWeek)
                 calendar.set(Calendar.HOUR_OF_DAY, 0)
                 calendar.set(Calendar.MINUTE, 0)
@@ -87,9 +90,7 @@ fun AnalyticsTab(
                 startDate = calendar.timeInMillis
                 endDate = now
             }
-
             3 -> {
-                // Month
                 calendar.set(Calendar.DAY_OF_MONTH, 1)
                 calendar.set(Calendar.HOUR_OF_DAY, 0)
                 calendar.set(Calendar.MINUTE, 0)
@@ -98,10 +99,7 @@ fun AnalyticsTab(
                 startDate = calendar.timeInMillis
                 endDate = now
             }
-
-            4 -> {
-                customDateDialogExpanded = true
-            }
+            4 -> { customDateDialogExpanded = true }
         }
     }
 
@@ -114,21 +112,17 @@ fun AnalyticsTab(
                 entries = transactionViewModel.getTotalSpendingAndEarning(startDate, endDate)
                     .toMutableList()
             }
-
             1 -> {
                 selectedType = "Spending"
                 centerText = "Total"
                 total = transactionViewModel.getTotalSpend(startDate, endDate)
-                entries =
-                    transactionViewModel.getSpendingByCategory(startDate, endDate).toMutableList()
+                entries = transactionViewModel.getSpendingByCategory(startDate, endDate).toMutableList()
             }
-
             2 -> {
                 selectedType = "Earning"
                 centerText = "Total"
                 total = transactionViewModel.getTotalEarn(startDate, endDate)
-                entries =
-                    transactionViewModel.getEarningByCategory(startDate, endDate).toMutableList()
+                entries = transactionViewModel.getEarningByCategory(startDate, endDate).toMutableList()
             }
         }
     }
@@ -187,28 +181,17 @@ fun AnalyticsTab(
                     .height(250.dp),
                 factory = { context ->
                     val pieChart = com.github.mikephil.charting.charts.PieChart(context)
-
-                    //slice thickness
-//                    pieChart.holeRadius = 38f
-//                    pieChart.transparentCircleRadius = 40f // optional
-
                     pieChart.setUsePercentValues(false)
-
-                    //labels inside the slice
                     pieChart.setDrawEntryLabels(true)
                     pieChart.setEntryLabelTextSize(14f)
                     pieChart.setEntryLabelColor(android.graphics.Color.rgb(24, 49, 83))
                     pieChart.setEntryLabelTypeface(android.graphics.Typeface.DEFAULT_BOLD)
-
                     pieChart.legend.isEnabled = false
                     pieChart.description.isEnabled = false
-
-                    //center text
                     pieChart.setDrawCenterText(true)
                     pieChart.setCenterTextSize(18f)
                     pieChart.setCenterTextColor(android.graphics.Color.rgb(24, 49, 83))
                     pieChart.setCenterTextTypeface(android.graphics.Typeface.DEFAULT_BOLD)
-
                     pieChart
                 },
                 update = { pieChart ->
@@ -222,7 +205,6 @@ fun AnalyticsTab(
                     dataSet.valueLineColor = android.graphics.Color.DKGRAY
                     dataSet.valueFormatter = object : IValueFormatter {
                         private val decimalFormat = DecimalFormat("#,###.##")
-
                         override fun getFormattedValue(
                             value: Float,
                             entry: Entry?,
@@ -232,17 +214,167 @@ fun AnalyticsTab(
                             return "${decimalFormat.format(value)} $"
                         }
                     }
-
                     val data = PieData(dataSet)
                     data.setValueTextSize(16f)
-
                     pieChart.data = data
                     pieChart.centerText = "${centerText}\n$${total}"
-
                     pieChart.invalidate()
-
                 }
             )
+        }
+
+        // --- Smaller FAB ---
+        FloatingActionButton(
+            onClick = { aiDialogVisible = true },
+            containerColor = PrimaryBlue,
+            contentColor = White,
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(end = 24.dp, bottom = 120.dp),
+            shape = RoundedCornerShape(16.dp),
+            elevation = FloatingActionButtonDefaults.elevation(8.dp)
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.sparkle),
+                contentDescription = "Ask AI",
+                modifier = Modifier.size(22.dp)
+            )
+        }
+
+        // --- AI Dialog (scrollable, formatted answer!) ---
+        if (aiDialogVisible) {
+            Dialog(
+                onDismissRequest = {
+                    aiDialogVisible = false
+                    aiResponse = null
+                    aiLoading = false
+                },
+                properties = DialogProperties(usePlatformDefaultWidth = false)
+            ) {
+                Card(
+                    shape = RoundedCornerShape(24.dp),
+                    modifier = Modifier
+                        .padding(20.dp)
+                        .fillMaxWidth(0.95f)
+                        .wrapContentHeight()
+                        .heightIn(max = 400.dp)
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .background(White)
+                            .padding(24.dp)
+                            .verticalScroll(rememberScrollState())
+                            .fillMaxWidth()
+                    ) {
+                        Box(
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 12.dp)
+                        ) {
+                            IconButton(
+                                onClick = {
+                                    aiDialogVisible = false
+                                    aiResponse = null
+                                    aiLoading = false
+                                },
+                                modifier = Modifier.align(Alignment.CenterStart)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.ArrowBack,
+                                    contentDescription = "Close",
+                                    tint = PrimaryBlue
+                                )
+                            }
+                            Text(
+                                "Ask AI for Advice",
+                                color = PrimaryBlue,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 22.sp,
+                                modifier = Modifier.align(Alignment.Center),
+                                textAlign = TextAlign.Center
+                            )
+                        }
+                        var userInput by remember { mutableStateOf("") }
+                        OutlinedTextField(
+                            value = userInput,
+                            onValueChange = { userInput = it },
+                            label = { Text("Your question") },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 8.dp),
+                            textStyle = TextStyle(fontSize = 18.sp)
+                        )
+                        if (aiLoading) {
+                            CircularProgressIndicator(Modifier.padding(top = 18.dp))
+                        } else if (aiResponse != null) {
+                            // --- Improved AI Answer Formatting ---
+                            val lines = aiResponse!!.lines()
+                            Column(
+                                modifier = Modifier
+                                    .padding(top = 18.dp)
+                                    .fillMaxWidth()
+                                    .background(Color(0xFFF7F9FA), shape = RoundedCornerShape(12.dp))
+                                    .padding(16.dp)
+                            ) {
+                                Text(
+                                    text = "AI Advice:",
+                                    color = PrimaryBlue,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 18.sp,
+                                    modifier = Modifier.padding(bottom = 8.dp)
+                                )
+                                lines.forEach { line ->
+                                    val trimmed = line.trim()
+                                    if (trimmed.startsWith("-") || trimmed.startsWith("*")) {
+                                        Row(Modifier.padding(bottom = 4.dp)) {
+                                            Text("• ", fontWeight = FontWeight.Bold, color = PrimaryBlue)
+                                            Text(trimmed.removePrefix("-").removePrefix("*").trim(), color = Color.DarkGray)
+                                        }
+                                    } else if (trimmed.isNotEmpty()) {
+                                        Text(trimmed, color = Color.DarkGray, modifier = Modifier.padding(bottom = 8.dp))
+                                    }
+                                }
+                            }
+                        }
+                        Spacer(Modifier.height(20.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            Button(
+                                onClick = {
+                                    aiDialogVisible = false
+                                    aiResponse = null
+                                    aiLoading = false
+                                },
+                                modifier = Modifier.weight(1f),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = PrimaryRed,
+                                    contentColor = White
+                                ),
+                                shape = RoundedCornerShape(20.dp)
+                            ) {
+                                Text("Cancel", fontWeight = FontWeight.Bold)
+                            }
+                            Button(
+                                onClick = {
+                                    aiLoading = true
+                                    askHuggingFace(userInput) { reply ->
+                                        aiResponse = reply
+                                        aiLoading = false
+                                    }
+                                },
+                                enabled = userInput.isNotBlank() && !aiLoading,
+                                modifier = Modifier.weight(1f),
+                                colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue),
+                                shape = RoundedCornerShape(20.dp)
+                            ) {
+                                Text("Ask", color = White, fontWeight = FontWeight.Bold)
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }
