@@ -51,7 +51,7 @@ import java.util.Locale
 @Composable
 fun CustomDateRangeDialog(
     onDismiss: () -> Unit,
-    onConfirm: (start: Long, end: Long) -> Unit
+    onConfirm: (start: Long?, end: Long?) -> Unit
 ) {
     val startDateState = rememberDatePickerState()
     val endDateState = rememberDatePickerState()
@@ -177,8 +177,8 @@ fun CustomDateRangeDialog(
                     Button(
                         onClick = {
                             onConfirm(
-                                startDateState.selectedDateMillis!!,
-                                endDateState.selectedDateMillis!!
+                                startDateState.selectedDateMillis,
+                                endDateState.selectedDateMillis
                             )
                             onDismiss()
                         },

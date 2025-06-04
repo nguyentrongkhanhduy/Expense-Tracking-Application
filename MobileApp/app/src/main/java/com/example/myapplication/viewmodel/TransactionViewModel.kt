@@ -174,6 +174,7 @@ class TransactionViewModel(
         return spendingByCategory.map { (categoryName, amount) ->
             PieEntry(amount, categoryName)
         }
+            .sortedByDescending { it.label }
     }
 
     fun getEarningByCategory(startDate: Long? = null, endDate: Long? = null): List<PieEntry> {
@@ -196,6 +197,7 @@ class TransactionViewModel(
         return earningByCategory.map { (categoryName, amount) ->
             PieEntry(amount, categoryName)
         }
+            .sortedBy { it.label }
     }
 
     fun getBalance(startDate: Long? = null, endDate: Long? = null): Double {
@@ -236,5 +238,45 @@ class TransactionViewModel(
                         (endDate == null || it.transaction.date <= endDate)
             }
             .sumOf { it.transaction.amount }
+    }
+
+    fun getSpendingWithLimitByCategory(startDate: Long? = null, endDate: Long? = null): List<Pair<String, Double>> {
+        return transactionsWithCategory.value
+            .filter {
+                it.transaction.type.lowercase() == "expense" &&
+                        (startDate == null || it.transaction.date >= startDate) &&
+                        (endDate == null || it.transaction.date <= endDate)
+            }
+            .groupBy { it.category?.title ?: "Unknown" }
+            .map { (categoryName, transactions) ->
+                val totalSpent = transactions.sumOf { it.transaction.amount }
+                val limit = transactions.firstOrNull()?.category?.limit ?: 0.0
+                "$categoryName|$limit" to totalSpent
+            }
+            .sortedBy { it.first }
+    }
+
+
+    fun getEarningWithTotalByCategory(startDate: Long? = null, endDate: Long? = null): List<Pair<String, Double>> {
+        val totalEarned = transactionsWithCategory.value
+            .filter {
+                it.transaction.type.lowercase() == "income" &&
+                        (startDate == null || it.transaction.date >= startDate) &&
+                        (endDate == null || it.transaction.date <= endDate)
+            }
+            .sumOf { it.transaction.amount }
+
+        return transactionsWithCategory.value
+            .filter {
+                it.transaction.type.lowercase() == "income" &&
+                        (startDate == null || it.transaction.date >= startDate) &&
+                        (endDate == null || it.transaction.date <= endDate)
+            }
+            .groupBy { it.category?.title ?: "Unknown" }
+            .map { (categoryName, transactions) ->
+                val categoryTotal = transactions.sumOf { it.transaction.amount }
+                "$categoryName|$totalEarned" to categoryTotal
+            }
+            .sortedBy { it.first }
     }
 }
