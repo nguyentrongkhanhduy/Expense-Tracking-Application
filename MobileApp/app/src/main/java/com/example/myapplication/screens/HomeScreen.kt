@@ -325,7 +325,7 @@ fun HomeTabContent(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(PrimaryBlue.copy(alpha = 0.85f), RoundedCornerShape(16.dp))
+                .background(PrimaryBlue, RoundedCornerShape(16.dp))
                 .padding(vertical = 12.dp, horizontal = 16.dp)
         ) {
             Column(
