@@ -6,10 +6,12 @@ import androidx.activity.compose.setContent
 import com.example.myapplication.helpers.RequestNotificationPermission
 import com.example.myapplication.helpers.createNotificationChannel
 import com.example.myapplication.navigation.AppNavHost
+import com.google.android.gms.ads.MobileAds
 import com.google.firebase.FirebaseApp
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
+        MobileAds.initialize(this) {}
         super.onCreate(savedInstanceState)
         FirebaseApp.initializeApp(this)
         createNotificationChannel(applicationContext)

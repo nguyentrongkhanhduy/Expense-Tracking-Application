@@ -3,8 +3,10 @@ package com.example.myapplication.screens.tabs
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
@@ -38,10 +40,12 @@ fun ProfileTab(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.White)
-            .padding(horizontal = 24.dp),
+            .padding(horizontal = 24.dp)
+            .verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
+
         Text(
             text = "Profile",
             fontSize = 28.sp,
@@ -137,5 +141,7 @@ fun ProfileTab(
                 Text("Log in", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
             }
         }
+        Spacer(Modifier.height(32.dp))
+
     }
 }
