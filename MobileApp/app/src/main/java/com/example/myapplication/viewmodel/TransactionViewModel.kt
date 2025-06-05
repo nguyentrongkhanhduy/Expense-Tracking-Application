@@ -286,4 +286,24 @@ class TransactionViewModel(
             transactionRepository.updateAllAmountsByExchangeRate(exchangeRate)
         }
     }
+
+    fun getFinancialSummary(startDate: Long? = null, endDate: Long? = null): String {
+        val totalSpend = getTotalSpend(startDate, endDate)
+        val totalEarn = getTotalEarn(startDate, endDate)
+        val balance = getBalance(startDate, endDate)
+        val spendingByCat = getSpendingWithLimitByCategory(startDate, endDate)
+            .joinToString("\n") { (cat, spent) ->
+                val (name, limit) = cat.split("|")
+                "$name: $spent spent (limit: $limit)"
+            }
+        return """
+        Financial Overview:
+        - Total spent: $totalSpend
+        - Total earned: $totalEarn
+        - Net balance: $balance
+        - Category breakdown:
+        $spendingByCat
+    """.trimIndent()
+    }
+
 }
