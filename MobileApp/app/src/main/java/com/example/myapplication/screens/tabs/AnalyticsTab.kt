@@ -74,6 +74,8 @@ fun AnalyticsTab(
     var aiResponse by remember { mutableStateOf<String?>(null) }
     var aiLoading by remember { mutableStateOf(false) }
 
+
+
     val context = LocalContext.current
 
     var shortFormCurrency by remember { mutableStateOf("CAD") }
@@ -475,7 +477,19 @@ fun AnalyticsTab(
                             Button(
                                 onClick = {
                                     aiLoading = true
-                                    askHuggingFace(userInput) { reply ->
+                                    // Build the context summary, add currency if you want
+                                    val contextSummary = transactionViewModel.getFinancialSummary(startDate, endDate)
+                                        .replace("spent (limit:", "spent (limit: $shortFormCurrency")
+                                        .replace("Total spent:", "Total spent: $shortFormCurrency")
+                                        .replace("Total earned:", "Total earned: $shortFormCurrency")
+                                        .replace("Net balance:", "Net balance: $shortFormCurrency")
+                                    val fullPrompt = """
+            Here is my recent financial data:
+            $contextSummary
+
+            Now answer this question: $userInput
+        """.trimIndent()
+                                    askHuggingFace(fullPrompt) { reply ->
                                         aiResponse = reply
                                         aiLoading = false
                                     }
@@ -487,6 +501,7 @@ fun AnalyticsTab(
                             ) {
                                 Text("Ask", color = White, fontWeight = FontWeight.Bold)
                             }
+
                         }
                     }
                 }

@@ -6,7 +6,7 @@ import org.json.JSONArray
 import org.json.JSONObject
 import java.io.IOException
 
-const val HF_API_TOKEN = "/* THIS IS WHERE YOU PUT THE ACCESS TOKEN */"
+const val HF_API_TOKEN = ""
 
 fun askHuggingFace(question: String, onResult: (String) -> Unit) {
     val client = OkHttpClient.Builder()
