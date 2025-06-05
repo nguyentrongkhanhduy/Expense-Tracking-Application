@@ -174,7 +174,7 @@ class TransactionViewModel(
         return spendingByCategory.map { (categoryName, amount) ->
             PieEntry(amount, categoryName)
         }
-            .sortedByDescending { it.label }
+            .sortedBy { it.label }
     }
 
     fun getEarningByCategory(startDate: Long? = null, endDate: Long? = null): List<PieEntry> {
