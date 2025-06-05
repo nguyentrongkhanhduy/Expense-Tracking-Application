@@ -14,6 +14,7 @@ import com.example.myapplication.helpers.sendBudgetExceededNotification
 import com.github.mikephil.charting.data.PieEntry
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -148,9 +149,9 @@ class TransactionViewModel(
             }
             .sumOf { it.transaction.amount }
 
-        return listOf(
-            PieEntry(totalSpending.toFloat(), "Spending"),
-            PieEntry(totalEarning.toFloat(), "Earning")
+        return listOfNotNull(
+            if (totalSpending > 0) PieEntry(totalSpending.toFloat(), "Spending") else null,
+            if (totalEarning > 0) PieEntry(totalEarning.toFloat(), "Earning") else null
         )
     }
 
@@ -278,5 +279,11 @@ class TransactionViewModel(
                 "$categoryName|$totalEarned" to categoryTotal
             }
             .sortedBy { it.first }
+    }
+
+    fun updateAllAmountsByExchangeRate(exchangeRate: Double) {
+        viewModelScope.launch {
+            transactionRepository.updateAllAmountsByExchangeRate(exchangeRate)
+        }
     }
 }

@@ -2,39 +2,90 @@ package com.example.myapplication.screens.tabs
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material3.*
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
+import com.example.myapplication.components.CustomDropdownMenu
 import com.example.myapplication.components.MyButton
+import com.example.myapplication.data.datastore.UserPreferences
 import com.example.myapplication.ui.theme.PrimaryBlue
 import com.example.myapplication.ui.theme.PrimaryRed
+import com.example.myapplication.viewmodel.CurrencyViewModel
 import com.google.firebase.auth.FirebaseAuth
+import kotlinx.coroutines.launch
 
 @Composable
 fun ProfileTab(
     navController: NavController,
-    onChangeCurrency: () -> Unit = {},
+    currencyViewModel: CurrencyViewModel,
+    onCurrencyChange: (Double) -> Unit = {},
     onSyncData: () -> Unit = {},
     onBackupData: () -> Unit = {},
     onLogout: () -> Unit = {},
 ) {
+    val context = LocalContext.current
+
     val user = FirebaseAuth.getInstance().currentUser
     val displayName = user?.displayName ?: "Username"
     val email = user?.email ?: "Username@gmail.com"
+
+    val currencyOptions = listOf(
+        "US Dollar",
+        "Canadian Dollar",
+        "Australian Dollar",
+        "Indian Rupee",
+        "Euro",
+        "British Pound",
+        "Japanese Yen",
+        "Chinese Yuan",
+        "Swiss Franc",
+        "Swedish Krona",
+        "Hong Kong Dollar",
+        "Singapore Dollar",
+        "Russian Ruble"
+    )
+
+
+    var selectedCurrency by remember { mutableStateOf("") }
+
+    LaunchedEffect(Unit) {
+        val defaultCurrency = UserPreferences.getCurrency(context)
+        selectedCurrency = defaultCurrency
+    }
+
+    LaunchedEffect(selectedCurrency) {
+        UserPreferences.setCurrency(context, selectedCurrency) // Persist the new selection
+    }
 
     Column(
         modifier = Modifier
@@ -90,19 +141,27 @@ fun ProfileTab(
             horizontalArrangement = Arrangement.Center
         ) {
             Text(
-                text = "Currency preference: CAD",
+                text = "Currency preference:",
                 fontSize = 15.sp
             )
-            Spacer(modifier = Modifier.width(10.dp))
-            Button(
-                onClick = onChangeCurrency,
-                colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue),
-                contentPadding = PaddingValues(horizontal = 18.dp, vertical = 6.dp),
-                shape = RoundedCornerShape(10.dp),
-                modifier = Modifier.height(36.dp)
-            ) {
-                Text("Change", fontSize = 14.sp, color = Color.White)
-            }
+            CustomDropdownMenu(
+                list = currencyOptions,
+                selected = selectedCurrency,
+                color = PrimaryBlue,
+                onSelected = { selectedIndex ->
+                    val fromCurrency = currencyViewModel.getCurrencyShortForm(selectedCurrency)
+                    val toCurrency = currencyViewModel.getCurrencyShortForm(currencyOptions[selectedIndex])
+                    selectedCurrency = currencyOptions[selectedIndex]
+
+                    currencyViewModel.getExchangeRate(fromCurrency, toCurrency) {
+                        it.quotes.entries.firstOrNull()?.value?.let { rate ->
+                            println("DEBUG: exchange rate = $rate")
+                            onCurrencyChange(rate)
+                        }
+                    }
+                },
+                modifier = Modifier.padding(start = 10.dp),
+                )
         }
         Spacer(modifier = Modifier.height(28.dp))
         MyButton(onClick = { navController.navigate("categories?fromTab=3") }) {
@@ -119,7 +178,12 @@ fun ProfileTab(
 
         if (user != null) {
             MyButton(onClick = onSyncData) {
-                Text("Sync data", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                Text(
+                    "Sync data",
+                    color = Color.White,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold
+                )
             }
             Spacer(modifier = Modifier.height(16.dp))
 

@@ -3,6 +3,7 @@ package com.example.myapplication.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.myapplication.models.User
+import com.example.myapplication.services.AuthApiService
 import com.example.myapplication.services.RetrofitClient
 import com.example.myapplication.services.SignUpRequest
 import com.example.myapplication.services.TokenRequest
@@ -26,6 +27,8 @@ class AuthViewModel : ViewModel() {
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading
 
+    private val authService = RetrofitClient.createService(AuthApiService::class.java, "http://10.0.2.2:3000")
+
     fun signIn(email: String, password: String) {
         _isLoading.value = true
         _isSignedIn.value = false
@@ -36,7 +39,7 @@ class AuthViewModel : ViewModel() {
                         val idToken = tokenResult.token ?: return@addOnSuccessListener
                         viewModelScope.launch {
                             try {
-                                val response = RetrofitClient.instance.signIn(TokenRequest(idToken))
+                                val response = authService.signIn(TokenRequest(idToken))
                                 _isSignedIn.value = true
                                 _isLoading.value = false
                                 _user.value = response
@@ -62,7 +65,7 @@ class AuthViewModel : ViewModel() {
         val request = SignUpRequest(email, password, displayName)
         viewModelScope.launch {
             try {
-                val response = RetrofitClient.instance.signUp(request)
+                val response = authService.signUp(request)
                 _user.value = response
                 _isSignedUp.value = true
                 _isLoading.value = false

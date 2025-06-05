@@ -14,6 +14,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -26,6 +27,7 @@ import androidx.compose.ui.window.DialogProperties
 import com.example.myapplication.R
 import com.example.myapplication.components.AdBanner
 import com.example.myapplication.components.CustomSegmentedTabRow
+import com.example.myapplication.data.datastore.UserPreferences
 import com.example.myapplication.helpers.askHuggingFace
 import com.example.myapplication.screens.dialogs.CustomDateRangeDialog
 import com.example.myapplication.ui.theme.COMBINED_COLORS
@@ -34,6 +36,7 @@ import com.example.myapplication.ui.theme.PrimaryRed
 import com.example.myapplication.ui.theme.White
 import com.example.myapplication.viewmodel.AuthViewModel
 import com.example.myapplication.viewmodel.CategoryViewModel
+import com.example.myapplication.viewmodel.CurrencyViewModel
 import com.example.myapplication.viewmodel.TransactionViewModel
 import com.github.mikephil.charting.charts.PieChart
 import com.github.mikephil.charting.data.Entry
@@ -48,8 +51,7 @@ import java.util.Calendar
 @Composable
 fun AnalyticsTab(
     transactionViewModel: TransactionViewModel,
-    categoryViewModel: CategoryViewModel,
-    authViewModel: AuthViewModel
+    currencyViewModel: CurrencyViewModel
 ) {
     val timeTab = listOf("All", "Today", "Week", "Month", "Custom")
     var selectedTimeTab by remember { mutableIntStateOf(0) }
@@ -71,6 +73,14 @@ fun AnalyticsTab(
     var aiDialogVisible by remember { mutableStateOf(false) }
     var aiResponse by remember { mutableStateOf<String?>(null) }
     var aiLoading by remember { mutableStateOf(false) }
+
+    val context = LocalContext.current
+
+    var shortFormCurrency by remember { mutableStateOf("CAD") }
+    LaunchedEffect(Unit) {
+        val defaultCurrency = UserPreferences.getCurrency(context)
+        shortFormCurrency = currencyViewModel.getCurrencyShortForm(defaultCurrency)
+    }
 
     LaunchedEffect(selectedTimeTab) {
         val calendar = Calendar.getInstance()
@@ -233,13 +243,13 @@ fun AnalyticsTab(
                             dataSetIndex: Int,
                             viewPortHandler: ViewPortHandler?
                         ): String {
-                            return "${decimalFormat.format(value)} $"
+                            return "${decimalFormat.format(value)} $shortFormCurrency"
                         }
                     }
                     val data = PieData(dataSet)
                     data.setValueTextSize(16f)
                     pieChart.data = data
-                    pieChart.centerText = "${centerText}\n$${total}"
+                    pieChart.centerText = "${centerText}\n${"%.2f".format(total)} $shortFormCurrency"
                     pieChart.invalidate()
                 }
             )
@@ -276,7 +286,7 @@ fun AnalyticsTab(
 
                                 Row {
                                     Text(
-                                        text = "$$amount",
+                                        text = "$amount $shortFormCurrency",
                                         fontSize = 14.sp,
                                         color = PrimaryBlue
                                     )
@@ -284,7 +294,7 @@ fun AnalyticsTab(
                                     val effectiveLimit = if (limit != null && limit > 0) limit else total
                                     Text(
                                         text = buildString {
-                                            append(" of $$effectiveLimit")
+                                            append(" of $effectiveLimit $shortFormCurrency")
                                             if (limit == null || limit == 0.0) append(" (total)")
                                         },
                                         fontSize = 14.sp,

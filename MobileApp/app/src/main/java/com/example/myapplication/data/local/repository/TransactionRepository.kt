@@ -30,4 +30,8 @@ class TransactionRepository(private val dao: TransactionDao) {
     fun getTransactionsWithCategory(): Flow<List<TransactionWithCategory>> = dao.getAllTransactionsWithCategory()
 
     fun getTotalAmountForCategory(categoryId: Long): Double = dao.getTotalAmountForCategory(categoryId)
+
+    suspend fun updateAllAmountsByExchangeRate(exchangeRate: Double) {
+        dao.updateAllAmountsByExchangeRate(exchangeRate)
+    }
 }

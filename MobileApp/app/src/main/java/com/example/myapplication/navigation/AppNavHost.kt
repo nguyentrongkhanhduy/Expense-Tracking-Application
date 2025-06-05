@@ -17,6 +17,7 @@ import com.example.myapplication.screens.WelcomeScreen
 import com.example.myapplication.viewmodel.AuthViewModel
 import com.example.myapplication.viewmodel.CategoryViewModel
 import com.example.myapplication.viewmodel.CategoryViewModelFactory
+import com.example.myapplication.viewmodel.CurrencyViewModel
 import com.example.myapplication.viewmodel.LocationViewModel
 import com.example.myapplication.viewmodel.TransactionViewModel
 import com.example.myapplication.viewmodel.TransactionViewModelFactory
@@ -33,6 +34,7 @@ fun AppNavHost() {
     val transactionViewModel: TransactionViewModel = viewModel(
         factory = TransactionViewModelFactory(context)
     )
+    val currencyViewModel: CurrencyViewModel = viewModel()
 
     NavHost(navController, startDestination = "splash") {
         composable("splash") { SplashScreen(navController) }
@@ -66,6 +68,7 @@ fun AppNavHost() {
                 transactionViewModel = transactionViewModel,
                 categoryViewModel = categoryViewModel,
                 locationViewModel = locationViewModel,
+                currencyViewModel = currencyViewModel,
                 isGuest = isGuest,
                 initialTab = selectedTab
             )

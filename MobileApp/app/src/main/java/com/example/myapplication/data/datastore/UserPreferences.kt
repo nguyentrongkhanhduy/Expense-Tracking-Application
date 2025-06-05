@@ -35,6 +35,18 @@ object UserPreferences {
         }
     }
 
+    suspend fun getCurrency(context: Context): String {
+        return context.dataStore.data
+            .map { it[PreferencesKeys.DEFAULT_CURRENCY] ?: "Canadian Dollar" }
+            .first()
+    }
+
+    suspend fun setCurrency(context: Context, currency: String) {
+        context.dataStore.edit {
+            it[PreferencesKeys.DEFAULT_CURRENCY] = currency
+        }
+    }
+
     // Initialize category
     suspend fun isInitialized(context: Context): Boolean {
         return context.dataStore.data
