@@ -302,8 +302,8 @@ fun AnalyticsTab(
                                     .fillMaxWidth()
                                     .height(20.dp)
                                     .clip(RoundedCornerShape(8.dp)),
-                                color = PrimaryBlue,
-                                trackColor = Color.LightGray,
+                                color = Color(COMBINED_COLORS[index % COMBINED_COLORS.size]),
+                                trackColor = Color(COMBINED_COLORS[index % COMBINED_COLORS.size]).copy(alpha = 0.3f),
                             )
                         }
                     }
