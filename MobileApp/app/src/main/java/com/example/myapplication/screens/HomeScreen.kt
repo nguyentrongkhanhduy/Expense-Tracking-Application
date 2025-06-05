@@ -50,6 +50,8 @@ import com.example.myapplication.ui.theme.White
 import com.example.myapplication.viewmodel.LocationViewModel
 import androidx.compose.material3.FloatingActionButtonDefaults
 import com.example.myapplication.components.AdBanner
+import com.example.myapplication.data.datastore.UserPreferences
+import com.example.myapplication.viewmodel.CurrencyViewModel
 
 @Composable
 fun HomeScreen(
@@ -58,9 +60,12 @@ fun HomeScreen(
     transactionViewModel: TransactionViewModel,
     categoryViewModel: CategoryViewModel,
     locationViewModel: LocationViewModel,
+    currencyViewModel: CurrencyViewModel,
     isGuest: Boolean = false,
     initialTab: Int = 0
 ) {
+
+
     val user by authViewModel.user.collectAsState()
     val isSignedIn by authViewModel.isSignedIn.collectAsState()
     val categories by categoryViewModel.categories.collectAsState()
@@ -77,6 +82,12 @@ fun HomeScreen(
     var selectedTab by rememberSaveable { mutableStateOf(initialTab) }
 
     val context = LocalContext.current
+
+    var shortFormCurrency by remember { mutableStateOf("CAD") }
+    LaunchedEffect(Unit) {
+        val defaultCurrency = UserPreferences.getCurrency(context)
+        shortFormCurrency = currencyViewModel.getCurrencyShortForm(defaultCurrency)
+    }
 
     LaunchedEffect(isSignedIn) {
         if (!isSignedIn && !isGuest) {
@@ -99,12 +110,13 @@ fun HomeScreen(
         when (selectedTab) {
             0 -> HomeTabContent(
                 user = user,
-                balance = "$%.2f".format(balance),
-                expenses = "$%.2f".format(expenses),
-                income = "$%.2f".format(income),
+                balance = "%.2f $shortFormCurrency".format(balance),
+                expenses = "%.2f $shortFormCurrency".format(expenses),
+                income = "%.2f $shortFormCurrency".format(income),
                 transactionsWithCategory = transactionsWithCategory,
                 onTransactionClick = { editingTransaction = it }
             )
+
             1 -> TransactionListTab(
                 transactionViewModel = transactionViewModel,
                 categoryViewModel = categoryViewModel,
@@ -112,18 +124,25 @@ fun HomeScreen(
                 authViewModel = authViewModel,
 
 
-            )
+                )
+
             2 -> AnalyticsTab(
                 transactionViewModel = transactionViewModel,
-                categoryViewModel = categoryViewModel,
-                authViewModel = authViewModel
+                currencyViewModel = currencyViewModel
             )
-            3 -> ProfileTab(navController = navController, onLogout = {
-                authViewModel.signOut()
-                navController.navigate("login?showGuestOption=true") {
-                    popUpTo(0)
+
+            3 -> ProfileTab(
+                navController = navController, onLogout = {
+                    authViewModel.signOut()
+                    navController.navigate("login?showGuestOption=true") {
+                        popUpTo(0)
+                    }
+                },
+                currencyViewModel = currencyViewModel
+                , onCurrencyChange = { rate ->
+                    transactionViewModel.updateAllAmountsByExchangeRate(rate)
                 }
-            })
+            )
         }
 
         // Custom bottom bar with cutout

@@ -28,4 +28,7 @@ interface TransactionDao {
 
     @Query("SELECT SUM(amount) FROM 'Transaction' WHERE type = 'Expense' AND categoryId = :categoryId")
     fun getTotalAmountForCategory(categoryId: Long): Double
+
+    @Query("UPDATE 'Transaction' SET amount = amount * :exchangeRate")
+    suspend fun updateAllAmountsByExchangeRate(exchangeRate: Double)
 }
