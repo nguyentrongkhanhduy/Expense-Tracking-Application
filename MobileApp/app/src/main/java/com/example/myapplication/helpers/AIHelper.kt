@@ -32,6 +32,7 @@ fun askHuggingFace(question: String, onResult: (String) -> Unit) {
         override fun onFailure(call: Call, e: IOException) {
             onResult("Failed: ${e.message}")
         }
+
         override fun onResponse(call: Call, response: Response) {
             val bodyString = response.body?.string()
             if (response.code == 403) {

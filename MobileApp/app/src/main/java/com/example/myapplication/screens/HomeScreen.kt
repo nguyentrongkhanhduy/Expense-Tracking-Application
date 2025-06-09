@@ -138,8 +138,7 @@ fun HomeScreen(
                         popUpTo(0)
                     }
                 },
-                currencyViewModel = currencyViewModel
-                , onCurrencyChange = { rate ->
+                currencyViewModel = currencyViewModel, onCurrencyChange = { rate ->
                     transactionViewModel.updateAllAmountsByExchangeRate(rate)
                 }
             )
