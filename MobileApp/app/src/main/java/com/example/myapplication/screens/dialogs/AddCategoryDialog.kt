@@ -27,7 +27,7 @@ import com.example.myapplication.ui.theme.PrimaryBlue
 import com.example.myapplication.ui.theme.PrimaryRed
 import com.example.myapplication.ui.theme.White
 import com.example.myapplication.ui.theme.InputBlue
-import com.example.myapplication.viewmodel.CategoryViewModel
+import com.example.myapplication.viewmodel.category.CategoryViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

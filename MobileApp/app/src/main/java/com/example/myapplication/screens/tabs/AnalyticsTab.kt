@@ -34,10 +34,8 @@ import com.example.myapplication.ui.theme.COMBINED_COLORS
 import com.example.myapplication.ui.theme.PrimaryBlue
 import com.example.myapplication.ui.theme.PrimaryRed
 import com.example.myapplication.ui.theme.White
-import com.example.myapplication.viewmodel.AuthViewModel
-import com.example.myapplication.viewmodel.CategoryViewModel
 import com.example.myapplication.viewmodel.CurrencyViewModel
-import com.example.myapplication.viewmodel.TransactionViewModel
+import com.example.myapplication.viewmodel.transaction.TransactionViewModel
 import com.github.mikephil.charting.charts.PieChart
 import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.PieData

@@ -1,11 +1,11 @@
-package com.example.myapplication.data.local.model
+package com.example.myapplication.data.model
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
 @Entity(tableName = "Transaction")
 data class Transaction(
-    @PrimaryKey(autoGenerate = true) val transactionId: Long = 0L,
+    @PrimaryKey(autoGenerate = false) val transactionId: Long = 0L,
     val amount: Double,
     val name: String,
     val type: String, // "income" or "expense"

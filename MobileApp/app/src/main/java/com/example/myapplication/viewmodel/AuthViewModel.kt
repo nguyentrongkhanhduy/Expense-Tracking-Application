@@ -2,7 +2,7 @@ package com.example.myapplication.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.myapplication.models.User
+import com.example.myapplication.data.model.User
 import com.example.myapplication.services.AuthApiService
 import com.example.myapplication.services.RetrofitClient
 import com.example.myapplication.services.SignUpRequest
@@ -59,7 +59,7 @@ class AuthViewModel : ViewModel() {
         }
     }
 
-    fun signUp(email: String, password: String, displayName: String) {
+    fun signUp(email: String, password: String, displayName: String, onSignUpSuccess: (userId: String) -> Unit) {
         _isSignedUp.value = false
         _isLoading.value = true
         val request = SignUpRequest(email, password, displayName)
@@ -70,6 +70,7 @@ class AuthViewModel : ViewModel() {
                 _isSignedUp.value = true
                 _isLoading.value = false
                 _isSignedIn.value = true
+                onSignUpSuccess(response.uid)
                 println("User: ${response.email}")
             } catch (e: Exception) {
                 println("Error: ${e.message}")

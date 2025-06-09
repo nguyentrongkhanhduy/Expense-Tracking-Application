@@ -1,8 +1,8 @@
 package com.example.myapplication.data.local.repository
 
 import com.example.myapplication.data.local.dao.TransactionDao
-import com.example.myapplication.data.local.model.Transaction
-import com.example.myapplication.data.local.model.TransactionWithCategory
+import com.example.myapplication.data.model.Transaction
+import com.example.myapplication.data.model.TransactionWithCategory
 
 import kotlinx.coroutines.flow.Flow
 

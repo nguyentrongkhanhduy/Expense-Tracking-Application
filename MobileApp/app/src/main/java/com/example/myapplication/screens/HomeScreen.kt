@@ -1,6 +1,5 @@
 package com.example.myapplication.screens
 
-import android.R.attr.bottom
 import com.example.myapplication.R
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -23,7 +22,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.example.myapplication.models.User
+import com.example.myapplication.data.model.User
 import com.example.myapplication.viewmodel.AuthViewModel
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -34,15 +33,15 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import com.example.myapplication.components.CustomBottomBar
-import com.example.myapplication.data.local.model.TransactionWithCategory
+import com.example.myapplication.data.model.TransactionWithCategory
 import com.example.myapplication.helpers.removeFromInternalStorage
 import com.example.myapplication.screens.dialogs.EditTransactionDialog
 import com.example.myapplication.screens.dialogs.AddTransactionDialog
 import com.example.myapplication.screens.tabs.AnalyticsTab
 import com.example.myapplication.screens.tabs.ProfileTab
 import com.example.myapplication.screens.tabs.TransactionListTab
-import com.example.myapplication.viewmodel.CategoryViewModel
-import com.example.myapplication.viewmodel.TransactionViewModel
+import com.example.myapplication.viewmodel.category.CategoryViewModel
+import com.example.myapplication.viewmodel.transaction.TransactionViewModel
 import com.example.myapplication.ui.theme.PrimaryBlue
 import com.example.myapplication.ui.theme.PrimaryRed
 import com.example.myapplication.ui.theme.PrimaryGreen

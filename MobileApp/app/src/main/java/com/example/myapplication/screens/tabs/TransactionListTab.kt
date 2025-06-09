@@ -22,10 +22,10 @@ import com.example.myapplication.ui.theme.PrimaryBlue
 import com.example.myapplication.ui.theme.PrimaryRed
 import com.example.myapplication.ui.theme.White
 import com.example.myapplication.R
-import com.example.myapplication.data.local.model.TransactionWithCategory
+import com.example.myapplication.data.model.TransactionWithCategory
 import com.example.myapplication.screens.dialogs.EditTransactionDialog
-import com.example.myapplication.viewmodel.CategoryViewModel
-import com.example.myapplication.viewmodel.TransactionViewModel
+import com.example.myapplication.viewmodel.category.CategoryViewModel
+import com.example.myapplication.viewmodel.transaction.TransactionViewModel
 import androidx.compose.foundation.lazy.items
 import androidx.compose.ui.platform.LocalContext
 import com.example.myapplication.components.AdBanner

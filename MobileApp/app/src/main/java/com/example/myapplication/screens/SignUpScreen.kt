@@ -30,9 +30,10 @@ import com.example.myapplication.components.BackButton
 import com.example.myapplication.components.MyButton
 import com.example.myapplication.ui.theme.PrimaryBlue
 import com.example.myapplication.viewmodel.AuthViewModel
+import com.example.myapplication.viewmodel.category.CategoryViewModel
 
 @Composable
-fun SignUpScreen(navController: NavController, viewModel: AuthViewModel) {
+fun SignUpScreen(navController: NavController, viewModel: AuthViewModel, categoryViewModel: CategoryViewModel) {
     var email by remember { mutableStateOf("test@123.com") }
     var password by remember { mutableStateOf("1234567") }
     var confirmPassword by remember { mutableStateOf("1234567") }
@@ -103,7 +104,9 @@ fun SignUpScreen(navController: NavController, viewModel: AuthViewModel) {
             )
             Spacer(Modifier.height(16.dp))
             MyButton(
-                onClick = { viewModel.signUp(email, password, displayName) },
+                onClick = { viewModel.signUp(email, password, displayName) {
+                    categoryViewModel.initializeDefaultsForFirestore(it)
+                } },
                 enabled = !isLoading && email.isNotBlank() && password.isNotBlank() && password.length >= 6 && confirmPassword.isNotBlank() && displayName.isNotBlank() && password == confirmPassword,
             ) {
                 if (isLoading) {
@@ -120,11 +123,11 @@ fun SignUpScreen(navController: NavController, viewModel: AuthViewModel) {
         }
     }
 }
-
-
-@Preview(showBackground = true)
-@Composable
-fun SignUpScreenPreview() {
-    val navController = rememberNavController()
-    SignUpScreen(navController = navController, viewModel = AuthViewModel())
-}
+//
+//
+//@Preview(showBackground = true)
+//@Composable
+//fun SignUpScreenPreview() {
+//    val navController = rememberNavController()
+//    SignUpScreen(navController = navController, viewModel = AuthViewModel())
+//}

@@ -15,12 +15,12 @@ import com.example.myapplication.screens.SignUpScreen
 import com.example.myapplication.screens.SplashScreen
 import com.example.myapplication.screens.WelcomeScreen
 import com.example.myapplication.viewmodel.AuthViewModel
-import com.example.myapplication.viewmodel.CategoryViewModel
-import com.example.myapplication.viewmodel.CategoryViewModelFactory
+import com.example.myapplication.viewmodel.category.CategoryViewModel
+import com.example.myapplication.viewmodel.category.CategoryViewModelFactory
 import com.example.myapplication.viewmodel.CurrencyViewModel
 import com.example.myapplication.viewmodel.LocationViewModel
-import com.example.myapplication.viewmodel.TransactionViewModel
-import com.example.myapplication.viewmodel.TransactionViewModelFactory
+import com.example.myapplication.viewmodel.transaction.TransactionViewModel
+import com.example.myapplication.viewmodel.transaction.TransactionViewModelFactory
 
 @Composable
 fun AppNavHost() {
@@ -50,7 +50,7 @@ fun AppNavHost() {
                 showGuestOption = showGuest
             )
         }
-        composable("signup") { SignUpScreen(navController, authViewModel) }
+        composable("signup") { SignUpScreen(navController, authViewModel, categoryViewModel) }
         composable(
             route = "home?isGuest={isGuest}&selectedTab={selectedTab}",
             arguments = listOf(

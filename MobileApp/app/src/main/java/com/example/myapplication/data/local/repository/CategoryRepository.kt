@@ -1,7 +1,7 @@
 package com.example.myapplication.data.local.repository
 
 import com.example.myapplication.data.local.dao.CategoryDao
-import com.example.myapplication.data.local.model.Category
+import com.example.myapplication.data.model.Category
 import kotlinx.coroutines.flow.Flow
 
 class CategoryRepository(private val dao: CategoryDao) {

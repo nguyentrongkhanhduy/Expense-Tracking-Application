@@ -1,13 +1,17 @@
-package com.example.myapplication.viewmodel
+package com.example.myapplication.viewmodel.category
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.myapplication.data.local.model.Category
+import com.example.myapplication.data.model.Category
 import com.example.myapplication.data.local.repository.CategoryRepository
 import com.example.myapplication.data.local.repository.TransactionRepository
+import com.example.myapplication.services.CategoryApiService
+import com.example.myapplication.services.InitialCategoriesRequest
+import com.example.myapplication.services.RetrofitClient
+import com.github.mikephil.charting.utils.Utils.init
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
@@ -24,6 +28,7 @@ class CategoryViewModel(
         .map { it.sortedBy { cat -> cat.categoryId } }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
     val categories: StateFlow<List<Category>> = _categories
+    private var defaultCategories = _categories.value
 
     // Dialog input state
     var inputType by mutableStateOf("")
@@ -39,19 +44,24 @@ class CategoryViewModel(
 
     private val validTypes = listOf("expense", "income")
 
+
     init {
         initializeDefaults()
     }
 
-    private fun initializeDefaults() {
+    private fun initializeDefaults(userId: String = "") {
         viewModelScope.launch {
             categoryRepository.getAllCategories().collect { list ->
                 if (list.isEmpty()) {
-                    addCategory(Category(title = "Food", icon = "🍔", type = "expense"))
-                    addCategory(Category(title = "Salary", icon = "💰", type = "income"))
-                    addCategory(Category(title = "Transport", icon = "🚗", type = "expense"))
-                    addCategory(Category(categoryId = -1L, title = "Others", icon = "📦", type = "expense"))
-                    addCategory(Category(categoryId = -2L, title = "Others", icon = "📦", type = "income"))
+                    defaultCategories = listOf(
+                        Category(categoryId = System.currentTimeMillis() + 1, title = "Food", icon = "🍔", type = "expense"),
+                        Category(categoryId = System.currentTimeMillis() + 2, title = "Salary", icon = "💰", type = "income"),
+                        Category(categoryId = System.currentTimeMillis() + 3, title = "Transport", icon = "🚗", type = "expense"),
+                        Category(categoryId = -1L, title = "Others", icon = "📦", type = "expense"),
+                        Category(categoryId = -2L, title = "Others", icon = "📦", type = "income")
+                    )
+
+                    defaultCategories.forEach { addCategory(it) }
                 }
             }
         }
@@ -96,7 +106,7 @@ class CategoryViewModel(
         limitError = null
     }
 
-    // --- CRUD Operations ---
+    // --- CRUD Operations for Room ---
 
     fun addCategory(category: Category) {
         viewModelScope.launch {
@@ -121,4 +131,20 @@ class CategoryViewModel(
             categoryRepository.updateCategory(category)
         }
     }
+
+    private val categoryApiService = RetrofitClient.createService(CategoryApiService::class.java, "http://10.0.2.2:3000")
+
+    // --- CRUD Operations for Firestore ---
+
+    fun initializeDefaultsForFirestore(userId: String) {
+        viewModelScope.launch {
+            try {
+                val response = categoryApiService.createInitialCategories(InitialCategoriesRequest(userId, defaultCategories))
+                println("Synced default categories to Firestore: $response")
+            } catch (e: Exception) {
+                println("Error: ${e.message}")
+            }
+        }
+    }
+
 }
