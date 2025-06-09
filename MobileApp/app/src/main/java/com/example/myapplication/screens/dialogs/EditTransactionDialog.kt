@@ -132,7 +132,12 @@ fun EditTransactionDialog(
         contract = ActivityResultContracts.TakePicturePreview(),
         onResult = { bitmap ->
             if (bitmap != null) {
-                val path = bitmap.let { saveBitmapToInternalStorage(context, it)?.let { saved -> "bitmap:$saved" } }
+                val path = bitmap.let {
+                    saveBitmapToInternalStorage(
+                        context,
+                        it
+                    )?.let { saved -> "bitmap:$saved" }
+                }
                 selectedImageBitmap = bitmap
                 selectedImageUri = null
                 viewModel.inputImagePath = path

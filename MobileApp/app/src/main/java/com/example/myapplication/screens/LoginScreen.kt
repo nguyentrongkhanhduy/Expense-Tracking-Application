@@ -34,7 +34,11 @@ import com.example.myapplication.ui.theme.PrimaryBlue
 import com.example.myapplication.viewmodel.AuthViewModel
 
 @Composable
-fun LoginScreen(navController: NavController, viewModel: AuthViewModel, showGuestOption: Boolean = false) {
+fun LoginScreen(
+    navController: NavController,
+    viewModel: AuthViewModel,
+    showGuestOption: Boolean = false
+) {
     var email by remember { mutableStateOf("test@123.com") }
     var password by remember { mutableStateOf("1234567") }
 
