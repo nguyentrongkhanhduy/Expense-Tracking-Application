@@ -50,6 +50,7 @@ fun WelcomeScreen(navController: NavController) {
             couroutineScope.launch {
                 navController.navigate("home?isGuest=true")
                 UserPreferences.setGuestMode(context, true)
+                UserPreferences.setFirstLaunch(context, false)
             }
         }) {
             Text("Continue as guest", color = PrimaryBlue, fontSize = 20.sp)
@@ -57,7 +58,12 @@ fun WelcomeScreen(navController: NavController) {
         Spacer(Modifier.height(16.dp))
         Text("Or", color = PrimaryBlue, fontSize = 18.sp)
         Spacer(Modifier.height(24.dp))
-        MyButton(onClick = { navController.navigate("login") }) {
+        MyButton(onClick = {
+            couroutineScope.launch {
+                navController.navigate("login")
+                UserPreferences.setFirstLaunch(context, false)
+            }
+        }) {
             Text("Login", color = White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
         }
     }

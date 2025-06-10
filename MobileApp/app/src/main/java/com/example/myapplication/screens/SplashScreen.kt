@@ -38,13 +38,11 @@ fun SplashScreen(navController: NavController) {
             navController.navigate("welcome") {
                 popUpTo("splash") { inclusive = true }
             }
-            UserPreferences.setFirstLaunch(context, false)
         } else {
             navController.navigate("home?isGuest=${isGuest ?: false}") {
                 popUpTo("splash") { inclusive = true }
             }
         }
-
     }
 
     Box(
