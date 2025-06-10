@@ -18,7 +18,7 @@ fun AdBanner(modifier: Modifier = Modifier) {
         factory = {
             AdView(context).apply {
                 setAdSize(AdSize.BANNER)
-                adUnitId = "ca-app-pub-5308421996916752/7686481922" // Real Key
+                adUnitId = "ca-app-pub-5308421996916752/7686481922" // Key
                 loadAd(AdRequest.Builder().build())
                 layoutParams = ViewGroup.LayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT,
