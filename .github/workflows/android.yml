@@ -27,10 +27,19 @@ jobs:
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
+        working-directory: MobileApp
+
+      - name: Create google-services.json
+        run: |
+          echo "${{ secrets.GOOGLE_SERVICES_JSON }}" > app/google-services.json
+        working-directory: MobileApp
+        
       - name: build release
         run: ./gradlew assembleDebug
+        working-directory: MobileApp
+        
       - name: upload artifact to Firebase App Distribution
-        uses: nguyentrongkhanhduy/Firebase-Distribution-Github-Action@main
+        uses: nguyentrongkhanhduy/Firebase-Distribution-Github-Action@master
         with:
           appId: ${{secrets.FIREBASE_APP_ID}}
           serviceCredentialsFileContent: ${{ secrets.CREDENTIAL_FILE_CONTENT }}      
