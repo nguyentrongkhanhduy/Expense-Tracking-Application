@@ -27,18 +27,22 @@ import com.example.myapplication.ui.theme.PrimaryBlue
 import com.example.myapplication.ui.theme.PrimaryGreen
 import com.example.myapplication.ui.theme.PrimaryRed
 import com.example.myapplication.ui.theme.White
+import com.example.myapplication.viewmodel.AuthViewModel
 import com.example.myapplication.viewmodel.category.CategoryViewModel
 
 @Composable
 fun CategoriesScreen(
     navController: NavController,
-    viewModel: CategoryViewModel
+    viewModel: CategoryViewModel,
+    authViewModel: AuthViewModel
 ) {
     var filter by remember { mutableStateOf("All") }
     val categories by viewModel.categories.collectAsState()
     val filterOptions = listOf("All", "Expense", "Income")
     var showAddDialog by remember { mutableStateOf(false) }
     var editingCategory by remember { mutableStateOf<Category?>(null) }
+
+    val user by authViewModel.user.collectAsState()
 
     Column(
         modifier = Modifier
@@ -147,15 +151,19 @@ fun CategoriesScreen(
             viewModel = viewModel,
             onDismiss = { showAddDialog = false },
             onSave = { type, title, icon, limit ->
-                viewModel.addCategory(
-                    Category(
-                        categoryId = System.currentTimeMillis(),
-                        type = type,
-                        title = title,
-                        icon = icon,
-                        limit = limit?.toDoubleOrNull()
-                    )
+                val newCat = Category(
+                    categoryId = System.currentTimeMillis(),
+                    type = type,
+                    title = title,
+                    icon = icon,
+                    limit = limit?.toDoubleOrNull()
                 )
+
+                viewModel.addCategory(newCat)
+
+                if (user != null) {
+                    viewModel.addCategoryToFirestore(newCat, user!!.uid)
+                }
             }
         )
     }
@@ -166,17 +174,26 @@ fun CategoriesScreen(
             onDismiss = { editingCategory = null },
             onDelete = {
                 viewModel.deleteCategory(editingCategory!!)
+
+                if (user != null) {
+                    viewModel.deleteCategoryFromFirestore(editingCategory!!.categoryId, user!!.uid)
+                }
+
                 editingCategory = null
             },
             onSave = { type, title, icon, limit ->
-                viewModel.updateCategory(
-                    editingCategory!!.copy(
-                        type = type,
-                        title = title,
-                        icon = icon,
-                        limit = limit?.toDoubleOrNull()
-                    )
+                val updatedCat = editingCategory!!.copy(
+                    type = type,
+                    title = title,
+                    icon = icon,
+                    limit = limit?.toDoubleOrNull()
                 )
+                viewModel.updateCategory(updatedCat)
+
+                if (user != null) {
+                    viewModel.updateCategoryInFirestore(updatedCat, user!!.uid)
+                }
+
                 editingCategory = null
             }
         )

@@ -9,8 +9,10 @@ import com.example.myapplication.data.model.Category
 import com.example.myapplication.data.local.repository.CategoryRepository
 import com.example.myapplication.data.local.repository.TransactionRepository
 import com.example.myapplication.services.CategoryApiService
+import com.example.myapplication.services.CategoryRequest
 import com.example.myapplication.services.InitialCategoriesRequest
 import com.example.myapplication.services.RetrofitClient
+import com.example.myapplication.services.UserIdRequest
 import com.github.mikephil.charting.utils.Utils.init
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -54,9 +56,24 @@ class CategoryViewModel(
             categoryRepository.getAllCategories().collect { list ->
                 if (list.isEmpty()) {
                     defaultCategories = listOf(
-                        Category(categoryId = System.currentTimeMillis() + 1, title = "Food", icon = "🍔", type = "expense"),
-                        Category(categoryId = System.currentTimeMillis() + 2, title = "Salary", icon = "💰", type = "income"),
-                        Category(categoryId = System.currentTimeMillis() + 3, title = "Transport", icon = "🚗", type = "expense"),
+                        Category(
+                            categoryId = System.currentTimeMillis() + 1,
+                            title = "Food",
+                            icon = "🍔",
+                            type = "expense"
+                        ),
+                        Category(
+                            categoryId = System.currentTimeMillis() + 2,
+                            title = "Salary",
+                            icon = "💰",
+                            type = "income"
+                        ),
+                        Category(
+                            categoryId = System.currentTimeMillis() + 3,
+                            title = "Transport",
+                            icon = "🚗",
+                            type = "expense"
+                        ),
                         Category(categoryId = -1L, title = "Others", icon = "📦", type = "expense"),
                         Category(categoryId = -2L, title = "Others", icon = "📦", type = "income")
                     )
@@ -70,7 +87,8 @@ class CategoryViewModel(
     // --- Input Validation Logic ---
 
     fun validateInputs(): Boolean {
-        typeError = if (inputType.isBlank() || inputType !in validTypes) "Select a valid type" else null
+        typeError =
+            if (inputType.isBlank() || inputType !in validTypes) "Select a valid type" else null
         titleError = when {
             inputTitle.isBlank() -> "Title cannot be empty"
             inputTitle.length > 30 -> "Title too long"
@@ -83,7 +101,9 @@ class CategoryViewModel(
         }
 
         limitError = when {
-            inputLimit.isNotBlank() && inputLimit.toDoubleOrNull()?.let { it < 0 } == true -> "Limit must be positive"
+            inputLimit.isNotBlank() && inputLimit.toDoubleOrNull()
+                ?.let { it < 0 } == true -> "Limit must be positive"
+
             inputLimit.isNotBlank() && inputLimit.toDoubleOrNull() == null -> "Limit must be a number"
             else -> null
         }
@@ -132,15 +152,57 @@ class CategoryViewModel(
         }
     }
 
-    private val categoryApiService = RetrofitClient.createService(CategoryApiService::class.java, "http://10.0.2.2:3000")
+    private val categoryApiService =
+        RetrofitClient.createService(CategoryApiService::class.java, "http://10.0.2.2:3000")
 
     // --- CRUD Operations for Firestore ---
 
     fun initializeDefaultsForFirestore(userId: String) {
         viewModelScope.launch {
             try {
-                val response = categoryApiService.createInitialCategories(InitialCategoriesRequest(userId, defaultCategories))
+                val response = categoryApiService.createInitialCategories(
+                    InitialCategoriesRequest(
+                        userId,
+                        defaultCategories
+                    )
+                )
                 println("Synced default categories to Firestore: $response")
+            } catch (e: Exception) {
+                println("Error: ${e.message}")
+            }
+        }
+    }
+
+    fun addCategoryToFirestore(category: Category, userId: String) {
+        viewModelScope.launch {
+            try {
+                val response = categoryApiService.createCategory(CategoryRequest(userId, category))
+                println("Added category to Firestore: $response")
+            } catch (e: Exception) {
+                println("Error: ${e.message}")
+            }
+        }
+    }
+
+    fun updateCategoryInFirestore(category: Category, userId: String) {
+        viewModelScope.launch {
+            try {
+                val response = categoryApiService.updateCategory(
+                    category.categoryId,
+                    CategoryRequest(userId, category)
+                )
+                println("Updated category in Firestore: $response")
+            } catch (e: Exception) {
+                println("Error: ${e.message}")
+            }
+        }
+    }
+
+    fun deleteCategoryFromFirestore(categoryId: Long, userId: String) {
+        viewModelScope.launch {
+            try {
+                val response = categoryApiService.deleteCategory(categoryId, UserIdRequest(userId))
+                println("Deleted category from Firestore: $response")
             } catch (e: Exception) {
                 println("Error: ${e.message}")
             }

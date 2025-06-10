@@ -13,6 +13,8 @@ data class InitialCategoriesRequest(
     val categories: List<Category>
 )
 
+data class UserIdRequest(val userId: String)
+
 interface CategoryApiService {
 
     @POST("api/categories/get")
@@ -27,6 +29,6 @@ interface CategoryApiService {
     @PUT("api/categories/{categoryId}")
     suspend fun updateCategory(@Path("categoryId") categoryId: Long, @Body request: CategoryRequest): Map<String, Any>
 
-    @DELETE("api/categories/{categoryId}")
-    suspend fun deleteCategory(@Path("categoryId") categoryId: Long, @Body userId: String): Map<String, Any>
+    @POST("api/categories/{categoryId}")
+    suspend fun deleteCategory(@Path("categoryId") categoryId: Long, @Body request: UserIdRequest): Map<String, Any>
 }

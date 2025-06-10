@@ -81,6 +81,7 @@ fun AppNavHost() {
             CategoriesScreen(
                 navController = navController,
                 viewModel = categoryViewModel,
+                authViewModel = authViewModel
             )
         }
 
