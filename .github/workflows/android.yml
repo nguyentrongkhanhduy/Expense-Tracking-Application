@@ -27,8 +27,12 @@ jobs:
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
+        working-directory: MobileApp
+        
       - name: build release
         run: ./gradlew assembleDebug
+        working-directory: MobileApp
+        
       - name: upload artifact to Firebase App Distribution
         uses: nguyentrongkhanhduy/Firebase-Distribution-Github-Action@master
         with:
