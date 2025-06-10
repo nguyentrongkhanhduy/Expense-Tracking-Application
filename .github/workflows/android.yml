@@ -30,9 +30,8 @@ jobs:
         working-directory: MobileApp
 
       - name: Create google-services.json
-  	run: |
-    	  printf '%s' "${{ secrets.GOOGLE_SERVICES_JSON }}" > app/google-services.json
-  	working-directory: MobileApp
+        working-directory: MobileApp
+        run: echo "${{ secrets.GOOGLE_SERVICES_JSON }}" | base64 -d > app/google-services.json
 
       - name: Build release APK
         run: ./gradlew assembleDebug
@@ -44,4 +43,4 @@ jobs:
           appId: ${{ secrets.FIREBASE_APP_ID }}
           serviceCredentialsFileContent: ${{ secrets.CREDENTIAL_FILE_CONTENT }}
           groups: testers
-          file: app/build/outputs/apk/debug/app-debug.apk
+          file: MobileApp/app/build/outputs/apk/debug/app-debug.apk
