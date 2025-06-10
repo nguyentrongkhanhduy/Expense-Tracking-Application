@@ -1,6 +1,5 @@
 package com.example.myapplication.screens
 
-import android.R.attr.bottom
 import com.example.myapplication.R
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -53,6 +52,7 @@ import com.example.myapplication.components.AdBanner
 import com.example.myapplication.data.datastore.UserPreferences
 import com.example.myapplication.viewmodel.CurrencyViewModel
 
+
 @Composable
 fun HomeScreen(
     navController: NavController,
@@ -83,11 +83,19 @@ fun HomeScreen(
 
     val context = LocalContext.current
 
-    var shortFormCurrency by remember { mutableStateOf("CAD") }
-    LaunchedEffect(Unit) {
-        val defaultCurrency = UserPreferences.getCurrency(context)
-        shortFormCurrency = currencyViewModel.getCurrencyShortForm(defaultCurrency)
+    var selectedCurrency by remember { mutableStateOf("Canadian Dollar") }
+    LaunchedEffect(selectedTab) {
+        if (selectedTab == 0) {
+            selectedCurrency = UserPreferences.getCurrency(context)
+        }
     }
+    LaunchedEffect(selectedTab) {
+        if (selectedTab == 1) {
+            selectedCurrency = UserPreferences.getCurrency(context)
+        }
+    }
+    val shortFormCurrency = currencyViewModel.getCurrencyShortForm(selectedCurrency)
+
 
     LaunchedEffect(isSignedIn) {
         if (!isSignedIn && !isGuest) {
@@ -114,7 +122,9 @@ fun HomeScreen(
                 expenses = "%.2f $shortFormCurrency".format(expenses),
                 income = "%.2f $shortFormCurrency".format(income),
                 transactionsWithCategory = transactionsWithCategory,
-                onTransactionClick = { editingTransaction = it }
+                shortFormCurrency = shortFormCurrency,
+                onTransactionClick = { editingTransaction = it },
+
             )
 
             1 -> TransactionListTab(
@@ -122,13 +132,13 @@ fun HomeScreen(
                 categoryViewModel = categoryViewModel,
                 locationViewModel = locationViewModel,
                 authViewModel = authViewModel,
-
-
-                )
+                shortFormCurrency = shortFormCurrency
+            )
 
             2 -> AnalyticsTab(
                 transactionViewModel = transactionViewModel,
-                currencyViewModel = currencyViewModel
+                currencyViewModel = currencyViewModel,
+                shortFormCurrency = shortFormCurrency
             )
 
             3 -> ProfileTab(
@@ -148,16 +158,21 @@ fun HomeScreen(
         CustomBottomBar(
             selectedTab = selectedTab,
             onTabSelected = { selectedTab = it },
-            modifier = Modifier.align(Alignment.BottomCenter)
+            modifier = Modifier
+                .navigationBarsPadding()
+                .align(Alignment.BottomCenter)
+
         )
 
         Box(
             modifier = Modifier
+                .navigationBarsPadding()
                 .align(Alignment.BottomCenter)
-                .offset(y = (-28).dp)
-                .size(56.dp)
+                .size(60.dp) // Make FAB slightly larger than cutout
+                .offset(y = (-32).dp) // Move FAB up to cover border
                 .clip(CircleShape)
                 .background(PrimaryBlue),
+
             contentAlignment = Alignment.Center
         ) {
             FloatingActionButton(
@@ -226,15 +241,19 @@ fun HomeTabContent(
     balance: String,
     expenses: String,
     income: String,
+    shortFormCurrency: String,
     transactionsWithCategory: List<TransactionWithCategory>,
     onTransactionClick: (TransactionWithCategory) -> Unit
 ) {
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .navigationBarsPadding()
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 24.dp, vertical = 18.dp),
         horizontalAlignment = Alignment.CenterHorizontally
+
+
     ) {
         AdBanner(
             modifier = Modifier
@@ -338,6 +357,7 @@ fun HomeTabContent(
 
         RecentTransactionsList(
             transactions = transactionsWithCategory,
+            shortFormCurrency = shortFormCurrency,
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f),
@@ -350,6 +370,7 @@ fun HomeTabContent(
 fun RecentTransactionsList(
     transactions: List<TransactionWithCategory>,
     modifier: Modifier = Modifier,
+    shortFormCurrency: String,
     onTransactionClick: (TransactionWithCategory) -> Unit
 ) {
     LazyColumn(
@@ -388,7 +409,7 @@ fun RecentTransactionsList(
                         fontWeight = FontWeight.Bold
                     )
                     Text(
-                        transaction.amount.toString(),
+                        text = "%.2f ".format(transaction.amount)+ shortFormCurrency,
                         color = White,
                         fontWeight = FontWeight.Bold
                     )

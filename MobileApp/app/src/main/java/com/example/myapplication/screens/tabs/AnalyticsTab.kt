@@ -1,5 +1,6 @@
 package com.example.myapplication.screens.tabs
 
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -19,6 +20,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -45,13 +47,14 @@ import com.github.mikephil.charting.data.PieDataSet
 import com.github.mikephil.charting.data.PieEntry
 import com.github.mikephil.charting.formatter.IValueFormatter
 import com.github.mikephil.charting.utils.ViewPortHandler
-import java.text.DecimalFormat
 import java.util.Calendar
+import kotlin.math.roundToInt
 
 @Composable
 fun AnalyticsTab(
     transactionViewModel: TransactionViewModel,
-    currencyViewModel: CurrencyViewModel
+    currencyViewModel: CurrencyViewModel,
+    shortFormCurrency: String
 ) {
     val timeTab = listOf("All", "Today", "Week", "Month", "Custom")
     var selectedTimeTab by remember { mutableIntStateOf(0) }
@@ -83,15 +86,12 @@ fun AnalyticsTab(
         val defaultCurrency = UserPreferences.getCurrency(context)
         shortFormCurrency = currencyViewModel.getCurrencyShortForm(defaultCurrency)
     }
-
+// --- Date range logic ---
     LaunchedEffect(selectedTimeTab) {
         val calendar = Calendar.getInstance()
         val now = calendar.timeInMillis
         when (selectedTimeTab) {
-            0 -> {
-                startDate = null; endDate = null
-            }
-
+            0 -> { startDate = null; endDate = null }
             1 -> {
                 calendar.set(Calendar.HOUR_OF_DAY, 0)
                 calendar.set(Calendar.MINUTE, 0)
@@ -100,7 +100,6 @@ fun AnalyticsTab(
                 startDate = calendar.timeInMillis
                 endDate = now
             }
-
             2 -> {
                 calendar.set(Calendar.DAY_OF_WEEK, calendar.firstDayOfWeek)
                 calendar.set(Calendar.HOUR_OF_DAY, 0)
@@ -110,7 +109,6 @@ fun AnalyticsTab(
                 startDate = calendar.timeInMillis
                 endDate = now
             }
-
             3 -> {
                 calendar.set(Calendar.DAY_OF_MONTH, 1)
                 calendar.set(Calendar.HOUR_OF_DAY, 0)
@@ -120,10 +118,7 @@ fun AnalyticsTab(
                 startDate = calendar.timeInMillis
                 endDate = now
             }
-
-            4 -> {
-                customDateDialogExpanded = true
-            }
+            4 -> { customDateDialogExpanded = true }
         }
     }
 
@@ -136,21 +131,17 @@ fun AnalyticsTab(
                 entries = transactionViewModel.getTotalSpendingAndEarning(startDate, endDate)
                     .toMutableList()
             }
-
             1 -> {
                 selectedType = "Spending"
                 centerText = "Total"
                 total = transactionViewModel.getTotalSpend(startDate, endDate)
-                entries =
-                    transactionViewModel.getSpendingByCategory(startDate, endDate).toMutableList()
+                entries = transactionViewModel.getSpendingByCategory(startDate, endDate).toMutableList()
             }
-
             2 -> {
                 selectedType = "Earning"
                 centerText = "Total"
                 total = transactionViewModel.getTotalEarn(startDate, endDate)
-                entries =
-                    transactionViewModel.getEarningByCategory(startDate, endDate).toMutableList()
+                entries = transactionViewModel.getEarningByCategory(startDate, endDate).toMutableList()
             }
         }
     }
@@ -189,8 +180,7 @@ fun AnalyticsTab(
                 fontSize = 28.sp,
                 fontWeight = FontWeight.Bold,
                 color = PrimaryBlue,
-                modifier = Modifier
-                    .align(Alignment.CenterHorizontally)
+                modifier = Modifier.align(Alignment.CenterHorizontally)
             )
             Spacer(modifier = Modifier.height(18.dp))
 
@@ -208,7 +198,7 @@ fun AnalyticsTab(
             )
             Spacer(modifier = Modifier.height(18.dp))
 
-            //Pie chart
+            // Pie chart
             AndroidView(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -234,29 +224,30 @@ fun AnalyticsTab(
                     dataSet.sliceSpace = 3f
                     dataSet.selectionShift = 5f
                     dataSet.yValuePosition = PieDataSet.ValuePosition.OUTSIDE_SLICE
-                    dataSet.valueLinePart1Length = 0.3f
+                    dataSet.valueLinePart1Length = 0.4f
                     dataSet.valueLinePart2Length = 0.3f
                     dataSet.valueLineColor = android.graphics.Color.DKGRAY
                     dataSet.valueFormatter = object : IValueFormatter {
-                        private val decimalFormat = DecimalFormat("#,###.##")
                         override fun getFormattedValue(
                             value: Float,
                             entry: Entry?,
                             dataSetIndex: Int,
                             viewPortHandler: ViewPortHandler?
                         ): String {
-                            return "${decimalFormat.format(value)} $shortFormCurrency"
+                            return "${value.roundToInt()} $shortFormCurrency"
                         }
                     }
+
                     val data = PieData(dataSet)
                     data.setValueTextSize(16f)
                     pieChart.data = data
-                    pieChart.centerText = "${centerText}\n${"%.2f".format(total)} $shortFormCurrency"
+                    pieChart.centerText = "${centerText}\n${total.roundToInt()} $shortFormCurrency"
                     pieChart.invalidate()
                 }
             )
             Spacer(modifier = Modifier.height(18.dp))
 
+            // --- Category List with Proper Formatting and Spacing ---
             if (selectedType == "Spending" || selectedType == "Earning") {
                 val list = if (selectedType == "Spending")
                     transactionViewModel.getSpendingWithLimitByCategory(startDate, endDate)
@@ -266,15 +257,21 @@ fun AnalyticsTab(
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .heightIn(max = 250.dp)
+                        .heightIn(max = 250.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp), // More space between items
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp) // Padding around content
                 ) {
                     items(list.size) { index ->
                         val (labelWithLimit, amount) = list[index]
                         val parts = labelWithLimit.split("|")
                         val category = parts.getOrNull(0) ?: "Unknown"
                         val limit = parts.getOrNull(1)?.toDoubleOrNull()
+                        val effectiveLimit = if (limit != null && limit > 0) limit else total
 
-                        Column(modifier = Modifier.padding(vertical = 6.dp)) {
+                        Column(
+                            modifier = Modifier
+                                .padding(vertical = 4.dp, horizontal = 4.dp)
+                        ) {
                             Row(
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 modifier = Modifier.fillMaxWidth()
@@ -282,37 +279,34 @@ fun AnalyticsTab(
                                 Text(
                                     text = category,
                                     fontWeight = FontWeight.Bold,
-                                    fontSize = 16.sp,
-                                    color = PrimaryBlue
+                                    fontSize = 14.sp,
+                                    color = PrimaryBlue,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                    modifier = Modifier.weight(1f) // Ensures category takes available space
                                 )
-
-                                Row {
-                                    Text(
-                                        text = "$amount $shortFormCurrency",
-                                        fontSize = 14.sp,
-                                        color = PrimaryBlue
-                                    )
-
-                                    val effectiveLimit = if (limit != null && limit > 0) limit else total
-                                    Text(
-                                        text = buildString {
-                                            append(" of $effectiveLimit $shortFormCurrency")
-                                            if (limit == null || limit == 0.0) append(" (total)")
-                                        },
-                                        fontSize = 14.sp,
-                                        color = PrimaryBlue
-                                    )
-                                }
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = buildString {
+                                        append("$${amount.roundToInt()} of $${effectiveLimit.roundToInt()} $shortFormCurrency")
+                                        if (limit == null || limit == 0.0) append(" (total)")
+                                    },
+                                    fontSize = 14.sp,
+                                    color = PrimaryBlue,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                    modifier = Modifier.weight(1.2f), // Adjust weight as needed for layout balance
+                                    textAlign = TextAlign.End
+                                )
                             }
-
+                            Spacer(modifier = Modifier.height(4.dp))
                             val denominator = limit?.takeIf { it > 0 } ?: total.takeIf { it > 0 } ?: 1.0
                             val progress = (amount / denominator).coerceIn(0.0, 1.0)
-
                             LinearProgressIndicator(
                                 progress = { progress.toFloat() },
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .height(20.dp)
+                                    .height(12.dp) // Shorter bar
                                     .clip(RoundedCornerShape(8.dp)),
                                 color = Color(COMBINED_COLORS[index % COMBINED_COLORS.size]),
                                 trackColor = Color(COMBINED_COLORS[index % COMBINED_COLORS.size]).copy(alpha = 0.3f),
@@ -320,6 +314,7 @@ fun AnalyticsTab(
                         }
                     }
                 }
+
             }
 
             if (selectedType == "Comparison") {
@@ -334,7 +329,8 @@ fun AnalyticsTab(
             contentColor = White,
             modifier = Modifier
                 .align(Alignment.BottomEnd)
-                .padding(end = 24.dp, bottom = 120.dp),
+                .navigationBarsPadding() // ensures above system nav bar
+                .padding(end = 24.dp, bottom = 96.dp), // 96.dp = height of
             shape = RoundedCornerShape(16.dp),
             elevation = FloatingActionButtonDefaults.elevation(8.dp)
         ) {
@@ -435,7 +431,7 @@ fun AnalyticsTab(
                                     if (trimmed.startsWith("-") || trimmed.startsWith("*")) {
                                         Row(Modifier.padding(bottom = 4.dp)) {
                                             Text(
-                                                "• ",
+                                                "â€¢ ",
                                                 fontWeight = FontWeight.Bold,
                                                 color = PrimaryBlue
                                             )
