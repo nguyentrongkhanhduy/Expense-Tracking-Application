@@ -46,12 +46,7 @@ class CategoryViewModel(
 
     private val validTypes = listOf("expense", "income")
 
-
-    init {
-        initializeDefaults()
-    }
-
-    private fun initializeDefaults(userId: String = "") {
+    fun initializeDefaults(userId: String = "") {
         viewModelScope.launch {
             categoryRepository.getAllCategories().collect { list ->
                 if (list.isEmpty()) {
@@ -79,6 +74,10 @@ class CategoryViewModel(
                     )
 
                     defaultCategories.forEach { addCategory(it) }
+
+                    if (userId.isNotEmpty()) {
+                        initializeDefaultsForFirestore(userId)
+                    }
                 }
             }
         }
@@ -160,6 +159,9 @@ class CategoryViewModel(
     fun initializeDefaultsForFirestore(userId: String) {
         viewModelScope.launch {
             try {
+                if (categories.value.isNotEmpty()) {
+                    defaultCategories = categories.value
+                }
                 val response = categoryApiService.createInitialCategories(
                     InitialCategoriesRequest(
                         userId,

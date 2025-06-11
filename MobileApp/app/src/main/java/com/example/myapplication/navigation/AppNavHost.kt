@@ -38,7 +38,7 @@ fun AppNavHost() {
 
     NavHost(navController, startDestination = "splash") {
         composable("splash") { SplashScreen(navController) }
-        composable("welcome") { WelcomeScreen(navController) }
+        composable("welcome") { WelcomeScreen(navController, categoryViewModel) }
         composable(
             route = "login?showGuest={showGuest}",
             arguments = listOf(navArgument("showGuest") { defaultValue = "false" })
