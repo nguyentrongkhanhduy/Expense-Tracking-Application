@@ -11,6 +11,7 @@ import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 
 class AuthViewModel : ViewModel() {
     private val auth = FirebaseAuth.getInstance()
@@ -27,7 +28,28 @@ class AuthViewModel : ViewModel() {
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading
 
-    private val authService = RetrofitClient.createService(AuthApiService::class.java, "http://10.0.2.2:3000")
+    private val authService =
+        RetrofitClient.createService(AuthApiService::class.java, "http://10.0.2.2:3000")
+
+    init {
+        getCurrentUser()
+    }
+
+    private fun getCurrentUser() {
+        val firebaseUser = auth.currentUser
+        if (firebaseUser != null) {
+            viewModelScope.launch {
+                try {
+                    val response = authService.signIn(TokenRequest(firebaseUser.getIdToken(true).await().token!!))
+                    _user.value = response
+                    _isSignedIn.value = true
+                } catch (e: Exception) {
+                    println("Error: ${e.message}")
+
+                }
+            }
+        }
+    }
 
     fun signIn(email: String, password: String) {
         _isLoading.value = true
@@ -59,7 +81,12 @@ class AuthViewModel : ViewModel() {
         }
     }
 
-    fun signUp(email: String, password: String, displayName: String, onSignUpSuccess: (userId: String) -> Unit) {
+    fun signUp(
+        email: String,
+        password: String,
+        displayName: String,
+        onSignUpSuccess: (userId: String) -> Unit
+    ) {
         _isSignedUp.value = false
         _isLoading.value = true
         val request = SignUpRequest(email, password, displayName)

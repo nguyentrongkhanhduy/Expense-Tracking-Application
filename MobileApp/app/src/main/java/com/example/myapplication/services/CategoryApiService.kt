@@ -18,7 +18,7 @@ data class UserIdRequest(val userId: String)
 interface CategoryApiService {
 
     @POST("api/categories/get")
-    suspend fun getCategories(@Body userId: String): List<Category>
+    suspend fun getCategories(@Body request: UserIdRequest): List<Category>
 
     @POST("api/categories/create")
     suspend fun createCategory(@Body request: CategoryRequest): Map<String, Any>

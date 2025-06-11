@@ -209,4 +209,14 @@ class CategoryViewModel(
         }
     }
 
+    fun getCategoriesFromFirestore(userId: String) {
+        viewModelScope.launch {
+            try {
+                val response = categoryApiService.getCategories(UserIdRequest(userId))
+                println("Fetched categories from Firestore: $response")
+            } catch (e: Exception) {
+                println("Error: ${e.message}")
+            }
+        }
+    }
 }

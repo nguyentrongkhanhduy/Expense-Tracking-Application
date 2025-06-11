@@ -33,21 +33,20 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import com.example.myapplication.components.CustomDropdownMenu
 import com.example.myapplication.components.MyButton
 import com.example.myapplication.data.datastore.UserPreferences
 import com.example.myapplication.ui.theme.PrimaryBlue
 import com.example.myapplication.ui.theme.PrimaryRed
+import com.example.myapplication.viewmodel.AuthViewModel
 import com.example.myapplication.viewmodel.CurrencyViewModel
-import com.google.firebase.auth.FirebaseAuth
-import kotlinx.coroutines.launch
 
 @Composable
 fun ProfileTab(
     navController: NavController,
     currencyViewModel: CurrencyViewModel,
+    authViewModel: AuthViewModel,
     onCurrencyChange: (Double) -> Unit = {},
     onSyncData: () -> Unit = {},
     onBackupData: () -> Unit = {},
@@ -55,7 +54,7 @@ fun ProfileTab(
 ) {
     val context = LocalContext.current
 
-    val user = FirebaseAuth.getInstance().currentUser
+    val user by authViewModel.user.collectAsState()
     val displayName = user?.displayName ?: "Username"
     val email = user?.email ?: "Username@gmail.com"
 

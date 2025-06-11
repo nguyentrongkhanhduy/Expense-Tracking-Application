@@ -66,7 +66,6 @@ fun HomeScreen(
 
 
     val user by authViewModel.user.collectAsState()
-    val isSignedIn by authViewModel.isSignedIn.collectAsState()
     val categories by categoryViewModel.categories.collectAsState()
     var showAddDialog by remember { mutableStateOf(false) }
     var editingTransaction by remember { mutableStateOf<TransactionWithCategory?>(null) }
@@ -88,13 +87,6 @@ fun HomeScreen(
         shortFormCurrency = currencyViewModel.getCurrencyShortForm(defaultCurrency)
     }
 
-    LaunchedEffect(isSignedIn) {
-        if (!isSignedIn && !isGuest) {
-            navController.navigate("login?showGuest=true") {
-                popUpTo(0)
-            }
-        }
-    }
     val currentBackStackEntry = navController.currentBackStackEntry
     LaunchedEffect(currentBackStackEntry) {
         val selectedTabResult = currentBackStackEntry?.savedStateHandle?.get<Int>("selectedTab")
@@ -137,6 +129,7 @@ fun HomeScreen(
                         popUpTo(0)
                     }
                 },
+                authViewModel = authViewModel ,
                 currencyViewModel = currencyViewModel
                 , onCurrencyChange = { rate ->
                     transactionViewModel.updateAllAmountsByExchangeRate(rate)
