@@ -38,24 +38,28 @@ fun SplashScreen(navController: NavController) {
             navController.navigate("welcome") {
                 popUpTo("splash") { inclusive = true }
             }
-            UserPreferences.setFirstLaunch(context, false)
         } else {
             navController.navigate("home?isGuest=${isGuest ?: false}") {
                 popUpTo("splash") { inclusive = true }
             }
         }
-
     }
 
     Box(
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier
+            .fillMaxSize()
             .background(PrimaryBlue),
         contentAlignment = Alignment.Center
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text("My Spend", fontSize = 40.sp, fontWeight = FontWeight.Bold, color = White)
             Spacer(modifier = Modifier.height(8.dp))
-            Text("Tracking cents so you don't make none!", fontSize = 18.sp, color = White, fontStyle = FontStyle.Italic)
+            Text(
+                "Tracking cents so you don't make none!",
+                fontSize = 18.sp,
+                color = White,
+                fontStyle = FontStyle.Italic
+            )
 
         }
     }

@@ -95,7 +95,15 @@ fun AddCategoryDialog(
                         label = { Text("Type") },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
                         isError = viewModel.typeError != null,
-                        supportingText = { viewModel.typeError?.let { Text(it, color = Color.Red, fontSize = 12.sp) } },
+                        supportingText = {
+                            viewModel.typeError?.let {
+                                Text(
+                                    it,
+                                    color = Color.Red,
+                                    fontSize = 12.sp
+                                )
+                            }
+                        },
                         modifier = Modifier
                             .fillMaxWidth()
                             .menuAnchor()
@@ -125,7 +133,15 @@ fun AddCategoryDialog(
                     },
                     label = { Text("Title") },
                     isError = viewModel.titleError != null,
-                    supportingText = { viewModel.titleError?.let { Text(it, color = Color.Red, fontSize = 12.sp) } },
+                    supportingText = {
+                        viewModel.titleError?.let {
+                            Text(
+                                it,
+                                color = Color.Red,
+                                fontSize = 12.sp
+                            )
+                        }
+                    },
                     modifier = Modifier.fillMaxWidth()
                 )
 
@@ -142,7 +158,15 @@ fun AddCategoryDialog(
                         },
                         label = { Text("Generate Icon") },
                         isError = viewModel.iconError != null,
-                        supportingText = { viewModel.iconError?.let { Text(it, color = Color.Red, fontSize = 12.sp) } },
+                        supportingText = {
+                            viewModel.iconError?.let {
+                                Text(
+                                    it,
+                                    color = Color.Red,
+                                    fontSize = 12.sp
+                                )
+                            }
+                        },
                         modifier = Modifier.weight(1f)
                     )
                     Spacer(modifier = Modifier.width(12.dp))
@@ -166,7 +190,15 @@ fun AddCategoryDialog(
                     label = { Text("Limit") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     isError = viewModel.limitError != null,
-                    supportingText = { viewModel.limitError?.let { Text(it, color = Color.Red, fontSize = 12.sp) } },
+                    supportingText = {
+                        viewModel.limitError?.let {
+                            Text(
+                                it,
+                                color = Color.Red,
+                                fontSize = 12.sp
+                            )
+                        }
+                    },
                     modifier = Modifier.fillMaxWidth()
                 )
 

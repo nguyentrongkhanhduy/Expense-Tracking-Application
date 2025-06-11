@@ -1,7 +1,7 @@
 package com.example.myapplication.components
 
-import android.R.attr.bottom
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
@@ -40,8 +40,16 @@ fun CustomBottomBar(
             .height(barHeight)
             .clip(BottomNavShape(
                 cornerRadius = with(LocalDensity.current) { 20.dp.toPx() },
-                dockRadius = with(LocalDensity.current) { 28.dp.toPx() } // or match your FAB radius
+                dockRadius = with(LocalDensity.current) { 24.dp.toPx() }
             ))
+            .border(
+                width = 2.dp,
+                color = PrimaryBlue,
+                shape = BottomNavShape(
+                    cornerRadius = with(LocalDensity.current) { 20.dp.toPx() },
+                    dockRadius = with(LocalDensity.current) { 28.dp.toPx() }
+                )
+            )
 
             .background(White)
     ) {
@@ -68,12 +76,12 @@ fun CustomBottomBar(
                 Icon(
                     painterResource(R.drawable.home),
                     contentDescription = "Home",
-                    modifier = Modifier.size(28.dp),
+                    modifier = Modifier.size(32.dp),
                     tint = if (selectedTab == 0) PrimaryBlue else Color.Gray
                 )
                 Text(
                     "Home",
-                    fontSize = 12.sp,
+                    fontSize = 14.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = if (selectedTab == 0) PrimaryBlue else Color.Gray,
                     textAlign = TextAlign.Center,
@@ -97,12 +105,12 @@ fun CustomBottomBar(
                 Icon(
                     painterResource(R.drawable.list),
                     contentDescription = "Transaction list",
-                    modifier = Modifier.size(28.dp),
+                    modifier = Modifier.size(32.dp),
                     tint = if (selectedTab == 1) PrimaryBlue else Color.Gray
                 )
                 Text(
                     "Transactions",
-                    fontSize = 12.sp,
+                    fontSize = 14.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = if (selectedTab == 1) PrimaryBlue else Color.Gray,
                     textAlign = TextAlign.Center,
@@ -127,12 +135,12 @@ fun CustomBottomBar(
                 Icon(
                     painterResource(R.drawable.barchart),
                     contentDescription = "Analytics",
-                    modifier = Modifier.size(28.dp),
+                    modifier = Modifier.size(32.dp),
                     tint = if (selectedTab == 2) PrimaryBlue else Color.Gray
                 )
                 Text(
                     "Analytics",
-                    fontSize = 12.sp,
+                    fontSize = 14.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = if (selectedTab == 2) PrimaryBlue else Color.Gray,
                     textAlign = TextAlign.Center,
@@ -156,12 +164,12 @@ fun CustomBottomBar(
                 Icon(
                     painterResource(R.drawable.profile),
                     contentDescription = "Profile",
-                    modifier = Modifier.size(28.dp),
+                    modifier = Modifier.size(32.dp),
                     tint = if (selectedTab == 3) PrimaryBlue else Color.Gray
                 )
                 Text(
                     "Profile",
-                    fontSize = 12.sp,
+                    fontSize = 14.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = if (selectedTab == 3) PrimaryBlue else Color.Gray,
                     textAlign = TextAlign.Center,

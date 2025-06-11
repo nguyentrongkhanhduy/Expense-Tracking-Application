@@ -46,7 +46,11 @@ fun EditCategoryDialog(
     var type by rememberSaveable(initialCategory.categoryId) { mutableStateOf(initialCategory.type) }
     var title by rememberSaveable(initialCategory.categoryId) { mutableStateOf(initialCategory.title) }
     var icon by rememberSaveable(initialCategory.categoryId) { mutableStateOf(initialCategory.icon) }
-    var limit by rememberSaveable(initialCategory.categoryId) { mutableStateOf(initialCategory.limit?.toString() ?: "") }
+    var limit by rememberSaveable(initialCategory.categoryId) {
+        mutableStateOf(
+            initialCategory.limit?.toString() ?: ""
+        )
+    }
 
     Dialog(
         onDismissRequest = onDismiss,
@@ -73,7 +77,11 @@ fun EditCategoryDialog(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     IconButton(onClick = onDismiss) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = PrimaryBlue)
+                        Icon(
+                            Icons.Default.ArrowBack,
+                            contentDescription = "Back",
+                            tint = PrimaryBlue
+                        )
                     }
                     Spacer(Modifier.width(8.dp))
                     Text(
@@ -143,7 +151,11 @@ fun EditCategoryDialog(
                             .clip(CircleShape)
                             .background(Color(0xFFE0E0E0))
                     ) {
-                        Icon(Icons.Default.Add, contentDescription = "Generate Icon", tint = Color.Black)
+                        Icon(
+                            Icons.Default.Add,
+                            contentDescription = "Generate Icon",
+                            tint = Color.Black
+                        )
                     }
                 }
 

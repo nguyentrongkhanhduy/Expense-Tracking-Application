@@ -54,7 +54,7 @@ fun CategoriesScreen(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 16.dp)
+                .padding(top = 32.dp)
                 .height(56.dp)
         ) {
             IconButton(
@@ -73,19 +73,20 @@ fun CategoriesScreen(
                 )
             }
             Text(
-                "Your categories",
+                "My Categories",
                 fontWeight = FontWeight.Bold,
                 fontSize = 26.sp,
                 color = Color(0xFF0A2540),
                 modifier = Modifier.align(Alignment.Center)
             )
-            // Optional: Invisible box to balance layout
             Box(
                 modifier = Modifier
                     .size(48.dp)
                     .align(Alignment.CenterEnd)
             )
         }
+
+
         Spacer(modifier = Modifier.height(16.dp))
 
         val currentFilterIndex = filterOptions.indexOf(filter)
