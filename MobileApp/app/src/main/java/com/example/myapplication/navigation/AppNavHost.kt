@@ -15,12 +15,12 @@ import com.example.myapplication.screens.SignUpScreen
 import com.example.myapplication.screens.SplashScreen
 import com.example.myapplication.screens.WelcomeScreen
 import com.example.myapplication.viewmodel.AuthViewModel
-import com.example.myapplication.viewmodel.CategoryViewModel
-import com.example.myapplication.viewmodel.CategoryViewModelFactory
+import com.example.myapplication.viewmodel.category.CategoryViewModel
+import com.example.myapplication.viewmodel.category.CategoryViewModelFactory
 import com.example.myapplication.viewmodel.CurrencyViewModel
 import com.example.myapplication.viewmodel.LocationViewModel
-import com.example.myapplication.viewmodel.TransactionViewModel
-import com.example.myapplication.viewmodel.TransactionViewModelFactory
+import com.example.myapplication.viewmodel.transaction.TransactionViewModel
+import com.example.myapplication.viewmodel.transaction.TransactionViewModelFactory
 
 @Composable
 fun AppNavHost() {
@@ -47,12 +47,13 @@ fun AppNavHost() {
             LoginScreen(
                 navController = navController,
                 viewModel = authViewModel,
+                categoryViewModel = categoryViewModel,
                 showGuestOption = showGuest
             )
         }
-        composable("signup") { SignUpScreen(navController, authViewModel) }
+        composable("signup") { SignUpScreen(navController, authViewModel, categoryViewModel) }
         composable(
-            route = "home?isGuest={isGuest}&selectedTab={selectedTab}",
+            route = "home?selectedTab={selectedTab}",
             arguments = listOf(
                 navArgument("isGuest") { defaultValue = "false" },
                 navArgument("selectedTab") {
@@ -60,7 +61,6 @@ fun AppNavHost() {
                     defaultValue = 0 }
             )
         ) { backStackEntry ->
-            val isGuest = backStackEntry.arguments?.getString("isGuest").toBoolean()
             val selectedTab = backStackEntry.arguments?.getString("selectedTab")?.toIntOrNull() ?: 0
             HomeScreen(
                 navController = navController,
@@ -69,7 +69,6 @@ fun AppNavHost() {
                 categoryViewModel = categoryViewModel,
                 locationViewModel = locationViewModel,
                 currencyViewModel = currencyViewModel,
-                isGuest = isGuest,
                 initialTab = selectedTab
             )
         }
@@ -81,6 +80,7 @@ fun AppNavHost() {
             CategoriesScreen(
                 navController = navController,
                 viewModel = categoryViewModel,
+                authViewModel = authViewModel
             )
         }
 

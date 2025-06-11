@@ -1,6 +1,6 @@
 package com.example.myapplication.services
 
-import com.example.myapplication.models.User
+import com.example.myapplication.data.model.User
 import retrofit2.http.Body
 import retrofit2.http.POST
 
@@ -19,4 +19,3 @@ interface AuthApiService {
     @POST("api/auth/signup")
     suspend fun signUp(@Body request: SignUpRequest): User
 }
-

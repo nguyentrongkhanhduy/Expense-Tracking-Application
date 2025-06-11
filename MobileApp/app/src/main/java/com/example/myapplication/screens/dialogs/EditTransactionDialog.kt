@@ -34,8 +34,8 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import coil.compose.rememberAsyncImagePainter
-import com.example.myapplication.data.local.model.Category
-import com.example.myapplication.data.local.model.Transaction
+import com.example.myapplication.data.model.Category
+import com.example.myapplication.data.model.Transaction
 import com.example.myapplication.helpers.loadImageUriOrBitmapFromInternalStorage
 import com.example.myapplication.helpers.rememberCameraPermissionHandler
 import com.example.myapplication.helpers.rememberLocationPermissionHandler
@@ -44,7 +44,7 @@ import com.example.myapplication.ui.theme.PrimaryBlue
 import com.example.myapplication.ui.theme.PrimaryRed
 import com.example.myapplication.ui.theme.White
 import com.example.myapplication.viewmodel.LocationViewModel
-import com.example.myapplication.viewmodel.TransactionViewModel
+import com.example.myapplication.viewmodel.transaction.TransactionViewModel
 import java.text.SimpleDateFormat
 import java.util.*
 

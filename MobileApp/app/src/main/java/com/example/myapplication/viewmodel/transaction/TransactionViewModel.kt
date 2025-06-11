@@ -1,4 +1,4 @@
-package com.example.myapplication.viewmodel
+package com.example.myapplication.viewmodel.transaction
 
 import android.content.Context
 import androidx.compose.runtime.getValue
@@ -6,15 +6,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.myapplication.data.local.model.Transaction
-import com.example.myapplication.data.local.model.TransactionWithCategory
+import com.example.myapplication.data.model.Transaction
+import com.example.myapplication.data.model.TransactionWithCategory
 import com.example.myapplication.data.local.repository.CategoryRepository
 import com.example.myapplication.data.local.repository.TransactionRepository
 import com.example.myapplication.helpers.sendBudgetExceededNotification
 import com.github.mikephil.charting.data.PieEntry
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -257,7 +256,6 @@ class TransactionViewModel(
             .sortedBy { it.first }
     }
 
-
     fun getEarningWithTotalByCategory(startDate: Long? = null, endDate: Long? = null): List<Pair<String, Double>> {
         val totalEarned = transactionsWithCategory.value
             .filter {
@@ -305,5 +303,4 @@ class TransactionViewModel(
         $spendingByCat
     """.trimIndent()
     }
-
 }

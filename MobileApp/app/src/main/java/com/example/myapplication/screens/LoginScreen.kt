@@ -32,11 +32,13 @@ import com.example.myapplication.components.BackButton
 import com.example.myapplication.components.MyButton
 import com.example.myapplication.ui.theme.PrimaryBlue
 import com.example.myapplication.viewmodel.AuthViewModel
+import com.example.myapplication.viewmodel.category.CategoryViewModel
 
 @Composable
 fun LoginScreen(
     navController: NavController,
     viewModel: AuthViewModel,
+    categoryViewModel: CategoryViewModel,
     showGuestOption: Boolean = false
 ) {
     var email by remember { mutableStateOf("test@123.com") }
@@ -47,6 +49,7 @@ fun LoginScreen(
 
     LaunchedEffect(isSignedIn) {
         if (isSignedIn) {
+            viewModel.user.value?.let { categoryViewModel.getCategoriesFromFirestore(it.uid) }
             navController.navigate("home") {
                 popUpTo("login") { inclusive = true }
             }
@@ -98,7 +101,9 @@ fun LoginScreen(
             )
             Spacer(Modifier.height(32.dp))
             MyButton(
-                onClick = { viewModel.signIn(email, password) },
+                onClick = {
+                    viewModel.signIn(email, password)
+                },
                 enabled = !isLoading && email.isNotBlank() && password.isNotBlank()
             ) {
                 if (isLoading) {
