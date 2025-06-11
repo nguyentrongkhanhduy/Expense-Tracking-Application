@@ -30,7 +30,6 @@ class CategoryViewModel(
         .map { it.sortedBy { cat -> cat.categoryId } }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
     val categories: StateFlow<List<Category>> = _categories
-    private var defaultCategories = _categories.value
 
     // Dialog input state
     var inputType by mutableStateOf("")
@@ -55,30 +54,46 @@ class CategoryViewModel(
         viewModelScope.launch {
             categoryRepository.getAllCategories().collect { list ->
                 if (list.isEmpty()) {
-                    defaultCategories = listOf(
+                    addCategory(
                         Category(
                             categoryId = System.currentTimeMillis() + 1,
                             title = "Food",
                             icon = "🍔",
                             type = "expense"
-                        ),
+                        )
+                    )
+                    addCategory(
                         Category(
                             categoryId = System.currentTimeMillis() + 2,
                             title = "Salary",
                             icon = "💰",
                             type = "income"
-                        ),
+                        )
+                    )
+                    addCategory(
                         Category(
                             categoryId = System.currentTimeMillis() + 3,
                             title = "Transport",
                             icon = "🚗",
                             type = "expense"
-                        ),
-                        Category(categoryId = -1L, title = "Others", icon = "📦", type = "expense"),
-                        Category(categoryId = -2L, title = "Others", icon = "📦", type = "income")
+                        )
                     )
-
-                    defaultCategories.forEach { addCategory(it) }
+                    addCategory(
+                        Category(
+                            categoryId = -1L,
+                            title = "Others",
+                            icon = "📦",
+                            type = "expense"
+                        )
+                    )
+                    addCategory(
+                        Category(
+                            categoryId = -2L,
+                            title = "Others",
+                            icon = "📦",
+                            type = "income"
+                        )
+                    )
                 }
             }
         }
@@ -163,7 +178,7 @@ class CategoryViewModel(
                 val response = categoryApiService.createInitialCategories(
                     InitialCategoriesRequest(
                         userId,
-                        defaultCategories
+                        categories.value
                     )
                 )
                 println("Synced default categories to Firestore: $response")
