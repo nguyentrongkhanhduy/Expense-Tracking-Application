@@ -44,7 +44,9 @@ fun TransactionListTab(
     transactionViewModel: TransactionViewModel,
     categoryViewModel: CategoryViewModel,
     locationViewModel: LocationViewModel,
-    authViewModel: AuthViewModel
+    authViewModel: AuthViewModel,
+    shortFormCurrency: String,
+
 ) {
     var searchQuery by remember { mutableStateOf(TextFieldValue("")) }
     val tabTexts = listOf("All", "Today", "Week", "Month", "Custom")
@@ -179,7 +181,10 @@ fun TransactionListTab(
             }
         }
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(modifier = Modifier
+        .fillMaxSize()
+        .navigationBarsPadding()
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -307,6 +312,7 @@ fun TransactionListTab(
                 items(filteredTransactions) { transactionWithCategory ->
                     TransactionCard(
                         transactionWithCategory = transactionWithCategory,
+                        shortFormCurrency = shortFormCurrency,
                         onClick = { editingTransaction = transactionWithCategory }
                     )
                 }
@@ -314,50 +320,51 @@ fun TransactionListTab(
 
         }
     }
-        // --- AddTransactionDialog ---
-        if (showAddDialog) {
-            AddTransactionDialog(
-                viewModel = transactionViewModel,
-                onDismiss = { showAddDialog = false },
-                onSave = {
-                    transactionViewModel.addTransaction(it)
-                    showAddDialog = false
-                    transactionViewModel.checkAndNotifyBudget(context, it)
-                },
-                categoryList = categories,
-                locationViewModel = locationViewModel,
-                authViewModel = authViewModel
-            )
-        }
-        // Edit dialog
-        if (editingTransaction != null) {
-            EditTransactionDialog(
-                transaction = editingTransaction!!.transaction,
-                onDismiss = { editingTransaction = null },
-                onSave = { updatedTransaction ->
-                    transactionViewModel.updateTransaction(updatedTransaction)
-                    editingTransaction = null
-                    transactionViewModel.checkAndNotifyBudget(context, updatedTransaction)
-                },
-                onDelete = {
-                    val imagePath = editingTransaction!!.transaction.imageUrl
-                    if (imagePath?.startsWith("bitmap:") == true) {
-                        removeFromInternalStorage(imagePath)
-                    }
-                    transactionViewModel.deleteTransaction(editingTransaction!!.transaction)
-                    editingTransaction = null
-                },
-                categoryList = categories,
-                locationViewModel = locationViewModel,
-                viewModel = transactionViewModel,
-            )
-        }
+    // --- AddTransactionDialog ---
+    if (showAddDialog) {
+        AddTransactionDialog(
+            viewModel = transactionViewModel,
+            onDismiss = { showAddDialog = false },
+            onSave = {
+                transactionViewModel.addTransaction(it)
+                showAddDialog = false
+                transactionViewModel.checkAndNotifyBudget(context, it)
+            },
+            categoryList = categories,
+            locationViewModel = locationViewModel,
+            authViewModel = authViewModel
+        )
     }
+    // Edit dialog
+    if (editingTransaction != null) {
+        EditTransactionDialog(
+            transaction = editingTransaction!!.transaction,
+            onDismiss = { editingTransaction = null },
+            onSave = { updatedTransaction ->
+                transactionViewModel.updateTransaction(updatedTransaction)
+                editingTransaction = null
+                transactionViewModel.checkAndNotifyBudget(context, updatedTransaction)
+            },
+            onDelete = {
+                val imagePath = editingTransaction!!.transaction.imageUrl
+                if (imagePath?.startsWith("bitmap:") == true) {
+                    removeFromInternalStorage(imagePath)
+                }
+                transactionViewModel.deleteTransaction(editingTransaction!!.transaction)
+                editingTransaction = null
+            },
+            categoryList = categories,
+            locationViewModel = locationViewModel,
+            viewModel = transactionViewModel,
+        )
+    }
+}
 
 
 @Composable
 fun TransactionCard(
     transactionWithCategory: TransactionWithCategory,
+    shortFormCurrency: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -391,11 +398,10 @@ fun TransactionCard(
                 fontWeight = FontWeight.Bold
             )
             Text(
-                transaction.amount.toString(),
+                text = "%.2f ".format(transaction.amount) + shortFormCurrency,
                 color = White,
                 fontWeight = FontWeight.Bold
             )
         }
     }
 }
-

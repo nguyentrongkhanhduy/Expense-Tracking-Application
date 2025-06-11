@@ -161,7 +161,7 @@ fun ProfileTab(
                     }
                 },
                 modifier = Modifier.padding(start = 10.dp),
-                )
+            )
         }
         Spacer(modifier = Modifier.height(28.dp))
         MyButton(onClick = { navController.navigate("categories?fromTab=3") }) {
