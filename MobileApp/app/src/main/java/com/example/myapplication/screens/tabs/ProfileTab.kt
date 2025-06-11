@@ -49,7 +49,6 @@ fun ProfileTab(
     authViewModel: AuthViewModel,
     onCurrencyChange: (Double) -> Unit = {},
     onSyncData: () -> Unit = {},
-    onBackupData: () -> Unit = {},
     onLogout: () -> Unit = {},
 ) {
     val context = LocalContext.current
@@ -186,21 +185,11 @@ fun ProfileTab(
             }
             Spacer(modifier = Modifier.height(16.dp))
 
-            MyButton(onClick = onBackupData) {
-                Text(
-                    "Back up data",
-                    color = Color.White,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-            Spacer(modifier = Modifier.height(16.dp))
-
             MyButton(onClick = onLogout, backgroundColor = PrimaryRed) {
                 Text("Log out", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
             }
         } else {
-            MyButton(onClick = { navController.navigate("login") }) {
+            MyButton(onClick = { navController.navigate("login?showGuest=true") }) {
                 Text("Log in", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
             }
         }

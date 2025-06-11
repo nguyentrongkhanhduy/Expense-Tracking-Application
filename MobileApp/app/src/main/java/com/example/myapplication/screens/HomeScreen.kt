@@ -60,7 +60,6 @@ fun HomeScreen(
     categoryViewModel: CategoryViewModel,
     locationViewModel: LocationViewModel,
     currencyViewModel: CurrencyViewModel,
-    isGuest: Boolean = false,
     initialTab: Int = 0
 ) {
 
@@ -125,7 +124,7 @@ fun HomeScreen(
             3 -> ProfileTab(
                 navController = navController, onLogout = {
                     authViewModel.signOut()
-                    navController.navigate("login?showGuestOption=true") {
+                    navController.navigate("login?showGuest=true") {
                         popUpTo(0)
                     }
                 },

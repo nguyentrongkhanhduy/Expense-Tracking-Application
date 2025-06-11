@@ -53,7 +53,7 @@ fun AppNavHost() {
         }
         composable("signup") { SignUpScreen(navController, authViewModel, categoryViewModel) }
         composable(
-            route = "home?isGuest={isGuest}&selectedTab={selectedTab}",
+            route = "home?selectedTab={selectedTab}",
             arguments = listOf(
                 navArgument("isGuest") { defaultValue = "false" },
                 navArgument("selectedTab") {
@@ -61,7 +61,6 @@ fun AppNavHost() {
                     defaultValue = 0 }
             )
         ) { backStackEntry ->
-            val isGuest = backStackEntry.arguments?.getString("isGuest").toBoolean()
             val selectedTab = backStackEntry.arguments?.getString("selectedTab")?.toIntOrNull() ?: 0
             HomeScreen(
                 navController = navController,
@@ -70,7 +69,6 @@ fun AppNavHost() {
                 categoryViewModel = categoryViewModel,
                 locationViewModel = locationViewModel,
                 currencyViewModel = currencyViewModel,
-                isGuest = isGuest,
                 initialTab = selectedTab
             )
         }
