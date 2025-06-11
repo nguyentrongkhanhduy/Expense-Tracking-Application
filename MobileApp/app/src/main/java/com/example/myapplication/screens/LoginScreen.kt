@@ -137,7 +137,11 @@ fun LoginScreen(
             if (showGuestOption) {
                 Text("Or", color = PrimaryBlue, fontSize = 18.sp)
                 Spacer(Modifier.height(16.dp))
-                TextButton(onClick = {}) {
+                TextButton(onClick = {
+                    navController.navigate("home?isGuest=true&selectedTab=0") {
+                        popUpTo("login") { inclusive = true }
+                    }
+                }) {
                     Text("Continue as guest", color = PrimaryBlue, fontSize = 20.sp)
                 }
             }
