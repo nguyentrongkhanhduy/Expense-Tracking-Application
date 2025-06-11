@@ -51,7 +51,7 @@ class AuthViewModel : ViewModel() {
         }
     }
 
-    fun signIn(email: String, password: String) {
+    fun signIn(email: String, password: String, onSignInSuccess: (userId: String) -> Unit) {
         _isLoading.value = true
         _isSignedIn.value = false
         viewModelScope.launch {
@@ -65,6 +65,7 @@ class AuthViewModel : ViewModel() {
                                 _isSignedIn.value = true
                                 _isLoading.value = false
                                 _user.value = response
+                                onSignInSuccess(response.uid)
                                 println("User: ${response.email}")
                             } catch (e: Exception) {
                                 println("Error: ${e.message}")

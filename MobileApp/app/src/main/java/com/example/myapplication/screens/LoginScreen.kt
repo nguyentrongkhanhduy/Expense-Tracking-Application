@@ -49,7 +49,6 @@ fun LoginScreen(
 
     LaunchedEffect(isSignedIn) {
         if (isSignedIn) {
-            viewModel.user.value?.let { categoryViewModel.getCategoriesFromFirestore(it.uid) }
             navController.navigate("home") {
                 popUpTo("login") { inclusive = true }
             }
@@ -102,7 +101,9 @@ fun LoginScreen(
             Spacer(Modifier.height(32.dp))
             MyButton(
                 onClick = {
-                    viewModel.signIn(email, password)
+                    viewModel.signIn(email, password) {
+                        categoryViewModel.syncDataWhenLogIn(it)
+                    }
                 },
                 enabled = !isLoading && email.isNotBlank() && password.isNotBlank()
             ) {

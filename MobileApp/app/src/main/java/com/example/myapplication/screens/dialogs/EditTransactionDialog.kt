@@ -464,7 +464,8 @@ fun EditTransactionDialog(
                                     date = viewModel.inputDate ?: transaction.date,
                                     note = viewModel.inputNote,
                                     location = viewModel.inputLocation,
-                                    imageUrl = viewModel.inputImagePath
+                                    imageUrl = viewModel.inputImagePath,
+                                    updatedAt = System.currentTimeMillis()
                                 )
                                 onSave(updatedTransaction)
                                 viewModel.resetInputFields()

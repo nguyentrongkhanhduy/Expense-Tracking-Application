@@ -434,6 +434,7 @@ fun AddTransactionDialog(
                                     note = viewModel.inputNote,
                                     location = viewModel.inputLocation,
                                     imageUrl = viewModel.inputImagePath,
+                                    updatedAt = System.currentTimeMillis()
                                 )
                                 onSave(transaction)
                                 viewModel.resetInputFields()

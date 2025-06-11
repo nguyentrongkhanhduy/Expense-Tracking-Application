@@ -55,22 +55,26 @@ class CategoryViewModel(
                             categoryId = System.currentTimeMillis() + 1,
                             title = "Food",
                             icon = "🍔",
-                            type = "expense"
+                            type = "expense",
+                            updatedAt = System.currentTimeMillis()
                         ),
                         Category(
                             categoryId = System.currentTimeMillis() + 2,
                             title = "Salary",
                             icon = "💰",
-                            type = "income"
+                            type = "income",
+                            updatedAt = System.currentTimeMillis()
+
                         ),
                         Category(
                             categoryId = System.currentTimeMillis() + 3,
                             title = "Transport",
                             icon = "🚗",
-                            type = "expense"
+                            type = "expense",
+                            updatedAt = System.currentTimeMillis()
                         ),
-                        Category(categoryId = -1L, title = "Others", icon = "📦", type = "expense"),
-                        Category(categoryId = -2L, title = "Others", icon = "📦", type = "income")
+                        Category(categoryId = -1L, title = "Others", icon = "📦", type = "expense", updatedAt = -1L),
+                        Category(categoryId = -2L, title = "Others", icon = "📦", type = "income", updatedAt = -2L)
                     )
 
                     defaultCategories.forEach { addCategory(it) }
@@ -211,14 +215,27 @@ class CategoryViewModel(
         }
     }
 
-    fun getCategoriesFromFirestore(userId: String) {
-        viewModelScope.launch {
-            try {
-                val response = categoryApiService.getCategories(UserIdRequest(userId))
-                println("Fetched categories from Firestore: $response")
-            } catch (e: Exception) {
-                println("Error: ${e.message}")
-            }
+    suspend fun getCategoriesFromFirestore(userId: String): List<Category> {
+        try {
+            val response = categoryApiService.getCategories(UserIdRequest(userId))
+            println("Fetched categories from Firestore: $response")
+            return response
+        } catch (e: Exception) {
+            println("Error: ${e.message}")
+            return emptyList()
         }
+    }
+
+    fun syncDataWhenLogIn(userId: String) {
+       viewModelScope.launch {
+           val remoteCategories = getCategoriesFromFirestore(userId)
+           if (remoteCategories.isNotEmpty()) {
+               if (categories.value.isEmpty()) {
+                   remoteCategories.forEach { addCategory(it) }
+               } else {
+
+               }
+           }
+       }
     }
 }
