@@ -43,6 +43,7 @@ import com.example.myapplication.helpers.saveBitmapToInternalStorage
 import com.example.myapplication.ui.theme.PrimaryBlue
 import com.example.myapplication.ui.theme.PrimaryRed
 import com.example.myapplication.ui.theme.White
+import com.example.myapplication.viewmodel.AuthViewModel
 import com.example.myapplication.viewmodel.LocationViewModel
 import com.example.myapplication.viewmodel.transaction.TransactionViewModel
 import java.text.SimpleDateFormat
@@ -58,6 +59,7 @@ fun EditTransactionDialog(
     onDelete: () -> Unit,
     categoryList: List<Category>,
     locationViewModel: LocationViewModel,
+    authViewModel: AuthViewModel
 ) {
     // Prefill ViewModel state ONCE per transaction
     LaunchedEffect(transaction.transactionId) {
@@ -455,6 +457,7 @@ fun EditTransactionDialog(
                     Button(
                         onClick = {
                             if (viewModel.validateInputs()) {
+                                val currentTime = System.currentTimeMillis()
                                 val updatedTransaction = transaction.copy(
                                     name = viewModel.inputName,
                                     type = viewModel.inputType.lowercase(),
@@ -465,9 +468,12 @@ fun EditTransactionDialog(
                                     note = viewModel.inputNote,
                                     location = viewModel.inputLocation,
                                     imageUrl = viewModel.inputImagePath,
-                                    updatedAt = System.currentTimeMillis()
+                                    updatedAt = currentTime
                                 )
                                 onSave(updatedTransaction)
+
+
+
                                 viewModel.resetInputFields()
                                 onDismiss()
                             }

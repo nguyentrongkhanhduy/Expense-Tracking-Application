@@ -4,6 +4,8 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
+import com.example.myapplication.services.RequestedImage
+import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
 
@@ -56,5 +58,42 @@ fun removeFromInternalStorage(filename: String): Boolean {
     } catch (e: Exception) {
         e.printStackTrace()
         false
+    }
+}
+
+fun getRequestedImage(
+    context: Context,
+    uri: Uri?,
+    bitmap: Bitmap?,
+    imageName: String
+): RequestedImage? {
+    return try {
+        val byteArray = when {
+            bitmap != null -> {
+                ByteArrayOutputStream().use { stream ->
+                    bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream)
+                    stream.toByteArray()
+                }
+            }
+            uri != null -> {
+                context.contentResolver.openInputStream(uri)?.use { inputStream ->
+                    inputStream.readBytes()
+                }
+            }
+            else -> null
+        } ?: return null
+
+        val base64 = android.util.Base64.encodeToString(byteArray, android.util.Base64.NO_WRAP)
+
+        val contentType = when {
+            bitmap != null -> "image/jpeg"
+            uri != null -> context.contentResolver.getType(uri) ?: "image/jpeg"
+            else -> "image/jpeg"
+        }
+
+        RequestedImage(imageName, base64, contentType)
+    } catch (e: Exception) {
+        e.printStackTrace()
+        null
     }
 }

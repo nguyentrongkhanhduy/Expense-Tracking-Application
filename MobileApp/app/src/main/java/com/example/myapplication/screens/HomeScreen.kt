@@ -50,6 +50,7 @@ import com.example.myapplication.viewmodel.LocationViewModel
 import androidx.compose.material3.FloatingActionButtonDefaults
 import com.example.myapplication.components.AdBanner
 import com.example.myapplication.data.datastore.UserPreferences
+import com.example.myapplication.helpers.getRequestedImage
 import com.example.myapplication.viewmodel.CurrencyViewModel
 
 
@@ -192,10 +193,16 @@ fun HomeScreen(
         AddTransactionDialog(
             viewModel = transactionViewModel,
             onDismiss = { showAddDialog = false },
-            onSave = {
-                transactionViewModel.addTransaction(it)
+            onSave = { transaction ->
                 showAddDialog = false
-                transactionViewModel.checkAndNotifyBudget(context, it)
+
+                transactionViewModel.addTransaction(transaction)
+                transactionViewModel.checkAndNotifyBudget(context, transaction)
+
+                if (user != null) {
+                    transactionViewModel.addTransactionToFirestore(user!!.uid, transaction)
+
+                }
             },
             categoryList = categories,
             locationViewModel = locationViewModel,
@@ -210,6 +217,9 @@ fun HomeScreen(
             onSave = { updatedTransaction ->
                 transactionViewModel.updateTransaction(updatedTransaction)
                 editingTransaction = null
+                if (user != null) {
+                    transactionViewModel.updateTransactionInFirestore(user!!.uid, updatedTransaction)
+                }
                 transactionViewModel.checkAndNotifyBudget(context, updatedTransaction)
             },
             onDelete = {
@@ -218,11 +228,19 @@ fun HomeScreen(
                     removeFromInternalStorage(imagePath)
                 }
                 transactionViewModel.deleteTransaction(editingTransaction!!.transaction)
+
+                if (user != null) {
+                    transactionViewModel.deleteTransactionFromFirestore(user!!.uid, editingTransaction!!.transaction.transactionId)
+                }
+
+                transactionViewModel.resetInputFields()
+
                 editingTransaction = null
             },
             categoryList = categories,
             locationViewModel = locationViewModel,
             viewModel = transactionViewModel,
+            authViewModel = authViewModel
         )
     }
 }
