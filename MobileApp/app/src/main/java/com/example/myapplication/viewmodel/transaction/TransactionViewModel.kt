@@ -350,7 +350,8 @@ class TransactionViewModel(
     fun deleteTransactionFromFirestore(userId: String, transactionId: Long) {
         viewModelScope.launch {
             try {
-                val response = transactionApiService.deleteTransaction(transactionId, UserIdRequest(userId))
+                val response =
+                    transactionApiService.deleteTransaction(transactionId, UserIdRequest(userId))
                 println("Deleted transaction from Firestore: $response")
             } catch (e: Exception) {
                 println("Error: ${e.message}")
@@ -369,10 +370,36 @@ class TransactionViewModel(
         }
     }
 
-    fun uploadImageToFirebaseStorage(userId:String, requestedImage: RequestedImage, onImageUploaded: (String) -> Unit) {
+    fun syncDataWhenLogIn(userId: String) {
+        viewModelScope.launch {
+            val remoteTransactions = getTransactionsFromFirestore(userId)
+            if (remoteTransactions.isNotEmpty()) {
+                if (transactions.value.isEmpty()) {
+                    remoteTransactions.forEach { addTransaction(it) }
+                } else {
+                    //TO DO: HANDLE CONFLICTS
+                }
+            }
+        }
+    }
+
+    fun syncDataWhenSignUp(userId: String) {
+        viewModelScope.launch {
+            if (transactions.value.isNotEmpty()) {
+                transactions.value.forEach { addTransactionToFirestore(userId, it) }
+            }
+        }
+    }
+
+    fun uploadImageToFirebaseStorage(
+        userId: String,
+        requestedImage: RequestedImage,
+        onImageUploaded: (String) -> Unit
+    ) {
         viewModelScope.launch {
             try {
-                val response = transactionApiService.uploadImage(ImageRequest(userId, requestedImage))
+                val response =
+                    transactionApiService.uploadImage(ImageRequest(userId, requestedImage))
                 if (response.success) {
                     onImageUploaded(response.imageUrl!!)
                 } else {

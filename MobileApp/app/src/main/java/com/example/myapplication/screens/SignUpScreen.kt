@@ -31,9 +31,10 @@ import com.example.myapplication.components.MyButton
 import com.example.myapplication.ui.theme.PrimaryBlue
 import com.example.myapplication.viewmodel.AuthViewModel
 import com.example.myapplication.viewmodel.category.CategoryViewModel
+import com.example.myapplication.viewmodel.transaction.TransactionViewModel
 
 @Composable
-fun SignUpScreen(navController: NavController, viewModel: AuthViewModel, categoryViewModel: CategoryViewModel) {
+fun SignUpScreen(navController: NavController, viewModel: AuthViewModel, categoryViewModel: CategoryViewModel, transactionViewModel: TransactionViewModel) {
     var email by remember { mutableStateOf("test@123.com") }
     var password by remember { mutableStateOf("1234567") }
     var confirmPassword by remember { mutableStateOf("1234567") }
@@ -109,6 +110,7 @@ fun SignUpScreen(navController: NavController, viewModel: AuthViewModel, categor
                         categoryViewModel.initializeDefaults(it)
                     } else {
                         categoryViewModel.initializeDefaultsForFirestore(it)
+                        transactionViewModel.syncDataWhenSignUp(it)
                     }
                 } },
                 enabled = !isLoading && email.isNotBlank() && password.isNotBlank() && password.length >= 6 && confirmPassword.isNotBlank() && displayName.isNotBlank() && password == confirmPassword,

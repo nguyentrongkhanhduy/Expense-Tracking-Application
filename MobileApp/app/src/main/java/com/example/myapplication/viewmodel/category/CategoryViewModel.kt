@@ -233,7 +233,7 @@ class CategoryViewModel(
                if (categories.value.isEmpty()) {
                    remoteCategories.forEach { addCategory(it) }
                } else {
-
+                   //TO DO: HANDLE CONFLICTS
                }
            }
        }
