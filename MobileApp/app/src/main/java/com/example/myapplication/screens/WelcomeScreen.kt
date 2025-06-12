@@ -24,10 +24,11 @@ import com.example.myapplication.components.MyButton
 import com.example.myapplication.data.datastore.UserPreferences
 import com.example.myapplication.ui.theme.PrimaryBlue
 import com.example.myapplication.ui.theme.White
+import com.example.myapplication.viewmodel.category.CategoryViewModel
 import kotlinx.coroutines.launch
 
 @Composable
-fun WelcomeScreen(navController: NavController) {
+fun WelcomeScreen(navController: NavController, categoryViewModel: CategoryViewModel) {
     val context = LocalContext.current
     val couroutineScope = rememberCoroutineScope()
 
@@ -49,6 +50,7 @@ fun WelcomeScreen(navController: NavController) {
         TextButton(onClick = {
             couroutineScope.launch {
                 navController.navigate("home?isGuest=true")
+                categoryViewModel.initializeDefaults()
                 UserPreferences.setGuestMode(context, true)
                 UserPreferences.setFirstLaunch(context, false)
             }
@@ -67,11 +69,4 @@ fun WelcomeScreen(navController: NavController) {
             Text("Login", color = White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
         }
     }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun WelcomeScreenPreview() {
-    val navController = rememberNavController()
-    WelcomeScreen(navController)
 }

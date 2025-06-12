@@ -11,6 +11,13 @@ import com.example.myapplication.data.model.TransactionWithCategory
 import com.example.myapplication.data.local.repository.CategoryRepository
 import com.example.myapplication.data.local.repository.TransactionRepository
 import com.example.myapplication.helpers.sendBudgetExceededNotification
+import com.example.myapplication.services.CategoryApiService
+import com.example.myapplication.services.ImageRequest
+import com.example.myapplication.services.RequestedImage
+import com.example.myapplication.services.RetrofitClient
+import com.example.myapplication.services.TransactionApiService
+import com.example.myapplication.services.TransactionRequest
+import com.example.myapplication.services.UserIdRequest
 import com.github.mikephil.charting.data.PieEntry
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -240,7 +247,10 @@ class TransactionViewModel(
             .sumOf { it.transaction.amount }
     }
 
-    fun getSpendingWithLimitByCategory(startDate: Long? = null, endDate: Long? = null): List<Pair<String, Double>> {
+    fun getSpendingWithLimitByCategory(
+        startDate: Long? = null,
+        endDate: Long? = null
+    ): List<Pair<String, Double>> {
         return transactionsWithCategory.value
             .filter {
                 it.transaction.type.lowercase() == "expense" &&
@@ -256,7 +266,10 @@ class TransactionViewModel(
             .sortedBy { it.first }
     }
 
-    fun getEarningWithTotalByCategory(startDate: Long? = null, endDate: Long? = null): List<Pair<String, Double>> {
+    fun getEarningWithTotalByCategory(
+        startDate: Long? = null,
+        endDate: Long? = null
+    ): List<Pair<String, Double>> {
         val totalEarned = transactionsWithCategory.value
             .filter {
                 it.transaction.type.lowercase() == "income" &&
@@ -302,5 +315,72 @@ class TransactionViewModel(
         - Category breakdown:
         $spendingByCat
     """.trimIndent()
+    }
+
+    private val transactionApiService =
+        RetrofitClient.createService(TransactionApiService::class.java, "http://10.0.2.2:3000")
+
+    //CRUD firestore/firebase storage
+    fun addTransactionToFirestore(userId: String, transaction: Transaction) {
+        viewModelScope.launch {
+            try {
+                val response =
+                    transactionApiService.createTransaction(TransactionRequest(userId, transaction))
+                println("Added transaction to Firestore: $response")
+            } catch (e: Exception) {
+                println("Error: ${e.message}")
+            }
+        }
+    }
+
+    fun updateTransactionInFirestore(userId: String, transaction: Transaction) {
+        viewModelScope.launch {
+            try {
+                val response = transactionApiService.updateTransaction(
+                    transaction.transactionId,
+                    TransactionRequest(userId, transaction)
+                )
+                println("Updated transaction in Firestore: $response")
+            } catch (e: Exception) {
+                println("Error: ${e.message}")
+            }
+        }
+    }
+
+    fun deleteTransactionFromFirestore(userId: String, transactionId: Long) {
+        viewModelScope.launch {
+            try {
+                val response = transactionApiService.deleteTransaction(transactionId, UserIdRequest(userId))
+                println("Deleted transaction from Firestore: $response")
+            } catch (e: Exception) {
+                println("Error: ${e.message}")
+            }
+        }
+    }
+
+    suspend fun getTransactionsFromFirestore(userId: String): List<Transaction> {
+        try {
+            val response = transactionApiService.getTransactions(UserIdRequest(userId))
+            println("Fetched transactions from Firestore: $response")
+            return response
+        } catch (e: Exception) {
+            println("Error: ${e.message}")
+            return emptyList()
+        }
+    }
+
+    fun uploadImageToFirebaseStorage(userId:String, requestedImage: RequestedImage, onImageUploaded: (String) -> Unit) {
+        viewModelScope.launch {
+            try {
+                val response = transactionApiService.uploadImage(ImageRequest(userId, requestedImage))
+                if (response.success) {
+                    onImageUploaded(response.imageUrl!!)
+                } else {
+                    println("Error uploading image: ${response.error}")
+                }
+            } catch (e: Exception) {
+                println("Error: ${e.message}")
+            }
+        }
     }
 }

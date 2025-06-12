@@ -157,7 +157,8 @@ fun CategoriesScreen(
                     type = type,
                     title = title,
                     icon = icon,
-                    limit = limit?.toDoubleOrNull()
+                    limit = limit?.toDoubleOrNull(),
+                    updatedAt = System.currentTimeMillis()
                 )
 
                 viewModel.addCategory(newCat)
@@ -187,7 +188,8 @@ fun CategoriesScreen(
                     type = type,
                     title = title,
                     icon = icon,
-                    limit = limit?.toDoubleOrNull()
+                    limit = limit?.toDoubleOrNull(),
+                    updatedAt = System.currentTimeMillis()
                 )
                 viewModel.updateCategory(updatedCat)
 

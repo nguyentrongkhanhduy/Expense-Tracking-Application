@@ -105,7 +105,11 @@ fun SignUpScreen(navController: NavController, viewModel: AuthViewModel, categor
             Spacer(Modifier.height(16.dp))
             MyButton(
                 onClick = { viewModel.signUp(email, password, displayName) {
-                    categoryViewModel.initializeDefaultsForFirestore(it)
+                    if (categoryViewModel.categories.value.isEmpty()) {
+                        categoryViewModel.initializeDefaults(it)
+                    } else {
+                        categoryViewModel.initializeDefaultsForFirestore(it)
+                    }
                 } },
                 enabled = !isLoading && email.isNotBlank() && password.isNotBlank() && password.length >= 6 && confirmPassword.isNotBlank() && displayName.isNotBlank() && password == confirmPassword,
             ) {

@@ -35,6 +35,7 @@ import androidx.compose.ui.window.DialogProperties
 import coil.compose.rememberAsyncImagePainter
 import com.example.myapplication.data.model.Category
 import com.example.myapplication.data.model.Transaction
+import com.example.myapplication.helpers.getRequestedImage
 import com.example.myapplication.helpers.rememberCameraPermissionHandler
 import com.example.myapplication.helpers.rememberLocationPermissionHandler
 import com.example.myapplication.helpers.saveBitmapToInternalStorage
@@ -424,17 +425,21 @@ fun AddTransactionDialog(
                     Button(
                         onClick = {
                             if (viewModel.validateInputs()) {
+                                val currentTime = System.currentTimeMillis()
+
                                 val transaction = Transaction(
-                                    transactionId = System.currentTimeMillis(),
+                                    transactionId = currentTime,
                                     name = viewModel.inputName,
                                     type = viewModel.inputType.lowercase(),
                                     amount = viewModel.inputAmount.toDouble(),
                                     categoryId = viewModel.inputCategoryId!!,
-                                    date = viewModel.inputDate ?: System.currentTimeMillis(),
+                                    date = viewModel.inputDate ?: currentTime,
                                     note = viewModel.inputNote,
                                     location = viewModel.inputLocation,
                                     imageUrl = viewModel.inputImagePath,
+                                    updatedAt = currentTime
                                 )
+
                                 onSave(transaction)
                                 viewModel.resetInputFields()
                                 onDismiss()
