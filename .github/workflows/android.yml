@@ -33,6 +33,17 @@ jobs:
         working-directory: MobileApp
         run: echo "${{ secrets.GOOGLE_SERVICES_JSON }}" | base64 -d > app/google-services.json
 
+      - name: Bump versionCode and versionName
+        working-directory: MobileApp/app
+        run: |
+          versionCode=$(grep versionCode build.gradle | head -1 | awk '{print $2}')
+          versionName=$(grep versionName build.gradle | head -1 | awk '{print $2}' | tr -d '"')
+          newVersionCode=$((versionCode + 1))
+          newVersionName="1.0.${newVersionCode}"
+          sed -i "s/versionCode $versionCode/versionCode $newVersionCode/" build.gradle
+          sed -i "s/versionName \"$versionName\"/versionName \"$newVersionName\"/" build.gradle
+          echo "Bumped versionCode to $newVersionCode and versionName to $newVersionName"
+
       - name: Build release APK
         run: ./gradlew assembleDebug
         working-directory: MobileApp
