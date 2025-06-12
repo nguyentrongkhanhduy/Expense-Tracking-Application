@@ -48,10 +48,11 @@ fun AppNavHost() {
                 navController = navController,
                 viewModel = authViewModel,
                 categoryViewModel = categoryViewModel,
+                transactionViewModel = transactionViewModel,
                 showGuestOption = showGuest
             )
         }
-        composable("signup") { SignUpScreen(navController, authViewModel, categoryViewModel) }
+        composable("signup") { SignUpScreen(navController, authViewModel, categoryViewModel, transactionViewModel) }
         composable(
             route = "home?selectedTab={selectedTab}",
             arguments = listOf(
