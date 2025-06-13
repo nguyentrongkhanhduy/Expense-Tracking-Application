@@ -7,6 +7,9 @@ import org.json.JSONObject
 import java.io.IOException
 import com.example.myapplication.BuildConfig
 
+/*---- For Android Studio  ----*/
+//const val HF_API_TOKEN = ""
+
 fun askHuggingFace(question: String, onResult: (String) -> Unit) {
     val client = OkHttpClient.Builder()
         .connectTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
@@ -15,7 +18,10 @@ fun askHuggingFace(question: String, onResult: (String) -> Unit) {
         .build()
 
     val url = "https://api-inference.huggingface.co/models/HuggingFaceH4/zephyr-7b-beta"
+
+    /*---- For Physical Device  ----*/
     val apiKey = BuildConfig.HF_API_TOKEN
+
     val json = JSONObject().apply {
         put("inputs", question)
     }
@@ -24,7 +30,12 @@ fun askHuggingFace(question: String, onResult: (String) -> Unit) {
     )
     val request = Request.Builder()
         .url(url)
+        /*---- For Android Studio  ----*/
+        //.header("Authorization", "Bearer $HF_API_TOKEN")
+
+        /*---- For Physical Device  ----*/
         .header("Authorization", "Bearer $apiKey")
+
         .post(body)
         .build()
     client.newCall(request).enqueue(object : Callback {
