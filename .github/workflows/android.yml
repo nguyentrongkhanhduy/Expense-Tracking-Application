@@ -52,7 +52,9 @@ jobs:
         working-directory: MobileApp
         run: cat local.properties
       # ----------------------------------------------------------------
-
+      - name: Debug HF_API_TOKEN length
+        run: echo ${{ secrets.HF_API_TOKEN }} | wc -c
+        
       - name: Bump versionCode and versionName
         if: github.event_name == 'push'
         working-directory: MobileApp/app
