@@ -10,6 +10,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
+/*---- For Android Studio  ----*/
+const val apiKey = "" //add your API key here from currencylayer.com
+
 class CurrencyViewModel : ViewModel() {
     private val apiService = RetrofitClient.createService(CurrencyApiService::class.java, "https://apilayer.net/")
 
@@ -19,7 +22,13 @@ class CurrencyViewModel : ViewModel() {
     fun getExchangeRate(source: String, target: String, onResult: (CurrencyResponse) -> Unit) {
         viewModelScope.launch {
             val response = apiService.getExchangeRates(
-                accessKey = BuildConfig.CURRENCYLAYER_API_KEY,
+
+                /*---- For Android Studio  ----*/
+                accessKey = apiKey,
+
+                /*---- For Physical Device  ----*/
+            //accessKey = BuildConfig.CURRENCYLAYER_API_KEY,
+
                 currencies = target,
                 source = source,
                 format = 1
