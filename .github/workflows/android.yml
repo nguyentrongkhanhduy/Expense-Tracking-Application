@@ -11,7 +11,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
 
       - name: Set up Node.js
         uses: actions/setup-node@v3
@@ -33,18 +34,18 @@ jobs:
         working-directory: MobileApp
         run: echo "${{ secrets.GOOGLE_SERVICES_JSON }}" | base64 -d > app/google-services.json
 
-      # --- Create and Inject API Keys into local.properties ---
+      # --- Inject API Keys into local.properties ---
       - name: Create local.properties file
         working-directory: MobileApp
         run: touch local.properties
 
       - name: Inject Hugging Face API Token into local.properties
         working-directory: MobileApp
-        run: echo "HF_API_TOKEN=\"${{ secrets.HF_API_TOKEN }}\"" >> local.properties
+        run: echo "HF_API_TOKEN=${{ secrets.HF_API_TOKEN }}" >> local.properties
 
       - name: Inject CurrencyLayer API Key into local.properties
         working-directory: MobileApp
-        run: echo "CURRENCYLAYER_API_KEY=\"${{ secrets.CURRENCYLAYER_API_KEY }}\"" >> local.properties
+        run: echo "CURRENCYLAYER_API_KEY=${{ secrets.CURRENCYLAYER_API_KEY }}" >> local.properties
 
       # Debug step to verify the file contents
       - name: Show local.properties (debug)
@@ -63,7 +64,7 @@ jobs:
           sed -i "s/versionCode = $versionCode/versionCode = $newVersionCode/" build.gradle.kts
           sed -i "s/versionName = \"$versionName\"/versionName = \"$newVersionName\"/" build.gradle.kts
           echo "Bumped versionCode to $newVersionCode and versionName to $newVersionName"
-        
+
       - name: Build release APK
         run: ./gradlew assembleDebug
         working-directory: MobileApp
@@ -75,4 +76,3 @@ jobs:
           serviceCredentialsFileContent: ${{ secrets.CREDENTIAL_FILE_CONTENT }}
           groups: testers
           file: MobileApp/app/build/outputs/apk/debug/app-debug.apk
-
