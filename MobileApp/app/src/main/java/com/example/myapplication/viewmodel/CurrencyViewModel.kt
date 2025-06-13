@@ -15,7 +15,7 @@ import kotlinx.coroutines.launch
 //const val apiKey = "" //add your API key here from currencylayer.com
 
 class CurrencyViewModel : ViewModel() {
-    private val apiService = RetrofitClient.createService(CurrencyApiService::class.java, "https://apilayer.net/")
+     private val apiService = RetrofitClient.createService(CurrencyApiService::class.java, "https://apilayer.net/")
 
     private val _exchangeRates = MutableStateFlow<CurrencyResponse?>(null)
     val exchangeRates: StateFlow<CurrencyResponse?> = _exchangeRates
