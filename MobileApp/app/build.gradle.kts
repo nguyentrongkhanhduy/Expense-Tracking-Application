@@ -1,3 +1,11 @@
+import java.util.Properties
+
+val localProperties = Properties()
+val localPropertiesFile = rootProject.file("local.properties")
+if (localPropertiesFile.exists()) {
+    localProperties.load(localPropertiesFile.inputStream())
+}
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -18,8 +26,8 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        buildConfigField("String", "HF_API_TOKEN", "\"${project.findProperty("HF_API_TOKEN") ?: ""}\"")
-        buildConfigField("String", "CURRENCYLAYER_API_KEY", "\"${project.findProperty("CURRENCYLAYER_API_KEY") ?: ""}\"")
+        buildConfigField("String", "HF_API_TOKEN", "\"${localProperties["HF_API_TOKEN"] ?: ""}\"")
+        buildConfigField("String", "CURRENCYLAYER_API_KEY", "\"${localProperties["CURRENCYLAYER_API_KEY"] ?: ""}\"")
     }
 
     buildTypes {
