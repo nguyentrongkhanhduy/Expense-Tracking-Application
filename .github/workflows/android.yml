@@ -54,7 +54,6 @@ jobs:
       # ----------------------------------------------------------------
         
       - name: Bump versionCode and versionName
-        if: github.event_name == 'push'
         working-directory: MobileApp/app
         run: |
           versionCode=$(grep 'versionCode =' build.gradle.kts | head -1 | awk '{print $3}')
