@@ -83,5 +83,4 @@ dependencies {
     implementation("com.squareup.okhttp3:okhttp:4.11.0")
     implementation("org.json:json:20210307")
     implementation ("com.google.android.gms:play-services-ads:24.3.0")
-
 }
