@@ -18,6 +18,8 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        buildConfigField("String", "HF_API_TOKEN", "\"${project.findProperty("HF_API_TOKEN") ?: ""}\"")
+        buildConfigField("String", "CURRENCYLAYER_API_KEY", "\"${project.findProperty("CURRENCYLAYER_API_KEY") ?: ""}\"")
     }
 
     buildTypes {
@@ -37,6 +39,7 @@ android {
         jvmTarget = "11"
     }
     buildFeatures {
+        buildConfig = true
         compose = true
     }
 }

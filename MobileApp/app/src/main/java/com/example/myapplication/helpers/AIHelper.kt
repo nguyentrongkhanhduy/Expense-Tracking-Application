@@ -5,8 +5,7 @@ import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.IOException
-
-const val HF_API_TOKEN = ""
+import com.example.myapplication.BuildConfig
 
 fun askHuggingFace(question: String, onResult: (String) -> Unit) {
     val client = OkHttpClient.Builder()
@@ -16,7 +15,7 @@ fun askHuggingFace(question: String, onResult: (String) -> Unit) {
         .build()
 
     val url = "https://api-inference.huggingface.co/models/HuggingFaceH4/zephyr-7b-beta"
-
+    val apiKey = BuildConfig.HF_API_TOKEN
     val json = JSONObject().apply {
         put("inputs", question)
     }
@@ -25,7 +24,7 @@ fun askHuggingFace(question: String, onResult: (String) -> Unit) {
     )
     val request = Request.Builder()
         .url(url)
-        .header("Authorization", "Bearer $HF_API_TOKEN")
+        .header("Authorization", "Bearer $apiKey")
         .post(body)
         .build()
     client.newCall(request).enqueue(object : Callback {
