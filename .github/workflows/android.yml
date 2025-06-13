@@ -33,6 +33,16 @@ jobs:
         working-directory: MobileApp
         run: echo "${{ secrets.GOOGLE_SERVICES_JSON }}" | base64 -d > app/google-services.json
 
+      # --- Inject API Keys from GitHub Secrets into local.properties ---
+      - name: Inject Hugging Face API Token into local.properties
+        working-directory: MobileApp
+        run: echo "HF_API_TOKEN=${{ secrets.HF_API_TOKEN }}" >> local.properties
+
+      - name: Inject CurrencyLayer API Key into local.properties
+        working-directory: MobileApp
+        run: echo "CURRENCYLAYER_API_KEY=${{ secrets.CURRENCYLAYER_API_KEY }}" >> local.properties
+      # ----------------------------------------------------------------
+
       - name: Bump versionCode and versionName
         if: github.event_name == 'push'
         working-directory: MobileApp/app
