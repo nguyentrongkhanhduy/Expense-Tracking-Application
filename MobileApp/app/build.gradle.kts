@@ -18,6 +18,8 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        buildConfigField("String", "HF_API_TOKEN", "\"${project.findProperty("HF_API_TOKEN") ?: ""}\"")
+        buildConfigField("String", "CURRENCYLAYER_API_KEY", "\"${project.findProperty("CURRENCYLAYER_API_KEY") ?: ""}\"")
     }
 
     buildTypes {
@@ -37,6 +39,7 @@ android {
         jvmTarget = "11"
     }
     buildFeatures {
+        buildConfig = true
         compose = true
     }
 }
@@ -80,5 +83,4 @@ dependencies {
     implementation("com.squareup.okhttp3:okhttp:4.11.0")
     implementation("org.json:json:20210307")
     implementation ("com.google.android.gms:play-services-ads:24.3.0")
-
 }
