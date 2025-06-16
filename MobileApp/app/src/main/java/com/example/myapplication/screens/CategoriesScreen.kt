@@ -269,7 +269,7 @@ fun CategoryCard(category: Category, onClick: () -> Unit) {
                     else Color(0xFF4CAF50),
                     shape = RoundedCornerShape(12.dp)
                 )
-                .padding(horizontal = 12.dp, vertical = 4.dp)
+                 .padding(horizontal = 12.dp, vertical = 4.dp)
         )
     }
 }
