@@ -47,19 +47,18 @@ jobs:
         working-directory: MobileApp
         run: echo "CURRENCYLAYER_API_KEY=${{ secrets.CURRENCYLAYER_API_KEY }}" >> local.properties
 
-      - name: Bump versionCode and versionName
-        working-directory: MobileApp/app
+      - name: Generate version numbers
+        id: version
         run: |
-          versionCode=$(grep 'versionCode =' build.gradle.kts | head -1 | awk '{print $3}')
-          versionName=$(grep 'versionName =' build.gradle.kts | head -1 | awk -F'"' '{print $2}')
-          newVersionCode=$((versionCode + 1))
-          newVersionName="1.0.${newVersionCode}"
-          sed -i "s/versionCode = $versionCode/versionCode = $newVersionCode/" build.gradle.kts
-          sed -i "s/versionName = \"$versionName\"/versionName = \"$newVersionName\"/" build.gradle.kts
-          echo "Bumped versionCode to $newVersionCode and versionName to $newVersionName"
+          # Use GitHub run number as version code for uniqueness
+          VERSION_CODE=${{ github.run_number }}
+          VERSION_NAME="1.0.$VERSION_CODE"
+          echo "VERSION_CODE=$VERSION_CODE" >> $GITHUB_ENV
+          echo "VERSION_NAME=$VERSION_NAME" >> $GITHUB_ENV
+          echo "Generated versionCode: $VERSION_CODE and versionName: $VERSION_NAME"
 
       - name: Build release APK
-        run: ./gradlew assembleDebug
+        run: ./gradlew assembleDebug -PversionCode=${{ env.VERSION_CODE }} -PversionName=${{ env.VERSION_NAME }}
         working-directory: MobileApp
 
       - name: Upload artifact to Firebase App Distribution
