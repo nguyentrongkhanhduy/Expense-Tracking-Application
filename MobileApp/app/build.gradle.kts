@@ -22,13 +22,15 @@ android {
         applicationId = "com.example.myapplication"
         minSdk = 30
         targetSdk = 35
-        versionCode = project.findProperty("versionCode")?.toString()?.toInt() ?: 1
-        versionName = project.findProperty("versionName")?.toString() ?: "1.0.0"
+        versionCode = 1
+        versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "HF_API_TOKEN", "\"${localProperties["HF_API_TOKEN"] ?: ""}\"")
         buildConfigField("String", "CURRENCYLAYER_API_KEY", "\"${localProperties["CURRENCYLAYER_API_KEY"] ?: ""}\"")
 
+        versionCode = project.findProperty("versionCode")?.toString()?.toInt() ?: 1
+        versionName = project.findProperty("versionName")?.toString() ?: "1.0.0"
     }
 
     buildTypes {
