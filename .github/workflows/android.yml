@@ -47,12 +47,6 @@ jobs:
         working-directory: MobileApp
         run: echo "CURRENCYLAYER_API_KEY=${{ secrets.CURRENCYLAYER_API_KEY }}" >> local.properties
 
-      # Debug step to verify the file contents
-      - name: Show local.properties (debug)
-        working-directory: MobileApp
-        run: cat local.properties
-      # ----------------------------------------------------------------
-        
       - name: Bump versionCode and versionName
         working-directory: MobileApp/app
         run: |
