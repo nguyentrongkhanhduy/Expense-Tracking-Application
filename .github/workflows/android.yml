@@ -47,11 +47,22 @@ jobs:
         working-directory: MobileApp
         run: echo "CURRENCYLAYER_API_KEY=${{ secrets.CURRENCYLAYER_API_KEY }}" >> local.properties
 
+      # Debug step to verify the file contents
+      - name: Show local.properties (debug)
+        working-directory: MobileApp
+        run: cat local.properties
+      # ----------------------------------------------------------------
+
       - name: Bump versionCode and versionName
-        uses: chkfung/android-version-actions@v1.2.2
-        with:
-          gradlePath: MobileApp/app/build.gradle.kts
-          incrementType: patch
+        working-directory: MobileApp/app
+        run: |
+          versionCode=$(grep 'versionCode =' build.gradle.kts | head -1 | awk '{print $3}')
+          versionName=$(grep 'versionName =' build.gradle.kts | head -1 | awk -F'"' '{print $2}')
+          newVersionCode=$((versionCode + 1))
+          newVersionName="1.0.${newVersionCode}"
+          sed -i "s/versionCode = $versionCode/versionCode = $newVersionCode/" build.gradle.kts
+          sed -i "s/versionName = \"$versionName\"/versionName = \"$newVersionName\"/" build.gradle.kts
+          echo "Bumped versionCode to $newVersionCode and versionName to $newVersionName"
 
       - name: Build release APK
         run: ./gradlew assembleDebug
