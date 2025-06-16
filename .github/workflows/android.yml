@@ -47,18 +47,14 @@ jobs:
         working-directory: MobileApp
         run: echo "CURRENCYLAYER_API_KEY=${{ secrets.CURRENCYLAYER_API_KEY }}" >> local.properties
 
-      - name: Generate version numbers
-        id: version
-        run: |
-          # Use GitHub run number as version code for uniqueness
-          VERSION_CODE=${{ github.run_number }}
-          VERSION_NAME="1.0.$VERSION_CODE"
-          echo "VERSION_CODE=$VERSION_CODE" >> $GITHUB_ENV
-          echo "VERSION_NAME=$VERSION_NAME" >> $GITHUB_ENV
-          echo "Generated versionCode: $VERSION_CODE and versionName: $VERSION_NAME"
+      - name: Bump versionCode and versionName
+        uses: chkfung/android-version-actions@v1.2.2
+        with:
+          gradlePath: MobileApp/app/build.gradle.kts
+          incrementType: patch
 
       - name: Build release APK
-        run: ./gradlew assembleDebug -PversionCode=${{ env.VERSION_CODE }} -PversionName=${{ env.VERSION_NAME }}
+        run: ./gradlew assembleDebug
         working-directory: MobileApp
 
       - name: Upload artifact to Firebase App Distribution
