@@ -327,12 +327,13 @@ class TransactionViewModel(
     """.trimIndent()
     }
 
-    private val transactionApiService =
-            /*---- For Android Studio  ----*/
-        //RetrofitClient.createService(TransactionApiService::class.java, "http://10.0.2.2:3000") //Simulator
+    /*---- For Android Studio  ----*/
+    //RetrofitClient.createService(CategoryApiService::class.java, "http://10.0.2.2:3000") //Simulator
 
-        /*---- For Physical Device  ----*/
-        RetrofitClient.createService(CategoryApiService::class.java, "https://expense-app-server-aijfxzali-eddie-nguyens-projects.vercel.app")
+    /*---- For Physical Device  ----*/
+    private val transactionApiService = RetrofitClient.createService(CategoryApiService::class.java,"https://expense-app-server-mocha.vercel.app/")
+
+
     //CRUD firestore/firebase storage
     fun addTransactionToFirestore(userId: String, transaction: Transaction) {
         viewModelScope.launch {
