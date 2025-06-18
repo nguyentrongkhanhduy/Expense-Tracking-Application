@@ -29,7 +29,8 @@ class CategoryViewModel(
     private val _categories: StateFlow<List<Category>> = categoryRepository.getAllCategories()
         .map { it.sortedBy { cat -> cat.categoryId } }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
-    val categories: StateFlow<List<Category>> = _categories
+    val categories: StateFlow<List<Category>> =
+        _categories //Both deleted and not deleted -> filter to use
     private var defaultCategories = _categories.value
 
     // Dialog input state
@@ -73,14 +74,26 @@ class CategoryViewModel(
                             type = "expense",
                             updatedAt = System.currentTimeMillis()
                         ),
-                        Category(categoryId = -1L, title = "Others", icon = "📦", type = "expense", updatedAt = -1L),
-                        Category(categoryId = -2L, title = "Others", icon = "📦", type = "income", updatedAt = -2L)
+                        Category(
+                            categoryId = -1L,
+                            title = "Others",
+                            icon = "📦",
+                            type = "expense",
+                            updatedAt = -1L
+                        ),
+                        Category(
+                            categoryId = -2L,
+                            title = "Others",
+                            icon = "📦",
+                            type = "income",
+                            updatedAt = -2L
+                        )
                     )
 
                     defaultCategories.forEach { addCategory(it) }
 
                     if (userId.isNotEmpty()) {
-                        initializeDefaultsForFirestore(userId)
+                        syncDataWhenSignUp(userId)
                     }
                 }
             }
@@ -143,9 +156,17 @@ class CategoryViewModel(
             return
         }
         viewModelScope.launch {
+//            val fallbackId = if (category.type == "expense") -1L else -2L
+//            transactionRepository.reassignCategory(category.categoryId, fallbackId)
+            categoryRepository.deleteCategory(category)
+        }
+    }
+
+    fun softDeleteCategory(category: Category) {
+        viewModelScope.launch {
             val fallbackId = if (category.type == "expense") -1L else -2L
             transactionRepository.reassignCategory(category.categoryId, fallbackId)
-            categoryRepository.deleteCategory(category)
+            categoryRepository.softDeleteCategory(category.categoryId)
         }
     }
 
@@ -159,26 +180,6 @@ class CategoryViewModel(
         RetrofitClient.createService(CategoryApiService::class.java, "http://10.0.2.2:3000")
 
     // --- CRUD Operations for Firestore ---
-
-    fun initializeDefaultsForFirestore(userId: String) {
-        viewModelScope.launch {
-            try {
-                if (categories.value.isNotEmpty()) {
-                    defaultCategories = categories.value
-                }
-                val response = categoryApiService.createInitialCategories(
-                    InitialCategoriesRequest(
-                        userId,
-                        defaultCategories
-                    )
-                )
-                println("Synced default categories to Firestore: $response")
-            } catch (e: Exception) {
-                println("Error: ${e.message}")
-            }
-        }
-    }
-
     fun addCategoryToFirestore(category: Category, userId: String) {
         viewModelScope.launch {
             try {
@@ -226,16 +227,84 @@ class CategoryViewModel(
         }
     }
 
+
+    fun syncDataWhenSignUp(userId: String) {
+        viewModelScope.launch {
+            try {
+                if (categories.value.isNotEmpty()) {
+                    defaultCategories = categories.value.filter { !it.isDeleted }
+                }
+                val response = categoryApiService.createInitialCategories(
+                    InitialCategoriesRequest(
+                        userId,
+                        defaultCategories
+                    )
+                )
+
+                //hard delete after sync
+                categories.value.filter { it.isDeleted }.forEach {
+                    deleteCategory(it)
+                }
+
+                println("Synced default categories to Firestore: $response")
+            } catch (e: Exception) {
+                println("Error: ${e.message}")
+            }
+        }
+    }
+
     fun syncDataWhenLogIn(userId: String) {
-       viewModelScope.launch {
-           val remoteCategories = getCategoriesFromFirestore(userId)
-           if (remoteCategories.isNotEmpty()) {
-               if (categories.value.isEmpty()) {
-                   remoteCategories.forEach { addCategory(it) }
-               } else {
-                   //TO DO: HANDLE CONFLICTS
-               }
-           }
-       }
+        viewModelScope.launch {
+            val remoteCategories = getCategoriesFromFirestore(userId)
+            val localCategories = categories.value //get all categories both deleted and not deleted
+
+            if (remoteCategories.isNotEmpty()) {
+                if (localCategories.isEmpty()) {
+                    remoteCategories.forEach { addCategory(it) }
+                } else {
+                    //TO DO: HANDLE CONFLICTS
+                    //sync local first
+                    val localMap = localCategories.associateBy { it.categoryId }
+                    remoteCategories.forEach { remote ->
+                        if (remote.categoryId < 0L) {
+                            return@forEach
+                        }
+
+                        val local = localMap[remote.categoryId]
+                        when {
+                            local == null -> addCategory(remote)
+                            local.isDeleted -> {
+                                deleteCategory(local)
+                                deleteCategoryFromFirestore(remote.categoryId, userId)
+                            }
+
+                            remote.updatedAt > local.updatedAt -> {
+                                updateCategory(remote)
+                            }
+
+                            remote.updatedAt < local.updatedAt -> {
+                                updateCategoryInFirestore(local, userId)
+                            }
+                        }
+                    }
+
+                    //sync remote next
+                    val remoteMap = remoteCategories.associateBy { it.categoryId }
+                    localCategories.forEach { local ->
+                        if (local.categoryId < 0L) return@forEach
+
+                        val remote = remoteMap[local.categoryId]
+                        if (remote == null) {
+                            if (local.isDeleted) {
+                                deleteCategory(local)
+                            } else {
+                                addCategoryToFirestore(local, userId)
+                            }
+                        }
+                    }
+
+                }
+            }
+        }
     }
 }

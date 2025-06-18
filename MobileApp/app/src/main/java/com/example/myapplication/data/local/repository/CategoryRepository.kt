@@ -14,4 +14,6 @@ class CategoryRepository(private val dao: CategoryDao) {
     suspend fun updateCategory(category: Category) = dao.updateCategory(category)
 
     suspend fun deleteCategory(category: Category) = dao.deleteCategory(category)
+
+    suspend fun softDeleteCategory(categoryId: Long) = dao.softDeleteCategory(categoryId)
 }

@@ -360,10 +360,11 @@ fun TransactionListTab(
                 if (imagePath?.startsWith("bitmap:") == true) {
                     removeFromInternalStorage(imagePath)
                 }
-                transactionViewModel.deleteTransaction(editingTransaction!!.transaction)
+                transactionViewModel.softDeleteTransaction(editingTransaction!!.transaction)
 
                 if (user != null) {
                     transactionViewModel.deleteTransactionFromFirestore(user!!.uid, editingTransaction!!.transaction.transactionId)
+                    transactionViewModel.deleteTransaction(editingTransaction!!.transaction)
                 }
 
                 editingTransaction = null

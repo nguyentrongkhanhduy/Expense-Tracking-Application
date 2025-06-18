@@ -22,6 +22,9 @@ class TransactionRepository(private val dao: TransactionDao) {
         dao.deleteTransaction(transaction)
     }
 
+    suspend fun softDeleteTransaction(transactionId: Long) {
+        dao.softDeleteTransaction(transactionId)
+    }
 
     suspend fun reassignCategory(oldCategoryId: Long, newCategoryId: Long) {
         dao.reassignCategory(oldCategoryId, newCategoryId)
