@@ -29,7 +29,12 @@ class AuthViewModel : ViewModel() {
     val isLoading: StateFlow<Boolean> = _isLoading
 
     private val authService =
-        RetrofitClient.createService(AuthApiService::class.java, "http://10.0.2.2:3000")
+
+        /*---- For Android Studio  ----*/
+        //RetrofitClient.createService(CategoryApiService::class.java, "http://10.0.2.2:3000") //Simulator
+
+        /*---- For Physical Device  ----*/
+        RetrofitClient.createService(AuthApiService::class.java, "https://expense-app-server-aijfxzali-eddie-nguyens-projects.vercel.app")
 
     init {
         getCurrentUser()
