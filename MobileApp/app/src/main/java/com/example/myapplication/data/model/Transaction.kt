@@ -14,5 +14,6 @@ data class Transaction(
     val date: Long, // Store as timestamp in milliseconds
     val location: String? = null,
     val imageUrl: String? = null,
-    val updatedAt: Long
+    val updatedAt: Long,
+    val isDeleted: Boolean = false
 )

@@ -20,4 +20,7 @@ interface CategoryDao {
 
     @Query("SELECT * FROM Category WHERE categoryId = :categoryId")
     suspend fun getCategoryById(categoryId: Long): Category?
+
+    @Query("UPDATE Category SET isDeleted = 1 WHERE categoryId = :categoryId")
+    suspend fun softDeleteCategory(categoryId: Long)
 }

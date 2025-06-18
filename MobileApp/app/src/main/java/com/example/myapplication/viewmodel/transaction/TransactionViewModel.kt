@@ -10,9 +10,11 @@ import com.example.myapplication.data.model.Transaction
 import com.example.myapplication.data.model.TransactionWithCategory
 import com.example.myapplication.data.local.repository.CategoryRepository
 import com.example.myapplication.data.local.repository.TransactionRepository
+import com.example.myapplication.data.model.Category
 import com.example.myapplication.helpers.sendBudgetExceededNotification
 import com.example.myapplication.services.CategoryApiService
 import com.example.myapplication.services.ImageRequest
+import com.example.myapplication.services.ReassignCategoryRequest
 import com.example.myapplication.services.RequestedImage
 import com.example.myapplication.services.RetrofitClient
 import com.example.myapplication.services.TransactionApiService
@@ -91,7 +93,7 @@ class TransactionViewModel(
         categoryError = null
     }
 
-    // --- CRUD Operations ---
+    // --- CRUD Operations Room database---
     fun addTransaction(transaction: Transaction) {
         viewModelScope.launch {
             transactionRepository.insertTransaction(transaction)
@@ -101,6 +103,12 @@ class TransactionViewModel(
     fun updateTransaction(transaction: Transaction) {
         viewModelScope.launch {
             transactionRepository.updateTransaction(transaction)
+        }
+    }
+
+    fun softDeleteTransaction(transaction: Transaction) {
+        viewModelScope.launch {
+            transactionRepository.softDeleteTransaction(transaction.transactionId)
         }
     }
 
@@ -164,19 +172,20 @@ class TransactionViewModel(
     fun getSpendingByCategory(startDate: Long? = null, endDate: Long? = null): List<PieEntry> {
         val spendingByCategory = mutableMapOf<String, Float>()
 
-        transactionsWithCategory.value.forEach { transactionWithCategory ->
-            val categoryName = transactionWithCategory.category?.title ?: "Unknown"
-            val transaction = transactionWithCategory.transaction
+        transactionsWithCategory.value
+            .forEach { transactionWithCategory ->
+                val categoryName = transactionWithCategory.category?.title ?: "Unknown"
+                val transaction = transactionWithCategory.transaction
 
-            if (
-                transaction.type.lowercase() == "expense" &&
-                (startDate == null || transaction.date >= startDate) &&
-                (endDate == null || transaction.date <= endDate)
-            ) {
-                spendingByCategory[categoryName] =
-                    (spendingByCategory[categoryName] ?: 0f) + transaction.amount.toFloat()
+                if (
+                    transaction.type.lowercase() == "expense" &&
+                    (startDate == null || transaction.date >= startDate) &&
+                    (endDate == null || transaction.date <= endDate)
+                ) {
+                    spendingByCategory[categoryName] =
+                        (spendingByCategory[categoryName] ?: 0f) + transaction.amount.toFloat()
+                }
             }
-        }
 
         return spendingByCategory.map { (categoryName, amount) ->
             PieEntry(amount, categoryName)
@@ -187,19 +196,20 @@ class TransactionViewModel(
     fun getEarningByCategory(startDate: Long? = null, endDate: Long? = null): List<PieEntry> {
         val earningByCategory = mutableMapOf<String, Float>()
 
-        transactionsWithCategory.value.forEach { transactionWithCategory ->
-            val categoryName = transactionWithCategory.category?.title ?: "Unknown"
-            val transaction = transactionWithCategory.transaction
+        transactionsWithCategory.value
+            .forEach { transactionWithCategory ->
+                val categoryName = transactionWithCategory.category?.title ?: "Unknown"
+                val transaction = transactionWithCategory.transaction
 
-            if (
-                transaction.type.lowercase() == "income" &&
-                (startDate == null || transaction.date >= startDate) &&
-                (endDate == null || transaction.date <= endDate)
-            ) {
-                earningByCategory[categoryName] =
-                    (earningByCategory[categoryName] ?: 0f) + transaction.amount.toFloat()
+                if (
+                    transaction.type.lowercase() == "income" &&
+                    (startDate == null || transaction.date >= startDate) &&
+                    (endDate == null || transaction.date <= endDate)
+                ) {
+                    earningByCategory[categoryName] =
+                        (earningByCategory[categoryName] ?: 0f) + transaction.amount.toFloat()
+                }
             }
-        }
 
         return earningByCategory.map { (categoryName, amount) ->
             PieEntry(amount, categoryName)
@@ -347,6 +357,27 @@ class TransactionViewModel(
         }
     }
 
+    fun reassignCategoryInFirestore(userId: String, category: Category) {
+        viewModelScope.launch {
+            try {
+                val oldCategoryId = category.categoryId
+                val newCategoryId = if (category.type == "expense") -1L else -2L
+
+                val response =
+                    transactionApiService.reassignCategory(
+                        ReassignCategoryRequest(
+                            userId,
+                            oldCategoryId,
+                            newCategoryId
+                        )
+                    )
+                println("Reassigned category in Firestore: $response")
+            } catch (e: Exception) {
+                println("Error: ${e.message}")
+            }
+        }
+    }
+
     fun deleteTransactionFromFirestore(userId: String, transactionId: Long) {
         viewModelScope.launch {
             try {
@@ -370,23 +401,67 @@ class TransactionViewModel(
         }
     }
 
+    fun syncDataWhenSignUp(userId: String) {
+        viewModelScope.launch {
+            if (transactions.value.isNotEmpty()) {
+                transactions.value
+                    .filter { !it.isDeleted }
+                    .forEach { addTransactionToFirestore(userId, it) }
+
+                //hard delete after sync
+                transactions.value
+                    .filter { it.isDeleted }
+                    .forEach { deleteTransaction(it) }
+            }
+        }
+    }
+
     fun syncDataWhenLogIn(userId: String) {
         viewModelScope.launch {
             val remoteTransactions = getTransactionsFromFirestore(userId)
+            val localTransactions =
+                transactions.value //get all transactions both deleted and not deleted
+
             if (remoteTransactions.isNotEmpty()) {
                 if (transactions.value.isEmpty()) {
                     remoteTransactions.forEach { addTransaction(it) }
                 } else {
                     //TO DO: HANDLE CONFLICTS
-                }
-            }
-        }
-    }
+                    //sync local first
+                    val localMap = localTransactions.associateBy { it.transactionId }
+                    remoteTransactions.forEach { remote ->
+                        val local = localMap[remote.transactionId]
+                        when {
+                            local == null -> addTransaction(remote)
 
-    fun syncDataWhenSignUp(userId: String) {
-        viewModelScope.launch {
-            if (transactions.value.isNotEmpty()) {
-                transactions.value.forEach { addTransactionToFirestore(userId, it) }
+                            local.isDeleted -> {
+                                deleteTransaction(local)
+                                deleteTransactionFromFirestore(userId, remote.transactionId)
+                            }
+
+                            remote.updatedAt > local.updatedAt -> {
+                                updateTransaction(remote)
+                            }
+
+                            remote.updatedAt < local.updatedAt -> {
+                                updateTransactionInFirestore(userId, local)
+                            }
+                        }
+                    }
+
+                    //sync remote next
+                    val remoteMap = remoteTransactions.associateBy { it.transactionId }
+                    localTransactions.forEach { local ->
+                        val remote = remoteMap[local.transactionId]
+                        if (remote == null) {
+                            if (local.isDeleted) {
+                                deleteTransaction(local)
+                            } else {
+                                addTransactionToFirestore(userId, local)
+                            }
+                        }
+                    }
+                }
             }
         }
     }

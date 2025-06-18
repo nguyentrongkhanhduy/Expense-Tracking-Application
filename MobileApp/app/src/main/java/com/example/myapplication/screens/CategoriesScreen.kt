@@ -29,15 +29,17 @@ import com.example.myapplication.ui.theme.PrimaryRed
 import com.example.myapplication.ui.theme.White
 import com.example.myapplication.viewmodel.AuthViewModel
 import com.example.myapplication.viewmodel.category.CategoryViewModel
+import com.example.myapplication.viewmodel.transaction.TransactionViewModel
 
 @Composable
 fun CategoriesScreen(
     navController: NavController,
-    viewModel: CategoryViewModel,
+    categoryViewModel: CategoryViewModel,
+    transactionViewModel: TransactionViewModel,
     authViewModel: AuthViewModel
 ) {
     var filter by remember { mutableStateOf("All") }
-    val categories by viewModel.categories.collectAsState()
+    val categories by categoryViewModel.categories.collectAsState()
     val filterOptions = listOf("All", "Expense", "Income")
     var showAddDialog by remember { mutableStateOf(false) }
     var editingCategory by remember { mutableStateOf<Category?>(null) }
@@ -117,7 +119,7 @@ fun CategoriesScreen(
             modifier = Modifier.weight(1f, fill = false)
         ) {
             items(
-                categories.filter {
+                categories.filter { !it.isDeleted }. filter {
                     when (filter) {
                         "All" -> true
                         "Expense" -> it.type.equals("expense", ignoreCase = true)
@@ -137,7 +139,7 @@ fun CategoriesScreen(
         ) {
             FloatingActionButton(
                 onClick = {
-                    viewModel.resetInputFields()
+                    categoryViewModel.resetInputFields()
                     showAddDialog = true
                 },
                 containerColor = Color(0xFF22304B)
@@ -149,7 +151,7 @@ fun CategoriesScreen(
 
     if (showAddDialog) {
         AddCategoryDialog(
-            viewModel = viewModel,
+            viewModel = categoryViewModel,
             onDismiss = { showAddDialog = false },
             onSave = { type, title, icon, limit ->
                 val newCat = Category(
@@ -161,10 +163,10 @@ fun CategoriesScreen(
                     updatedAt = System.currentTimeMillis()
                 )
 
-                viewModel.addCategory(newCat)
+                categoryViewModel.addCategory(newCat)
 
                 if (user != null) {
-                    viewModel.addCategoryToFirestore(newCat, user!!.uid)
+                    categoryViewModel.addCategoryToFirestore(newCat, user!!.uid)
                 }
             }
         )
@@ -175,10 +177,13 @@ fun CategoriesScreen(
             initialCategory = editingCategory!!,
             onDismiss = { editingCategory = null },
             onDelete = {
-                viewModel.deleteCategory(editingCategory!!)
+//                viewModel.deleteCategory(editingCategory!!)
+                categoryViewModel.softDeleteCategory(editingCategory!!)
 
                 if (user != null) {
-                    viewModel.deleteCategoryFromFirestore(editingCategory!!.categoryId, user!!.uid)
+                    categoryViewModel.deleteCategoryFromFirestore(editingCategory!!.categoryId, user!!.uid)
+                    transactionViewModel.reassignCategoryInFirestore(user!!.uid, editingCategory!!)
+                    categoryViewModel.deleteCategory(editingCategory!!)
                 }
 
                 editingCategory = null
@@ -191,10 +196,10 @@ fun CategoriesScreen(
                     limit = limit?.toDoubleOrNull(),
                     updatedAt = System.currentTimeMillis()
                 )
-                viewModel.updateCategory(updatedCat)
+                categoryViewModel.updateCategory(updatedCat)
 
                 if (user != null) {
-                    viewModel.updateCategoryInFirestore(updatedCat, user!!.uid)
+                    categoryViewModel.updateCategoryInFirestore(updatedCat, user!!.uid)
                 }
 
                 editingCategory = null

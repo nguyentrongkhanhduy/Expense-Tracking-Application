@@ -80,7 +80,8 @@ fun AppNavHost() {
         ) { backStackEntry ->
             CategoriesScreen(
                 navController = navController,
-                viewModel = categoryViewModel,
+                categoryViewModel = categoryViewModel,
+                transactionViewModel = transactionViewModel,
                 authViewModel = authViewModel
             )
         }

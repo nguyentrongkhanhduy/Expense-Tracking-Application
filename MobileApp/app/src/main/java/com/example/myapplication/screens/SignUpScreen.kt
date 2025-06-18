@@ -109,7 +109,7 @@ fun SignUpScreen(navController: NavController, viewModel: AuthViewModel, categor
                     if (categoryViewModel.categories.value.isEmpty()) {
                         categoryViewModel.initializeDefaults(it)
                     } else {
-                        categoryViewModel.initializeDefaultsForFirestore(it)
+                        categoryViewModel.syncDataWhenSignUp(it)
                         transactionViewModel.syncDataWhenSignUp(it)
                     }
                 } },

@@ -10,5 +10,6 @@ data class Category(
     val title: String,
     val icon: String,
     val limit: Double? = null,
-    val updatedAt: Long
+    val updatedAt: Long,
+    val isDeleted: Boolean = false
 )

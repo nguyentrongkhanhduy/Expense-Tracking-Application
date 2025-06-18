@@ -23,7 +23,7 @@ interface TransactionDao {
     suspend fun reassignCategory(oldCategoryId: Long, newCategoryId: Long)
 
     @Transaction
-    @Query("SELECT * FROM 'Transaction' ORDER BY date DESC")
+    @Query("SELECT * FROM 'Transaction' WHERE isDeleted = 0 ORDER BY date DESC")
     fun getAllTransactionsWithCategory(): Flow<List<TransactionWithCategory>>
 
     @Query("SELECT SUM(amount) FROM 'Transaction' WHERE type = 'Expense' AND categoryId = :categoryId")
@@ -31,4 +31,7 @@ interface TransactionDao {
 
     @Query("UPDATE 'Transaction' SET amount = amount * :exchangeRate")
     suspend fun updateAllAmountsByExchangeRate(exchangeRate: Double)
+
+    @Query("UPDATE 'Transaction' SET isDeleted = 1 WHERE transactionId = :transactionId")
+    suspend fun softDeleteTransaction(transactionId: Long)
 }

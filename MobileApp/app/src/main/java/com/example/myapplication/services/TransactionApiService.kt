@@ -30,6 +30,12 @@ data class RemoveImageRequest(
     val imageName: String
 )
 
+data class ReassignCategoryRequest(
+    val userId: String,
+    val oldCategoryId: Long,
+    val newCategoryId: Long
+)
+
 
 interface TransactionApiService {
 
@@ -42,6 +48,9 @@ interface TransactionApiService {
     @PUT("api/transactions/{transactionId}")
     suspend fun updateTransaction(@Path("transactionId") transactionId: Long, @Body request: TransactionRequest): Map<String, Any>
 
+    @POST("api/transactions/reassign-category")
+    suspend fun reassignCategory(@Body request: ReassignCategoryRequest): Map<String, Any>
+
     @POST("api/transactions/{transactionId}")
     suspend fun deleteTransaction(@Path("transactionId") transactionId: Long, @Body request: UserIdRequest): Map<String, Any>
 
@@ -53,6 +62,4 @@ interface TransactionApiService {
 
     @POST("api/transactions/remove-image")
     suspend fun deleteImage(@Body request: RemoveImageRequest): Map<String, Any>
-
-
 }
