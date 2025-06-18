@@ -34,7 +34,7 @@ class AuthViewModel : ViewModel() {
         //RetrofitClient.createService(CategoryApiService::class.java, "http://10.0.2.2:3000") //Simulator
 
         /*---- For Physical Device  ----*/
-        RetrofitClient.createService(AuthApiService::class.java, "https://expense-app-server-aijfxzali-eddie-nguyens-projects.vercel.app")
+        RetrofitClient.createService(AuthApiService::class.java, "https://expense-app-server-mocha.vercel.app")
 
     init {
         getCurrentUser()

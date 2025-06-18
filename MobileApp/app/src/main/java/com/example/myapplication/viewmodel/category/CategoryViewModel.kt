@@ -181,7 +181,7 @@ class CategoryViewModel(
         //RetrofitClient.createService(CategoryApiService::class.java, "http://10.0.2.2:3000")
 
         /*---- For Physical Device  ----*/
-        RetrofitClient.createService(CategoryApiService::class.java, "https://expense-app-server-aijfxzali-eddie-nguyens-projects.vercel.app")
+        RetrofitClient.createService(CategoryApiService::class.java, "https://expense-app-server-mocha.vercel.app")
 
     // --- CRUD Operations for Firestore ---
     fun addCategoryToFirestore(category: Category, userId: String) {
