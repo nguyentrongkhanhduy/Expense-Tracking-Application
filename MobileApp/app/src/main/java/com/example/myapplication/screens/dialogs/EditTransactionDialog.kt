@@ -86,11 +86,12 @@ fun EditTransactionDialog(
     // Date picker state
     val datePickerState = rememberDatePickerState(initialSelectedDateMillis = viewModel.inputDate)
     var showDatePicker by remember { mutableStateOf(false) }
-    val formattedDate = remember(viewModel.inputDate) {
-        SimpleDateFormat("MM/dd/yyyy", Locale.getDefault()).format(
-            Date(viewModel.inputDate ?: System.currentTimeMillis())
-        )
+    val utcFormat = SimpleDateFormat("MM/dd/yyyy", Locale.getDefault()).apply {
+        timeZone = TimeZone.getTimeZone("UTC")
     }
+    val formattedDate = utcFormat.format(
+        Date(datePickerState.selectedDateMillis ?: System.currentTimeMillis())
+    )
 
     // Location logic
     val locationFromVM by locationViewModel.locationString.collectAsState()

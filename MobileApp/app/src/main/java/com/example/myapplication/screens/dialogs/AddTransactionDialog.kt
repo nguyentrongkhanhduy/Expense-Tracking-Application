@@ -72,7 +72,10 @@ fun AddTransactionDialog(
 
     val datePickerState = rememberDatePickerState()
     var showDatePicker by remember { mutableStateOf(false) }
-    val formattedDate = SimpleDateFormat("MM/dd/yyyy", Locale.getDefault()).format(
+    val utcFormat = SimpleDateFormat("MM/dd/yyyy", Locale.getDefault()).apply {
+        timeZone = TimeZone.getTimeZone("UTC")
+    }
+    val formattedDate = utcFormat.format(
         Date(datePickerState.selectedDateMillis ?: System.currentTimeMillis())
     )
 

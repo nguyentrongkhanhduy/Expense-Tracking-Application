@@ -46,6 +46,7 @@ import com.example.myapplication.ui.theme.White
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import java.util.TimeZone
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -55,10 +56,14 @@ fun CustomDateRangeDialog(
 ) {
     val startDateState = rememberDatePickerState()
     val endDateState = rememberDatePickerState()
-    val formattedStartDate = SimpleDateFormat("MM/dd/yyyy", Locale.getDefault()).format(
+
+    val utcFormat = SimpleDateFormat("MM/dd/yyyy", Locale.getDefault()).apply {
+        timeZone = TimeZone.getTimeZone("UTC")
+    }
+    val formattedStartDate = utcFormat.format(
         Date(startDateState.selectedDateMillis ?: System.currentTimeMillis())
     )
-    val formattedEndDate = SimpleDateFormat("MM/dd/yyyy", Locale.getDefault()).format(
+    val formattedEndDate = utcFormat.format(
         Date(endDateState.selectedDateMillis ?: System.currentTimeMillis())
     )
 
