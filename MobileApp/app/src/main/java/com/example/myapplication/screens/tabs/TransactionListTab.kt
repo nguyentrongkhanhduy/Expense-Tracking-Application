@@ -37,7 +37,10 @@ import com.example.myapplication.screens.dialogs.CustomDateRangeDialog
 import com.example.myapplication.ui.theme.PrimaryGreen
 import com.example.myapplication.viewmodel.AuthViewModel
 import com.example.myapplication.viewmodel.LocationViewModel
+import java.text.SimpleDateFormat
 import java.util.Calendar
+import java.util.Locale
+import java.util.TimeZone
 
 @Composable
 fun TransactionListTab(
@@ -404,8 +407,10 @@ fun TransactionCard(
             modifier = Modifier.fillMaxWidth()
         ) {
             Column {
-                val formattedDate = java.text.SimpleDateFormat("MM/dd/yyyy")
-                    .format(java.util.Date(transaction.date))
+                val utcFormat = SimpleDateFormat("MM/dd/yyyy", Locale.getDefault()).apply {
+                    timeZone = TimeZone.getTimeZone("UTC")
+                }
+                val formattedDate = utcFormat.format(java.util.Date(transaction.date))
                 Text(formattedDate, color = White, fontWeight = FontWeight.SemiBold)
                 Text(transaction.name, color = White)
             }
