@@ -52,6 +52,9 @@ import com.example.myapplication.components.AdBanner
 import com.example.myapplication.data.datastore.UserPreferences
 import com.example.myapplication.helpers.getRequestedImage
 import com.example.myapplication.viewmodel.CurrencyViewModel
+import java.text.SimpleDateFormat
+import java.util.Locale
+import java.util.TimeZone
 
 
 @Composable
@@ -410,8 +413,10 @@ fun RecentTransactionsList(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Column {
-                        val formattedDate = java.text.SimpleDateFormat("MM/dd/yyyy")
-                            .format(java.util.Date(transaction.date))
+                        val utcFormat = SimpleDateFormat("MM/dd/yyyy", Locale.getDefault()).apply {
+                            timeZone = TimeZone.getTimeZone("UTC")
+                        }
+                        val formattedDate = utcFormat.format(java.util.Date(transaction.date))
                         Text(formattedDate, color = White, fontWeight = FontWeight.SemiBold)
                         Text(transaction.name, color = White)
                     }
