@@ -91,7 +91,7 @@ fun EditTransactionDialog(
     }
     val formattedDate = utcFormat.format(
         Date(datePickerState.selectedDateMillis ?: System.currentTimeMillis())
-    )
+    ) 
 
     // Location logic
     val locationFromVM by locationViewModel.locationString.collectAsState()
