@@ -8,7 +8,7 @@ import java.io.IOException
 import com.example.myapplication.BuildConfig
 
 /*---- For Android Studio  ----*/
-const val HF_API_TOKEN = ""
+//const val HF_API_TOKEN = ""
 
 fun askHuggingFace(question: String, onResult: (String) -> Unit) {
     val client = OkHttpClient.Builder()
@@ -31,10 +31,10 @@ fun askHuggingFace(question: String, onResult: (String) -> Unit) {
     val request = Request.Builder()
         .url(url)
         /*---- For Android Studio  ----*/
-        .header("Authorization", "Bearer $HF_API_TOKEN")
+        //.header("Authorization", "Bearer $HF_API_TOKEN")
 
         /*---- For Physical Device  ----*/
-//        .header("Authorization", "Bearer $apiKey")
+        .header("Authorization", "Bearer $apiKey")
 
         .post(body)
         .build()
