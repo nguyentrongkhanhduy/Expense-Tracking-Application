@@ -90,8 +90,8 @@ fun EditTransactionDialog(
         timeZone = TimeZone.getTimeZone("UTC")
     }
     val formattedDate = utcFormat.format(
-        Date(datePickerState.selectedDateMillis ?: System.currentTimeMillis())
-    ) 
+    Date(viewModel.inputDate ?: System.currentTimeMillis())
+    )
 
     // Location logic
     val locationFromVM by locationViewModel.locationString.collectAsState()
