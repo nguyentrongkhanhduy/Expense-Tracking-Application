@@ -118,6 +118,12 @@ class TransactionViewModel(
         }
     }
 
+    fun clearTransactions() {
+        viewModelScope.launch {
+            transactionRepository.clearTransactions()
+        }
+    }
+
     fun checkAndNotifyBudget(context: Context, transaction: Transaction) {
         if (transaction.type.lowercase() != "expense") return
         val categoryId = transaction.categoryId

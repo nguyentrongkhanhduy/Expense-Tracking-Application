@@ -37,6 +37,7 @@ import androidx.navigation.NavController
 import com.example.myapplication.components.CustomDropdownMenu
 import com.example.myapplication.components.MyButton
 import com.example.myapplication.data.datastore.UserPreferences
+import com.example.myapplication.screens.dialogs.ConfirmationDialog
 import com.example.myapplication.ui.theme.PrimaryBlue
 import com.example.myapplication.ui.theme.PrimaryRed
 import com.example.myapplication.viewmodel.AuthViewModel
@@ -49,6 +50,7 @@ fun ProfileTab(
     authViewModel: AuthViewModel,
     onCurrencyChange: (Double) -> Unit = {},
     onSyncData: () -> Unit = {},
+    onClearData: () -> Unit = {},
     onLogout: () -> Unit = {},
 ) {
     val context = LocalContext.current
@@ -75,6 +77,9 @@ fun ProfileTab(
 
 
     var selectedCurrency by remember { mutableStateOf("") }
+
+    var logOutDialog by remember { mutableStateOf(false) }
+    var clearDataDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         val defaultCurrency = UserPreferences.getCurrency(context)
@@ -185,7 +190,9 @@ fun ProfileTab(
             }
             Spacer(modifier = Modifier.height(16.dp))
 
-            MyButton(onClick = onLogout, backgroundColor = PrimaryRed) {
+            MyButton(onClick = {
+                logOutDialog = true
+            }, backgroundColor = PrimaryRed) {
                 Text("Log out", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
             }
         } else {
@@ -195,5 +202,40 @@ fun ProfileTab(
         }
         Spacer(Modifier.height(32.dp))
 
+        if (logOutDialog) {
+            ConfirmationDialog(
+                title = "Log out",
+                message = "Are you sure you want to log out?",
+                onConfirm = {
+                    clearDataDialog = true
+                    logOutDialog = false
+                },
+                onCancel = {
+                    logOutDialog = false
+                },
+                onDismiss = {
+                    logOutDialog = false
+                }
+            )
+        }
+
+        if (clearDataDialog) {
+            ConfirmationDialog(
+                title = "Clear data",
+                message = "Do you want to clear all data?",
+                onConfirm = {
+                    onLogout()
+                    onClearData()
+                    clearDataDialog = false
+                },
+                onCancel = {
+                    onLogout()
+                    clearDataDialog = false
+                },
+                onDismiss = {
+                    clearDataDialog = false
+                }
+            )
+        }
     }
 }

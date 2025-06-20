@@ -120,7 +120,7 @@ fun HomeScreen(
                 shortFormCurrency = shortFormCurrency,
                 onTransactionClick = { editingTransaction = it },
 
-            )
+                )
 
             1 -> TransactionListTab(
                 transactionViewModel = transactionViewModel,
@@ -137,17 +137,23 @@ fun HomeScreen(
             )
 
             3 -> ProfileTab(
-                navController = navController, onLogout = {
+                navController = navController,
+                currencyViewModel = currencyViewModel,
+                authViewModel = authViewModel,
+                onCurrencyChange = { rate ->
+                    transactionViewModel.updateAllAmountsByExchangeRate(rate)
+                },
+                onClearData = {
+                    transactionViewModel.clearTransactions()
+                    categoryViewModel.clearCategories()
+                },
+                onSyncData = {},
+                onLogout = {
                     authViewModel.signOut()
                     navController.navigate("login?showGuest=true") {
                         popUpTo(0)
                     }
                 },
-                authViewModel = authViewModel ,
-                currencyViewModel = currencyViewModel
-                , onCurrencyChange = { rate ->
-                    transactionViewModel.updateAllAmountsByExchangeRate(rate)
-                }
             )
         }
 
@@ -221,7 +227,10 @@ fun HomeScreen(
                 transactionViewModel.updateTransaction(updatedTransaction)
                 editingTransaction = null
                 if (user != null) {
-                    transactionViewModel.updateTransactionInFirestore(user!!.uid, updatedTransaction)
+                    transactionViewModel.updateTransactionInFirestore(
+                        user!!.uid,
+                        updatedTransaction
+                    )
                 }
                 transactionViewModel.checkAndNotifyBudget(context, updatedTransaction)
             },
@@ -233,7 +242,10 @@ fun HomeScreen(
                 transactionViewModel.softDeleteTransaction(editingTransaction!!.transaction)
 
                 if (user != null) {
-                    transactionViewModel.deleteTransactionFromFirestore(user!!.uid, editingTransaction!!.transaction.transactionId)
+                    transactionViewModel.deleteTransactionFromFirestore(
+                        user!!.uid,
+                        editingTransaction!!.transaction.transactionId
+                    )
                     transactionViewModel.deleteTransaction(editingTransaction!!.transaction)
                 }
 
@@ -426,7 +438,7 @@ fun RecentTransactionsList(
                         fontWeight = FontWeight.Bold
                     )
                     Text(
-                        text = "%.2f ".format(transaction.amount)+ shortFormCurrency,
+                        text = "%.2f ".format(transaction.amount) + shortFormCurrency,
                         color = White,
                         fontWeight = FontWeight.Bold
                     )

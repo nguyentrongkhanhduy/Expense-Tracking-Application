@@ -34,4 +34,7 @@ interface TransactionDao {
 
     @Query("UPDATE 'Transaction' SET isDeleted = 1 WHERE transactionId = :transactionId")
     suspend fun softDeleteTransaction(transactionId: Long)
+
+    @Query("DELETE FROM 'Transaction'")
+    suspend fun clearTransactions()
 }

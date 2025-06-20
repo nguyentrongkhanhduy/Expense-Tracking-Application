@@ -176,6 +176,12 @@ class CategoryViewModel(
         }
     }
 
+    fun clearCategories() {
+        viewModelScope.launch {
+            categoryRepository.clearCategories()
+        }
+    }
+
     private val categoryApiService =
             /*---- For Android Studio  ----*/
         //RetrofitClient.createService(CategoryApiService::class.java, "http://10.0.2.2:3000")
@@ -230,7 +236,6 @@ class CategoryViewModel(
             return emptyList()
         }
     }
-
 
     fun syncDataWhenSignUp(userId: String) {
         viewModelScope.launch {

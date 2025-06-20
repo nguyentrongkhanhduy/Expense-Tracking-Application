@@ -37,4 +37,8 @@ class TransactionRepository(private val dao: TransactionDao) {
     suspend fun updateAllAmountsByExchangeRate(exchangeRate: Double) {
         dao.updateAllAmountsByExchangeRate(exchangeRate)
     }
+
+    suspend fun clearTransactions() {
+        dao.clearTransactions()
+    }
 }
