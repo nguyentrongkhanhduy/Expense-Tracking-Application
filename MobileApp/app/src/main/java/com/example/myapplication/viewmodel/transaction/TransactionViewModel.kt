@@ -12,9 +12,9 @@ import com.example.myapplication.data.local.repository.CategoryRepository
 import com.example.myapplication.data.local.repository.TransactionRepository
 import com.example.myapplication.data.model.Category
 import com.example.myapplication.helpers.sendBudgetExceededNotification
-import com.example.myapplication.services.CategoryApiService
 import com.example.myapplication.services.ImageRequest
 import com.example.myapplication.services.ReassignCategoryRequest
+import com.example.myapplication.services.RemoveImageRequest
 import com.example.myapplication.services.RequestedImage
 import com.example.myapplication.services.RetrofitClient
 import com.example.myapplication.services.TransactionApiService
@@ -335,7 +335,7 @@ class TransactionViewModel(
 
     private val transactionApiService =
             /*---- For Android Studio  ----*/
-        //RetrofitClient.createService(TransactionApiService::class.java, "http://10.0.2.2:3000") //Simulator
+//        RetrofitClient.createService(TransactionApiService::class.java, "http://10.0.2.2:3000") //Simulator
 
         /*---- For Physical Device  ----*/
         RetrofitClient.createService(TransactionApiService::class.java, "https://expense-app-server-mocha.vercel.app")
@@ -489,6 +489,38 @@ class TransactionViewModel(
                 } else {
                     println("Error uploading image: ${response.error}")
                 }
+            } catch (e: Exception) {
+                println("Error: ${e.message}")
+            }
+        }
+    }
+
+    fun updateImageInFirebaseStorage(
+        userId: String,
+        requestedImage: RequestedImage,
+        onImageUpdated: (String) -> Unit
+    ) {
+        viewModelScope.launch {
+            try {
+                val response = transactionApiService.updateImage(ImageRequest(userId, requestedImage))
+                if (response.success) {
+                    onImageUpdated(response.imageUrl!!)
+                } else {
+                    println("Error uploading image: ${response.error}")
+                }
+            } catch (e: Exception) {
+                println("Error: ${e.message}")
+            }
+        }
+    }
+
+    fun deleteImageFromFirebaseStorage(
+        userId: String,
+        imageName: String
+    ) {
+        viewModelScope.launch {
+            try {
+                transactionApiService.deleteImage(RemoveImageRequest(userId, imageName))
             } catch (e: Exception) {
                 println("Error: ${e.message}")
             }
