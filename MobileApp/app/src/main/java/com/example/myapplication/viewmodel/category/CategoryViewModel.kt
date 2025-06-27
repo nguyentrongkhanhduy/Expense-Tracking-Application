@@ -184,7 +184,7 @@ class CategoryViewModel(
 
     private val categoryApiService =
             /*---- For Android Studio  ----*/
-        //RetrofitClient.createService(CategoryApiService::class.java, "http://10.0.2.2:3000")
+//        RetrofitClient.createService(CategoryApiService::class.java, "http://10.0.2.2:3000")
 
         /*---- For Physical Device  ----*/
         RetrofitClient.createService(CategoryApiService::class.java, "https://expense-app-server-mocha.vercel.app")

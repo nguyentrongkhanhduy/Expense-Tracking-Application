@@ -202,15 +202,25 @@ fun HomeScreen(
         AddTransactionDialog(
             viewModel = transactionViewModel,
             onDismiss = { showAddDialog = false },
-            onSave = { transaction ->
+            onSave = { transaction, bitmap, uri ->
                 showAddDialog = false
 
                 transactionViewModel.addTransaction(transaction)
                 transactionViewModel.checkAndNotifyBudget(context, transaction)
 
                 if (user != null) {
-                    transactionViewModel.addTransactionToFirestore(user!!.uid, transaction)
-
+                    val requestedImage = getRequestedImage(
+                        context, uri, bitmap,
+                        transaction.transactionId.toString()
+                    )
+                    if (requestedImage != null) {
+                        transactionViewModel.uploadImageToFirebaseStorage(user!!.uid, requestedImage) { url ->
+                            val copyTransaction = transaction.copy(imageUrl = url)
+                            transactionViewModel.addTransactionToFirestore(user!!.uid, copyTransaction)
+                        }
+                    } else {
+                        transactionViewModel.addTransactionToFirestore(user!!.uid, transaction)
+                    }
                 }
             },
             categoryList = categories,
@@ -223,14 +233,23 @@ fun HomeScreen(
         EditTransactionDialog(
             transaction = editingTransaction!!.transaction,
             onDismiss = { editingTransaction = null },
-            onSave = { updatedTransaction ->
+            onSave = { updatedTransaction, bitmap, uri ->
                 transactionViewModel.updateTransaction(updatedTransaction)
                 editingTransaction = null
                 if (user != null) {
-                    transactionViewModel.updateTransactionInFirestore(
-                        user!!.uid,
-                        updatedTransaction
+                    val requestedImage = getRequestedImage(
+                        context, uri, bitmap,
+                        updatedTransaction.transactionId.toString()
                     )
+
+                    if (requestedImage != null) {
+                        transactionViewModel.updateImageInFirebaseStorage(user!!.uid, requestedImage) { url ->
+                            val copyTransaction = updatedTransaction.copy(imageUrl = url)
+                            transactionViewModel.updateTransactionInFirestore(user!!.uid, copyTransaction)
+                        }
+                    } else {
+                        transactionViewModel.updateTransactionInFirestore(user!!.uid, updatedTransaction)
+                    }
                 }
                 transactionViewModel.checkAndNotifyBudget(context, updatedTransaction)
             },
@@ -242,6 +261,7 @@ fun HomeScreen(
                 transactionViewModel.softDeleteTransaction(editingTransaction!!.transaction)
 
                 if (user != null) {
+                    transactionViewModel.deleteImageFromFirebaseStorage(user!!.uid, editingTransaction!!.transaction.transactionId.toString())
                     transactionViewModel.deleteTransactionFromFirestore(
                         user!!.uid,
                         editingTransaction!!.transaction.transactionId

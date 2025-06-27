@@ -39,6 +39,10 @@ fun loadImageUriOrBitmapFromInternalStorage(context: Context, filename: String):
                 Uri.parse(filename.removePrefix("uri:"))
             }
 
+            filename.startsWith("https://") || filename.startsWith("http://") -> {
+                Uri.parse(filename)
+            }
+
             else -> null
         }
     } catch (e: Exception) {

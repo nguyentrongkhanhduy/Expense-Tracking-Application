@@ -46,6 +46,7 @@ import com.example.myapplication.ui.theme.White
 import com.example.myapplication.viewmodel.AuthViewModel
 import com.example.myapplication.viewmodel.LocationViewModel
 import com.example.myapplication.viewmodel.transaction.TransactionViewModel
+import com.google.android.play.integrity.internal.s
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -55,12 +56,18 @@ fun EditTransactionDialog(
     viewModel: TransactionViewModel,
     transaction: Transaction,
     onDismiss: () -> Unit,
-    onSave: (Transaction) -> Unit,
+    onSave: (Transaction, Bitmap?, Uri?) -> Unit,
     onDelete: () -> Unit,
     categoryList: List<Category>,
     locationViewModel: LocationViewModel,
     authViewModel: AuthViewModel
 ) {
+    val context = LocalContext.current
+    var selectedImageBitmap by remember { mutableStateOf<Bitmap?>(null) }
+    var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
+    var oldImageBitmap by remember { mutableStateOf<Bitmap?>(null) }
+    var oldImageUri by remember { mutableStateOf<Uri?>(null) }
+
     // Prefill ViewModel state ONCE per transaction
     LaunchedEffect(transaction.transactionId) {
         viewModel.resetInputFields(
@@ -73,6 +80,15 @@ fun EditTransactionDialog(
             location = transaction.location ?: "",
             imagePath = transaction.imageUrl
         )
+        if (transaction.imageUrl != null) {
+            println("Image URL: ${transaction.imageUrl}")
+            val image =
+                loadImageUriOrBitmapFromInternalStorage(context, viewModel.inputImagePath ?: "")
+            selectedImageBitmap = image as? Bitmap
+            oldImageBitmap = image as? Bitmap
+            selectedImageUri = image as? Uri
+            oldImageUri = image as? Uri
+        }
     }
 
     val typeOptions = listOf("Expense", "Income")
@@ -113,22 +129,11 @@ fun EditTransactionDialog(
     }
 
 
-    val context = LocalContext.current
     var showImagePickerDialog by remember { mutableStateOf(false) }
     val cameraPermissionLauncher =
         rememberCameraPermissionHandler(onSuccess = { showImagePickerDialog = true })
 
-    var selectedImageBitmap by remember { mutableStateOf<Bitmap?>(null) }
-    var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
 
-    LaunchedEffect(viewModel.inputImagePath) {
-        if (transaction.imageUrl != null) {
-            val image =
-                loadImageUriOrBitmapFromInternalStorage(context, viewModel.inputImagePath ?: "")
-            selectedImageBitmap = image as? Bitmap
-            selectedImageUri = image as? Uri
-        }
-    }
 
 
     val cameraLauncher = rememberLauncherForActivityResult(
@@ -471,9 +476,12 @@ fun EditTransactionDialog(
                                     imageUrl = viewModel.inputImagePath,
                                     updatedAt = currentTime
                                 )
-                                onSave(updatedTransaction)
 
-
+                                if (oldImageBitmap == selectedImageBitmap && oldImageUri == selectedImageUri) {
+                                    onSave(updatedTransaction, null, null)
+                                } else {
+                                    onSave(updatedTransaction, selectedImageBitmap, selectedImageUri)
+                                }
 
                                 viewModel.resetInputFields()
                                 onDismiss()

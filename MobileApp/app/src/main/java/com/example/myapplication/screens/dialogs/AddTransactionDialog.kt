@@ -35,7 +35,6 @@ import androidx.compose.ui.window.DialogProperties
 import coil.compose.rememberAsyncImagePainter
 import com.example.myapplication.data.model.Category
 import com.example.myapplication.data.model.Transaction
-import com.example.myapplication.helpers.getRequestedImage
 import com.example.myapplication.helpers.rememberCameraPermissionHandler
 import com.example.myapplication.helpers.rememberLocationPermissionHandler
 import com.example.myapplication.helpers.saveBitmapToInternalStorage
@@ -53,7 +52,7 @@ import java.util.*
 fun AddTransactionDialog(
     viewModel: TransactionViewModel,
     onDismiss: () -> Unit,
-    onSave: (Transaction) -> Unit,
+    onSave: (Transaction, Bitmap?, Uri?) -> Unit,
     categoryList: List<Category>,
     locationViewModel: LocationViewModel,
     authViewModel: AuthViewModel
@@ -443,7 +442,7 @@ fun AddTransactionDialog(
                                     updatedAt = currentTime
                                 )
 
-                                onSave(transaction)
+                                onSave(transaction, selectedImageBitmap, selectedImageUri)
                                 viewModel.resetInputFields()
                                 onDismiss()
                             }

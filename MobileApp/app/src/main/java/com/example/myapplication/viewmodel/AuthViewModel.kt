@@ -31,7 +31,7 @@ class AuthViewModel : ViewModel() {
     private val authService =
 
         /*---- For Android Studio  ----*/
-        //RetrofitClient.createService(CategoryApiService::class.java, "http://10.0.2.2:3000") //Simulator
+//        RetrofitClient.createService(AuthApiService::class.java, "http://10.0.2.2:3000") //Simulator
 
         /*---- For Physical Device  ----*/
         RetrofitClient.createService(AuthApiService::class.java, "https://expense-app-server-mocha.vercel.app")
