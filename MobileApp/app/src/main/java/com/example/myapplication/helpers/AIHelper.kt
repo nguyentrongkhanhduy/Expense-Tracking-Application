@@ -5,10 +5,10 @@ import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.IOException
-import com.example.myapplication.BuildConfig
+//import com.example.myapplication.BuildConfig
 
 /*---- For Android Studio  ----*/
-//const val HF_API_TOKEN = ""
+//const val HF_API_TOKEN = "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"
 
 fun askHuggingFace(question: String, onResult: (String) -> Unit) {
     val client = OkHttpClient.Builder()
