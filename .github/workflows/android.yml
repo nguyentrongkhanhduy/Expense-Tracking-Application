@@ -48,12 +48,15 @@ jobs:
       - name: Generate version numbers
         id: version
         run: |
-          # Use GitHub run number as version code for uniqueness
           VERSION_CODE=${{ github.run_number }}
-          VERSION_NAME="1.0.$VERSION_CODE"
+          MAJOR=$(( (VERSION_CODE - 1) / 100 + 1 ))
+          MINOR=$(( ((VERSION_CODE - 1) % 100) / 10 ))
+          PATCH=$(( (VERSION_CODE - 1) % 10 ))
+          VERSION_NAME="$MAJOR.$MINOR.$PATCH"
           echo "VERSION_CODE=$VERSION_CODE" >> $GITHUB_ENV
           echo "VERSION_NAME=$VERSION_NAME" >> $GITHUB_ENV
           echo "Generated versionCode: $VERSION_CODE and versionName: $VERSION_NAME"
+
 
       - name: Build release APK
         run: ./gradlew assembleDebug -PversionCode=${{ env.VERSION_CODE }} -PversionName=${{ env.VERSION_NAME }}
