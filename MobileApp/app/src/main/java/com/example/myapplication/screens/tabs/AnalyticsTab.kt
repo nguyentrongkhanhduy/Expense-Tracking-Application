@@ -53,7 +53,7 @@ import kotlin.math.roundToInt
 fun AnalyticsTab(
     transactionViewModel: TransactionViewModel,
     currencyViewModel: CurrencyViewModel,
-    shortFormCurrency: String
+    currencySymbol: String
 ) {
     val timeTab = listOf("All", "Today", "Week", "Month", "Custom")
     var selectedTimeTab by remember { mutableIntStateOf(0) }
@@ -80,11 +80,12 @@ fun AnalyticsTab(
 
     val context = LocalContext.current
 
-    var shortFormCurrency by remember { mutableStateOf("CAD") }
+    var currencySymbol by remember { mutableStateOf("C$") }
     LaunchedEffect(Unit) {
         val defaultCurrency = UserPreferences.getCurrency(context)
-        shortFormCurrency = currencyViewModel.getCurrencyShortForm(defaultCurrency)
+        currencySymbol = currencyViewModel.getCurrencySymbol(defaultCurrency)
     }
+
 // --- Date range logic ---
     LaunchedEffect(selectedTimeTab) {
         val calendar = Calendar.getInstance()
@@ -237,14 +238,14 @@ fun AnalyticsTab(
                             dataSetIndex: Int,
                             viewPortHandler: ViewPortHandler?
                         ): String {
-                            return "${value.roundToInt()} $shortFormCurrency"
+                            return "$currencySymbol${value.roundToInt()}"
                         }
                     }
                     dataSet.valueTextSize = 8f // Smaller value labels
                     val data = PieData(dataSet)
                     data.setValueTextSize(8f)
                     pieChart.data = data
-                    pieChart.centerText = "${centerText}\n${total.roundToInt()} $shortFormCurrency"
+                    pieChart.centerText = "${centerText}\n $currencySymbol${total.roundToInt()}"
                     pieChart.invalidate()
                 }
             )
@@ -295,7 +296,7 @@ fun AnalyticsTab(
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text(
                                     text = buildString {
-                                        append("$${amount.roundToInt()} of $${effectiveLimit.roundToInt()} $shortFormCurrency")
+                                        append("$currencySymbol${amount.roundToInt()} of $currencySymbol${effectiveLimit.roundToInt()} ")
                                         if (limit == null || limit == 0.0) append(" (total)")
                                     },
                                     fontSize = 14.sp,
@@ -482,10 +483,10 @@ fun AnalyticsTab(
                                     aiLoading = true
                                     // Build the context summary, add currency if you want
                                     val contextSummary = transactionViewModel.getFinancialSummary(startDate, endDate)
-                                        .replace("spent (limit:", "spent (limit: $shortFormCurrency")
-                                        .replace("Total spent:", "Total spent: $shortFormCurrency")
-                                        .replace("Total earned:", "Total earned: $shortFormCurrency")
-                                        .replace("Net balance:", "Net balance: $shortFormCurrency")
+                                        .replace("spent (limit:", "spent (limit: $currencySymbol")
+                                        .replace("Total spent:", "Total spent: $currencySymbol")
+                                        .replace("Total earned:", "Total earned: $currencySymbol")
+                                        .replace("Net balance:", "Net balance: $currencySymbol")
                                     val fullPrompt = """
             Here is my recent financial data:
             $contextSummary
