@@ -44,8 +44,7 @@ fun askHuggingFace(question: String, onResult: (String) -> Unit) {
         }
 
         override fun onResponse(call: Call, response: Response) {
-            val bytes = response.body?.bytes()
-            val bodyString = bytes?.toString(Charsets.UTF_8)
+            val bodyString = response.body?.string()
             if (response.code == 403) {
                 onResult("Error: 403 Forbidden. Check your Hugging Face API token and model access.")
                 return
