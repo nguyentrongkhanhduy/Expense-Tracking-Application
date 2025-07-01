@@ -413,7 +413,14 @@ fun AnalyticsTab(
                             textStyle = TextStyle(fontSize = 18.sp)
                         )
                         if (aiLoading) {
-                            CircularProgressIndicator(Modifier.padding(top = 18.dp))
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = 18.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                CircularProgressIndicator()
+                            }
                         } else if (aiResponse != null) {
                             // --- Improved AI Answer Formatting ---
                             val lines = aiResponse!!.lines()
@@ -439,7 +446,7 @@ fun AnalyticsTab(
                                     if (trimmed.startsWith("-") || trimmed.startsWith("*")) {
                                         Row(Modifier.padding(bottom = 4.dp)) {
                                             Text(
-                                                "â€¢ ",
+                                                "-",
                                                 fontWeight = FontWeight.Bold,
                                                 color = PrimaryBlue
                                             )
