@@ -28,6 +28,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.draw.clip
@@ -51,6 +52,7 @@ import androidx.compose.material3.FloatingActionButtonDefaults
 import com.example.myapplication.components.AdBanner
 import com.example.myapplication.data.datastore.UserPreferences
 import com.example.myapplication.helpers.getRequestedImage
+import com.example.myapplication.screens.dialogs.ConfirmationDialog
 import com.example.myapplication.viewmodel.CurrencyViewModel
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -98,6 +100,43 @@ fun HomeScreen(
         }
     }
 
+    val shouldPromtSync by authViewModel.shouldPromtSync.collectAsState()
+    var syncDataDialog by remember { mutableStateOf(false) }
+    LaunchedEffect(shouldPromtSync) {
+        if (shouldPromtSync) {
+            syncDataDialog = true
+        }
+    }
+
+    if (syncDataDialog) {
+        ConfirmationDialog(
+            title = "Sync data",
+            message = "Would you like to sync your local data with your online account now? You can also do it manually later.",
+            onConfirm = {
+                syncDataDialog = false
+                categoryViewModel.setLoading(true)
+                transactionViewModel.setLoading(true)
+                categoryViewModel.syncDataWhenLogIn(user!!.uid) {
+                    categoryViewModel.setLoading(false)
+                }
+                transactionViewModel.syncDataWhenLogIn(user!!.uid) {
+                    transactionViewModel.setLoading(false)
+                }
+                authViewModel.setSyncPrompt(false)
+            },
+            onCancel = {
+                syncDataDialog = false
+                authViewModel.setSyncPrompt(false)
+            },
+            onDismiss = {
+                syncDataDialog = false
+                authViewModel.setSyncPrompt(false)
+            }
+        )
+    }
+
+
+
     val currencySymbol = currencyViewModel.getCurrencySymbol(selectedCurrency)
 
     val currentBackStackEntry = navController.currentBackStackEntry
@@ -109,8 +148,22 @@ fun HomeScreen(
         }
     }
 
+    val transactionIsLoading by transactionViewModel.isLoading.collectAsState()
+    val categoryIsLoading by categoryViewModel.isLoading.collectAsState()
+
     Box(Modifier.fillMaxSize()) {
         // Main content
+        if (transactionIsLoading || categoryIsLoading) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(color = White.copy(alpha = 0.6f)),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = PrimaryBlue)
+            }
+        }
+
         when (selectedTab) {
             0 -> HomeTabContent(
                 user = user,
@@ -141,6 +194,8 @@ fun HomeScreen(
                 navController = navController,
                 currencyViewModel = currencyViewModel,
                 authViewModel = authViewModel,
+                transactionViewModel = transactionViewModel,
+                categoryViewModel = categoryViewModel,
                 onCurrencyChange = { rate ->
                     transactionViewModel.updateAllAmountsByExchangeRate(rate)
                 },
@@ -148,7 +203,16 @@ fun HomeScreen(
                     transactionViewModel.clearTransactions()
                     categoryViewModel.clearCategories()
                 },
-                onSyncData = {},
+                onSyncData = {
+                    transactionViewModel.setLoading(true)
+                    categoryViewModel.setLoading(true)
+                    transactionViewModel.syncDataWhenLogIn(user!!.uid) {
+                        transactionViewModel.setLoading(false)
+                    }
+                    categoryViewModel.syncDataWhenLogIn(user!!.uid) {
+                        categoryViewModel.setLoading(false)
+                    }
+                },
                 onLogout = {
                     authViewModel.signOut()
                     navController.navigate("login?showGuest=true") {

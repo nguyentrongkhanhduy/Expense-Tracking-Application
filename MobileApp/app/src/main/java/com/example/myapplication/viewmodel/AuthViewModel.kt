@@ -7,6 +7,7 @@ import com.example.myapplication.services.AuthApiService
 import com.example.myapplication.services.RetrofitClient
 import com.example.myapplication.services.SignUpRequest
 import com.example.myapplication.services.TokenRequest
+import com.github.mikephil.charting.utils.Utils.init
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -27,6 +28,13 @@ class AuthViewModel : ViewModel() {
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading
+
+    private val _shouldPromtSync = MutableStateFlow(false)
+    val shouldPromtSync: StateFlow<Boolean> = _shouldPromtSync
+
+    fun setSyncPrompt(shouldPrompt: Boolean) {
+        _shouldPromtSync.value = shouldPrompt
+    }
 
     private val authService =
 

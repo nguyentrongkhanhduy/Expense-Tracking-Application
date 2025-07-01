@@ -21,6 +21,7 @@ import com.example.myapplication.services.TransactionApiService
 import com.example.myapplication.services.TransactionRequest
 import com.example.myapplication.services.UserIdRequest
 import com.github.mikephil.charting.data.PieEntry
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
@@ -37,6 +38,13 @@ class TransactionViewModel(
     val transactionsWithCategory: StateFlow<List<TransactionWithCategory>> =
         transactionRepository.getTransactionsWithCategory()
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> = _isLoading
+
+    fun setLoading(isLoading: Boolean) {
+        _isLoading.value = isLoading
+    }
 
     // --- Input Fields for Dialogs ---
     var inputAmount by mutableStateOf("")
@@ -425,7 +433,7 @@ class TransactionViewModel(
         }
     }
 
-    fun syncDataWhenLogIn(userId: String) {
+    fun syncDataWhenLogIn(userId: String, onSyncComplete : () -> Unit) {
         viewModelScope.launch {
             val remoteTransactions = getTransactionsFromFirestore(userId)
             val localTransactions =
@@ -473,6 +481,8 @@ class TransactionViewModel(
                 }
             }
         }
+
+        onSyncComplete()
     }
 
     fun uploadImageToFirebaseStorage(
