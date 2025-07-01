@@ -43,100 +43,10 @@ fun CategoriesScreen(
     val filterOptions = listOf("All", "Expense", "Income")
     var showAddDialog by remember { mutableStateOf(false) }
     var editingCategory by remember { mutableStateOf<Category?>(null) }
-
     val user by authViewModel.user.collectAsState()
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(White)
-            .padding(horizontal = 18.dp)
-    ) {
-
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 32.dp)
-                .height(56.dp)
-        ) {
-            IconButton(
-                onClick = {
-                    navController.previousBackStackEntry
-                        ?.savedStateHandle
-                        ?.set("selectedTab", 3)
-                    navController.popBackStack()
-                },
-                modifier = Modifier.align(Alignment.CenterStart)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.ArrowBack,
-                    contentDescription = "Back",
-                    tint = PrimaryBlue
-                )
-            }
-            Text(
-                "My Categories",
-                fontWeight = FontWeight.Bold,
-                fontSize = 26.sp,
-                color = Color(0xFF0A2540),
-                modifier = Modifier.align(Alignment.Center)
-            )
-            Box(
-                modifier = Modifier
-                    .size(48.dp)
-                    .align(Alignment.CenterEnd)
-            )
-        }
-
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        val currentFilterIndex = filterOptions.indexOf(filter)
-        val nextFilter = filterOptions[(currentFilterIndex + 1) % filterOptions.size]
-        val buttonColor = when (filter) {
-            "Expense" -> PrimaryRed
-            "Income" -> PrimaryGreen
-            else -> PrimaryBlue
-        }
-
-        Button(
-            onClick = {
-                filter = nextFilter
-            },
-            colors = ButtonDefaults.buttonColors(containerColor = buttonColor),
-            shape = RoundedCornerShape(20.dp),
-            modifier = Modifier
-                .align(Alignment.CenterHorizontally)
-                .width(160.dp)
-                .height(38.dp)
-        ) {
-            Text(filter, color = Color.White, fontWeight = FontWeight.Bold)
-        }
-
-        Spacer(modifier = Modifier.height(18.dp))
-        LazyColumn(
-            verticalArrangement = Arrangement.spacedBy(10.dp),
-            modifier = Modifier.weight(1f, fill = false)
-        ) {
-            items(
-                categories.filter { !it.isDeleted }. filter {
-                    when (filter) {
-                        "All" -> true
-                        "Expense" -> it.type.equals("expense", ignoreCase = true)
-                        "Income" -> it.type.equals("income", ignoreCase = true)
-                        else -> true
-                    }
-                }
-            ) { category ->
-                CategoryCard(category) { editingCategory = category }
-            }
-        }
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 18.dp),
-            contentAlignment = Alignment.Center
-        ) {
+    Scaffold(
+        floatingActionButton = {
             FloatingActionButton(
                 onClick = {
                     categoryViewModel.resetInputFields()
@@ -146,6 +56,97 @@ fun CategoriesScreen(
             ) {
                 Text("+", color = Color.White, fontSize = 32.sp)
             }
+        },
+        floatingActionButtonPosition = FabPosition.Center,
+        containerColor = White,
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 18.dp)
+                .padding(innerPadding)
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 32.dp)
+                    .height(56.dp)
+            ) {
+                IconButton(
+                    onClick = {
+                        navController.previousBackStackEntry
+                            ?.savedStateHandle
+                            ?.set("selectedTab", 3)
+                        navController.popBackStack()
+                    },
+                    modifier = Modifier.align(Alignment.CenterStart)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.ArrowBack,
+                        contentDescription = "Back",
+                        tint = PrimaryBlue
+                    )
+                }
+                Text(
+                    "My Categories",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 26.sp,
+                    color = Color(0xFF0A2540),
+                    modifier = Modifier.align(Alignment.Center)
+                )
+                Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .align(Alignment.CenterEnd)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            val currentFilterIndex = filterOptions.indexOf(filter)
+            val nextFilter = filterOptions[(currentFilterIndex + 1) % filterOptions.size]
+            val buttonColor = when (filter) {
+                "Expense" -> PrimaryRed
+                "Income" -> PrimaryGreen
+                else -> PrimaryBlue
+            }
+
+            Button(
+                onClick = {
+                    filter = nextFilter
+                },
+                colors = ButtonDefaults.buttonColors(containerColor = buttonColor),
+                shape = RoundedCornerShape(20.dp),
+                modifier = Modifier
+                    .align(Alignment.CenterHorizontally)
+                    .width(160.dp)
+                    .height(38.dp)
+            ) {
+                Text(filter, color = Color.White, fontWeight = FontWeight.Bold)
+            }
+
+            Spacer(modifier = Modifier.height(18.dp))
+
+            LazyColumn(
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+                modifier = Modifier.weight(1f, fill = false),
+                contentPadding = PaddingValues(bottom = 80.dp)
+            ) {
+                items(
+                    categories.filter { !it.isDeleted }.filter {
+                        when (filter) {
+                            "All" -> true
+                            "Expense" -> it.type.equals("expense", ignoreCase = true)
+                            "Income" -> it.type.equals("income", ignoreCase = true)
+                            else -> true
+                        }
+                    }
+                ) { category ->
+                    CategoryCard(category) { editingCategory = category }
+                }
+            }
+
+
         }
     }
 
@@ -177,7 +178,6 @@ fun CategoriesScreen(
             initialCategory = editingCategory!!,
             onDismiss = { editingCategory = null },
             onDelete = {
-//                viewModel.deleteCategory(editingCategory!!)
                 categoryViewModel.softDeleteCategory(editingCategory!!)
 
                 if (user != null) {
