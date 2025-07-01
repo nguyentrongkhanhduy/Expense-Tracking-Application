@@ -12,7 +12,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 /*---- For Android Studio  ----*/
-//const val apiKey = "" //add your API key here from currencylayer.com
+const val apiKey = "" //add your API key here from currencylayer.com
 
 class CurrencyViewModel : ViewModel() {
      private val apiService = RetrofitClient.createService(CurrencyApiService::class.java, "https://apilayer.net/")
@@ -57,4 +57,23 @@ class CurrencyViewModel : ViewModel() {
             else -> ""
         }
     }
+    fun getCurrencySymbol(currency: String): String {
+        return when (currency) {
+            "USD", "US Dollar" -> "$"
+            "CAD", "Canadian Dollar" -> "C$"
+            "AUD", "Australian Dollar" -> "A$"
+            "INR", "Indian Rupee" -> "₹"
+            "EUR", "Euro" -> "€"
+            "GBP", "British Pound" -> "£"
+            "JPY", "Japanese Yen" -> "¥"
+            "CNY", "Chinese Yuan" -> "¥"
+            "CHF", "Swiss Franc" -> "₣"
+            "SEK", "Swedish Krona" -> "kr"
+            "HKD", "Hong Kong Dollar" -> "HK$"
+            "SGD", "Singapore Dollar" -> "S$"
+            "RUB", "Russian Ruble" -> "₽"
+            else -> currency // fallback to code
+        }
+    }
+
 }

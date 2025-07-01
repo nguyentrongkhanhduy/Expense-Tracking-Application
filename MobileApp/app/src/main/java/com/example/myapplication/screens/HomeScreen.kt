@@ -85,6 +85,7 @@ fun HomeScreen(
 
     val context = LocalContext.current
 
+
     var selectedCurrency by remember { mutableStateOf("Canadian Dollar") }
     LaunchedEffect(selectedTab) {
         if (selectedTab == 0) {
@@ -96,8 +97,8 @@ fun HomeScreen(
             selectedCurrency = UserPreferences.getCurrency(context)
         }
     }
-    val shortFormCurrency = currencyViewModel.getCurrencyShortForm(selectedCurrency)
 
+    val currencySymbol = currencyViewModel.getCurrencySymbol(selectedCurrency)
 
     val currentBackStackEntry = navController.currentBackStackEntry
     LaunchedEffect(currentBackStackEntry) {
@@ -113,11 +114,11 @@ fun HomeScreen(
         when (selectedTab) {
             0 -> HomeTabContent(
                 user = user,
-                balance = "%.2f $shortFormCurrency".format(balance),
-                expenses = "%.2f $shortFormCurrency".format(expenses),
-                income = "%.2f $shortFormCurrency".format(income),
+                balance = "$currencySymbol${" %.2f".format(balance)}",
+                expenses = "$currencySymbol${" %.2f".format(expenses)}",
+                income = "$currencySymbol${" %.2f".format(income)}",
+                shortFormCurrency = currencySymbol,
                 transactionsWithCategory = transactionsWithCategory,
-                shortFormCurrency = shortFormCurrency,
                 onTransactionClick = { editingTransaction = it },
 
                 )
@@ -127,13 +128,13 @@ fun HomeScreen(
                 categoryViewModel = categoryViewModel,
                 locationViewModel = locationViewModel,
                 authViewModel = authViewModel,
-                shortFormCurrency = shortFormCurrency
+                currencySymbol = currencySymbol,
             )
 
             2 -> AnalyticsTab(
                 transactionViewModel = transactionViewModel,
                 currencyViewModel = currencyViewModel,
-                shortFormCurrency = shortFormCurrency
+                currencySymbol = currencySymbol,
             )
 
             3 -> ProfileTab(
@@ -404,7 +405,7 @@ fun HomeTabContent(
 
         RecentTransactionsList(
             transactions = transactionsWithCategory,
-            shortFormCurrency = shortFormCurrency,
+            currencySymbol = shortFormCurrency,
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f),
@@ -417,7 +418,7 @@ fun HomeTabContent(
 fun RecentTransactionsList(
     transactions: List<TransactionWithCategory>,
     modifier: Modifier = Modifier,
-    shortFormCurrency: String,
+    currencySymbol: String,
     onTransactionClick: (TransactionWithCategory) -> Unit
 ) {
     LazyColumn(
@@ -458,7 +459,7 @@ fun RecentTransactionsList(
                         fontWeight = FontWeight.Bold
                     )
                     Text(
-                        text = "%.2f ".format(transaction.amount) + shortFormCurrency,
+                        text = currencySymbol + " %.2f ".format(transaction.amount) ,
                         color = White,
                         fontWeight = FontWeight.Bold
                     )

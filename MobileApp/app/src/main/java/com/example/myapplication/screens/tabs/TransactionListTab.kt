@@ -49,7 +49,7 @@ fun TransactionListTab(
     categoryViewModel: CategoryViewModel,
     locationViewModel: LocationViewModel,
     authViewModel: AuthViewModel,
-    shortFormCurrency: String,
+    currencySymbol: String,
 
 ) {
     val user by authViewModel.user.collectAsState()
@@ -317,7 +317,7 @@ fun TransactionListTab(
                 items(filteredTransactions) { transactionWithCategory ->
                     TransactionCard(
                         transactionWithCategory = transactionWithCategory,
-                        shortFormCurrency = shortFormCurrency,
+                        currencySymbol = currencySymbol,
                         onClick = { editingTransaction = transactionWithCategory }
                     )
                 }
@@ -409,7 +409,7 @@ fun TransactionListTab(
 @Composable
 fun TransactionCard(
     transactionWithCategory: TransactionWithCategory,
-    shortFormCurrency: String,
+    currencySymbol: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -445,7 +445,7 @@ fun TransactionCard(
                 fontWeight = FontWeight.Bold
             )
             Text(
-                text = "%.2f ".format(transaction.amount) + shortFormCurrency,
+                text = currencySymbol + " %.2f ".format(transaction.amount),
                 color = White,
                 fontWeight = FontWeight.Bold
             )
