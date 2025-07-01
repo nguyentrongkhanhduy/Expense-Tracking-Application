@@ -14,6 +14,7 @@ import com.example.myapplication.services.InitialCategoriesRequest
 import com.example.myapplication.services.RetrofitClient
 import com.example.myapplication.services.UserIdRequest
 import com.github.mikephil.charting.utils.Utils.init
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
@@ -32,6 +33,13 @@ class CategoryViewModel(
     val categories: StateFlow<List<Category>> =
         _categories //Both deleted and not deleted -> filter to use
     private var defaultCategories = _categories.value
+
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> = _isLoading
+
+    fun setLoading(isLoading: Boolean) {
+        _isLoading.value = isLoading
+    }
 
     // Dialog input state
     var inputType by mutableStateOf("")
@@ -262,7 +270,7 @@ class CategoryViewModel(
         }
     }
 
-    fun syncDataWhenLogIn(userId: String) {
+    fun syncDataWhenLogIn(userId: String, onSyncComplete : () -> Unit) {
         viewModelScope.launch {
             val remoteCategories = getCategoriesFromFirestore(userId)
             val localCategories = categories.value //get all categories both deleted and not deleted
@@ -314,6 +322,8 @@ class CategoryViewModel(
 
                 }
             }
+
+            onSyncComplete()
         }
     }
 }

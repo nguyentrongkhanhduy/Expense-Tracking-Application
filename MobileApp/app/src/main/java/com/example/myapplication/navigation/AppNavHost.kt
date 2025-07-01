@@ -47,8 +47,6 @@ fun AppNavHost() {
             LoginScreen(
                 navController = navController,
                 viewModel = authViewModel,
-                categoryViewModel = categoryViewModel,
-                transactionViewModel = transactionViewModel,
                 showGuestOption = showGuest
             )
         }

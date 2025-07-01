@@ -32,15 +32,11 @@ import com.example.myapplication.components.BackButton
 import com.example.myapplication.components.MyButton
 import com.example.myapplication.ui.theme.PrimaryBlue
 import com.example.myapplication.viewmodel.AuthViewModel
-import com.example.myapplication.viewmodel.category.CategoryViewModel
-import com.example.myapplication.viewmodel.transaction.TransactionViewModel
 
 @Composable
 fun LoginScreen(
     navController: NavController,
     viewModel: AuthViewModel,
-    categoryViewModel: CategoryViewModel,
-    transactionViewModel: TransactionViewModel,
     showGuestOption: Boolean = false
 ) {
     var email by remember { mutableStateOf("test@123.com") }
@@ -104,8 +100,7 @@ fun LoginScreen(
             MyButton(
                 onClick = {
                     viewModel.signIn(email, password) {
-                        categoryViewModel.syncDataWhenLogIn(it)
-                        transactionViewModel.syncDataWhenLogIn(it)
+                        viewModel.setSyncPrompt(true)
                     }
                 },
                 enabled = !isLoading && email.isNotBlank() && password.isNotBlank()
