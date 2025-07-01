@@ -1,6 +1,7 @@
 package com.example.myapplication.screens.tabs
 
 
+import android.provider.SyncStateContract.Helpers.update
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -194,26 +195,30 @@ fun AnalyticsTab(
                 selectedTab = selectedTypeTab,
                 onTabSelected = { selectedTypeTab = it }
             )
-            Spacer(modifier = Modifier.height(18.dp))
 
             // Pie chart
             AndroidView(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(250.dp),
+                    .height(300.dp),
                 factory = { context ->
                     val pieChart = PieChart(context)
+                    pieChart.holeRadius = 35f
+                    pieChart.transparentCircleRadius = 38f
                     pieChart.setUsePercentValues(false)
                     pieChart.setDrawEntryLabels(true)
-                    pieChart.setEntryLabelTextSize(14f)
+                    pieChart.setEntryLabelTextSize(8f)
                     pieChart.setEntryLabelColor(android.graphics.Color.rgb(24, 49, 83))
                     pieChart.setEntryLabelTypeface(android.graphics.Typeface.DEFAULT_BOLD)
                     pieChart.legend.isEnabled = false
                     pieChart.description.isEnabled = false
                     pieChart.setDrawCenterText(true)
-                    pieChart.setCenterTextSize(18f)
+                    pieChart.setCenterTextSize(12f)
                     pieChart.setCenterTextColor(android.graphics.Color.rgb(24, 49, 83))
                     pieChart.setCenterTextTypeface(android.graphics.Typeface.DEFAULT_BOLD)
+                    pieChart.setExtraOffsets(20f, 30f, 20f, 30f)
+                    pieChart.minAngleForSlices = 24f
+                    pieChart.rotationAngle = 30f
                     pieChart
                 },
                 update = { pieChart ->
@@ -222,8 +227,8 @@ fun AnalyticsTab(
                     dataSet.sliceSpace = 3f
                     dataSet.selectionShift = 5f
                     dataSet.yValuePosition = PieDataSet.ValuePosition.OUTSIDE_SLICE
-                    dataSet.valueLinePart1Length = 0.4f
-                    dataSet.valueLinePart2Length = 0.3f
+                    dataSet.valueLinePart1Length = 0.6f // Longer lines
+                    dataSet.valueLinePart2Length = 0.5f // Longer lines
                     dataSet.valueLineColor = android.graphics.Color.DKGRAY
                     dataSet.valueFormatter = object : IValueFormatter {
                         override fun getFormattedValue(
@@ -235,15 +240,14 @@ fun AnalyticsTab(
                             return "${value.roundToInt()} $shortFormCurrency"
                         }
                     }
-
+                    dataSet.valueTextSize = 8f // Smaller value labels
                     val data = PieData(dataSet)
-                    data.setValueTextSize(16f)
+                    data.setValueTextSize(8f)
                     pieChart.data = data
                     pieChart.centerText = "${centerText}\n${total.roundToInt()} $shortFormCurrency"
                     pieChart.invalidate()
                 }
             )
-            Spacer(modifier = Modifier.height(18.dp))
 
             // --- Category List with Proper Formatting and Spacing ---
             if (selectedType == "Spending" || selectedType == "Earning") {
@@ -256,9 +260,14 @@ fun AnalyticsTab(
                     modifier = Modifier
                         .fillMaxWidth()
                         .heightIn(max = 250.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp), // More space between items
-                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp) // Padding around content
-                ) {
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    contentPadding = PaddingValues(
+                        start = 8.dp,
+                        end = 8.dp,
+                        top = 8.dp,
+                        bottom = 112.dp
+                    )
+                ){
                     items(list.size) { index ->
                         val (labelWithLimit, amount) = list[index]
                         val parts = labelWithLimit.split("|")
@@ -281,7 +290,7 @@ fun AnalyticsTab(
                                     color = PrimaryBlue,
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis,
-                                    modifier = Modifier.weight(1f) // Ensures category takes available space
+                                    modifier = Modifier.weight(1f)
                                 )
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text(
