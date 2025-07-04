@@ -26,7 +26,8 @@ android {
         versionName = project.findProperty("versionName")?.toString() ?: "1.0.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        buildConfigField("String", "HF_API_TOKEN", "\"${localProperties["HF_API_TOKEN"] ?: ""}\"")
+        buildConfigField("String", "GEMINI_API_KEY", "\"${localProperties["GEMINI_API_KEY"] ?: ""}\"")
+        //buildConfigField("String", "HF_API_TOKEN", "\"${localProperties["HF_API_TOKEN"] ?: ""}\"")
         buildConfigField("String", "CURRENCYLAYER_API_KEY", "\"${localProperties["CURRENCYLAYER_API_KEY"] ?: ""}\"")
 
     }
@@ -92,4 +93,6 @@ dependencies {
     implementation("com.squareup.okhttp3:okhttp:4.11.0")
     implementation("org.json:json:20210307")
     implementation ("com.google.android.gms:play-services-ads:24.3.0")
+    implementation("com.google.ai.client.generativeai:generativeai:0.1.1")
+
 }

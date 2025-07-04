@@ -1,6 +1,6 @@
 package com.example.myapplication.screens.tabs
 
-
+import com.example.myapplication.helpers.askGemini
 import android.provider.SyncStateContract.Helpers.update
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -500,7 +500,7 @@ fun AnalyticsTab(
 
             Now answer this question: $userInput
         """.trimIndent()
-                                    askHuggingFace(fullPrompt) { reply ->
+                                    askGemini(fullPrompt) { reply ->
                                         aiResponse = reply
                                         aiLoading = false
                                     }
