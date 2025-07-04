@@ -39,9 +39,9 @@ jobs:
         working-directory: MobileApp
         run: touch local.properties
 
-      - name: Inject Hugging Face API Token into local.properties
+      - name: Inject Gemini API Key into local.properties
         working-directory: MobileApp
-        run: echo "HF_API_TOKEN=${{ secrets.HF_API_TOKEN }}" >> local.properties
+        run: echo "GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}" >> local.properties
 
       - name: Inject CurrencyLayer API Key into local.properties
         working-directory: MobileApp
