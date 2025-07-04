@@ -31,7 +31,6 @@ import com.example.myapplication.R
 import com.example.myapplication.components.AdBanner
 import com.example.myapplication.components.CustomSegmentedTabRow
 import com.example.myapplication.data.datastore.UserPreferences
-import com.example.myapplication.helpers.askHuggingFace
 import com.example.myapplication.screens.dialogs.CustomDateRangeDialog
 import com.example.myapplication.ui.theme.COMBINED_COLORS
 import com.example.myapplication.ui.theme.PrimaryBlue
