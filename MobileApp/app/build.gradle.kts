@@ -27,7 +27,6 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "GEMINI_API_KEY", "\"${localProperties["GEMINI_API_KEY"] ?: ""}\"")
-        //buildConfigField("String", "HF_API_TOKEN", "\"${localProperties["HF_API_TOKEN"] ?: ""}\"")
         buildConfigField("String", "CURRENCYLAYER_API_KEY", "\"${localProperties["CURRENCYLAYER_API_KEY"] ?: ""}\"")
 
     }

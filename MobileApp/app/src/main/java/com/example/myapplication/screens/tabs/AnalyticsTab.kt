@@ -1,7 +1,6 @@
 package com.example.myapplication.screens.tabs
 
 import com.example.myapplication.helpers.askGemini
-import android.provider.SyncStateContract.Helpers.update
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -31,7 +30,6 @@ import com.example.myapplication.R
 import com.example.myapplication.components.AdBanner
 import com.example.myapplication.components.CustomSegmentedTabRow
 import com.example.myapplication.data.datastore.UserPreferences
-import com.example.myapplication.helpers.askHuggingFace
 import com.example.myapplication.screens.dialogs.CustomDateRangeDialog
 import com.example.myapplication.ui.theme.COMBINED_COLORS
 import com.example.myapplication.ui.theme.PrimaryBlue
@@ -53,7 +51,6 @@ import kotlin.math.roundToInt
 fun AnalyticsTab(
     transactionViewModel: TransactionViewModel,
     currencyViewModel: CurrencyViewModel,
-    currencySymbol: String
 ) {
     val timeTab = listOf("All", "Today", "Week", "Month", "Custom")
     var selectedTimeTab by remember { mutableIntStateOf(0) }
