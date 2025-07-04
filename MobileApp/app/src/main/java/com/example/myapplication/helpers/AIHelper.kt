@@ -6,9 +6,12 @@ import org.json.JSONArray
 import org.json.JSONObject
 import java.io.IOException
 import com.example.myapplication.BuildConfig
+import com.google.ai.client.generativeai.GenerativeModel
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.launch
 
 /*---- For Android Studio  ----*/
-//const val HF_API_TOKEN = ""
+const val HF_API_TOKEN = ""
 
 fun askHuggingFace(question: String, onResult: (String) -> Unit) {
     val client = OkHttpClient.Builder()
@@ -17,10 +20,10 @@ fun askHuggingFace(question: String, onResult: (String) -> Unit) {
         .writeTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
         .build()
 
-    val url = "https://api-inference.huggingface.co/models/HuggingFaceH4/zephyr-7b-beta"
+    val url = "https://api-inference.huggingface.co/models/gpt2"
 
     /*---- For Physical Device  ----*/
-    val apiKey = BuildConfig.HF_API_TOKEN
+    //val apiKey = BuildConfig.HF_API_TOKEN
 
     val json = JSONObject().apply {
         put("inputs", question)
@@ -30,11 +33,12 @@ fun askHuggingFace(question: String, onResult: (String) -> Unit) {
     )
     val request = Request.Builder()
         .url(url)
+
         /*---- For Android Studio  ----*/
-        //.header("Authorization", "Bearer $HF_API_TOKEN")
+        .header("Authorization", "Bearer $HF_API_TOKEN")
 
         /*---- For Physical Device  ----*/
-        .header("Authorization", "Bearer $apiKey")
+        //.header("Authorization", "Bearer $apiKey")
 
         .post(body)
         .build()
@@ -45,21 +49,41 @@ fun askHuggingFace(question: String, onResult: (String) -> Unit) {
 
         override fun onResponse(call: Call, response: Response) {
             val bodyString = response.body?.string()
-            if (response.code == 403) {
-                onResult("Error: 403 Forbidden. Check your Hugging Face API token and model access.")
-                return
-            }
-            if (bodyString != null) {
-                try {
-                    val arr = JSONArray(bodyString)
-                    val aiReply = arr.getJSONObject(0).getString("generated_text")
-                    onResult(aiReply.trim())
-                } catch (e: Exception) {
-                    onResult("Unexpected response: $bodyString")
+            when (response.code) {
+                200 -> {
+                    try {
+                        val arr = JSONArray(bodyString)
+                        val aiReply = arr.getJSONObject(0).getString("generated_text")
+                        onResult(aiReply.trim())
+                    } catch (e: Exception) {
+                        onResult("Unexpected response format: $bodyString")
+                    }
                 }
-            } else {
-                onResult("No response from AI.")
+                403 -> onResult("Error: 403 Forbidden. Check your Hugging Face API token and model access.")
+                404 -> onResult("Error: 404 Not Found. Check the model ID and your access rights.")
+                else -> onResult("Error: ${response.code}. $bodyString")
             }
         }
     })
 }
+
+fun askGemini(question: String, onResult: (String) -> Unit) {
+    val generativeModel = GenerativeModel(
+        modelName = "gemini-2.5-pro",
+
+        /*---- For Physical Device  ----*/
+        apiKey = BuildConfig.GEMINI_API_KEY
+
+        /*---- For Android Studio  ----*/
+        //apiKey = "" //API Key here
+    )
+    MainScope().launch {
+        try {
+            val response = generativeModel.generateContent(question)
+            onResult(response.text.toString())
+        } catch (e: Exception) {
+            onResult("Failed: ${e.message}")
+        }
+    }
+}
+
