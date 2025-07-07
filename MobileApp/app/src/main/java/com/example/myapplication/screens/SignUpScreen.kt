@@ -15,6 +15,8 @@ import androidx.navigation.NavController
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -32,9 +34,17 @@ import com.example.myapplication.ui.theme.PrimaryBlue
 import com.example.myapplication.viewmodel.AuthViewModel
 import com.example.myapplication.viewmodel.category.CategoryViewModel
 import com.example.myapplication.viewmodel.transaction.TransactionViewModel
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.windowInsetsPadding
 
 @Composable
-fun SignUpScreen(navController: NavController, viewModel: AuthViewModel, categoryViewModel: CategoryViewModel, transactionViewModel: TransactionViewModel) {
+fun SignUpScreen(
+    navController: NavController,
+    viewModel: AuthViewModel,
+    categoryViewModel: CategoryViewModel,
+    transactionViewModel: TransactionViewModel
+) {
     var email by remember { mutableStateOf("test@123.com") }
     var password by remember { mutableStateOf("1234567") }
     var confirmPassword by remember { mutableStateOf("1234567") }
@@ -57,7 +67,9 @@ fun SignUpScreen(navController: NavController, viewModel: AuthViewModel, categor
             .padding(horizontal = 24.dp)
     ) {
         BackButton(
-            modifier = Modifier.align(Alignment.TopStart),
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .windowInsetsPadding(WindowInsets.statusBars),
             onClick = { navController.popBackStack() }
         )
 
@@ -105,18 +117,22 @@ fun SignUpScreen(navController: NavController, viewModel: AuthViewModel, categor
             )
             Spacer(Modifier.height(16.dp))
             MyButton(
-                onClick = { viewModel.signUp(email, password, displayName) {
-                    if (categoryViewModel.categories.value.isEmpty()) {
-                        categoryViewModel.initializeDefaults(it)
-                    } else {
-                        categoryViewModel.syncDataWhenSignUp(it)
-                        transactionViewModel.syncDataWhenSignUp(it)
+                onClick = {
+                    viewModel.signUp(email, password, displayName) {
+                        if (categoryViewModel.categories.value.isEmpty()) {
+                            categoryViewModel.initializeDefaults(it)
+                        } else {
+                            categoryViewModel.syncDataWhenSignUp(it)
+                            transactionViewModel.syncDataWhenSignUp(it)
+                        }
                     }
-                } },
-                enabled = !isLoading && email.isNotBlank() && password.isNotBlank() && password.length >= 6 && confirmPassword.isNotBlank() && displayName.isNotBlank() && password == confirmPassword,
+                },
+                enabled = !isLoading && email.isNotBlank() && password.isNotBlank()
+                        && password.length >= 6 && confirmPassword.isNotBlank()
+                        && displayName.isNotBlank() && password == confirmPassword,
             ) {
                 if (isLoading) {
-                    androidx.compose.material3.CircularProgressIndicator(
+                    CircularProgressIndicator(
                         modifier = Modifier
                             .padding(4.dp)
                             .size(20.dp),
@@ -129,11 +145,3 @@ fun SignUpScreen(navController: NavController, viewModel: AuthViewModel, categor
         }
     }
 }
-//
-//
-//@Preview(showBackground = true)
-//@Composable
-//fun SignUpScreenPreview() {
-//    val navController = rememberNavController()
-//    SignUpScreen(navController = navController, viewModel = AuthViewModel())
-//}

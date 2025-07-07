@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -32,6 +33,9 @@ import com.example.myapplication.components.BackButton
 import com.example.myapplication.components.MyButton
 import com.example.myapplication.ui.theme.PrimaryBlue
 import com.example.myapplication.viewmodel.AuthViewModel
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.statusBars
+
 
 @Composable
 fun LoginScreen(
@@ -58,9 +62,12 @@ fun LoginScreen(
             .fillMaxSize()
             .padding(horizontal = 24.dp)
     ) {
+        // Apply status bar padding ONLY to the back button
         if (navController.previousBackStackEntry != null) {
             BackButton(
-                modifier = Modifier.align(Alignment.TopStart),
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .windowInsetsPadding(WindowInsets.statusBars),
                 onClick = { navController.popBackStack() }
             )
         }
@@ -147,4 +154,3 @@ fun LoginScreen(
         }
     }
 }
-
