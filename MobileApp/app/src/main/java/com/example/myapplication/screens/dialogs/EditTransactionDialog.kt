@@ -3,6 +3,7 @@ package com.example.myapplication.screens.dialogs
 import android.content.Intent
 import android.graphics.Bitmap
 import android.net.Uri
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -13,7 +14,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.LocationOn
@@ -46,9 +46,9 @@ import com.example.myapplication.ui.theme.White
 import com.example.myapplication.viewmodel.AuthViewModel
 import com.example.myapplication.viewmodel.LocationViewModel
 import com.example.myapplication.viewmodel.transaction.TransactionViewModel
-import com.google.android.play.integrity.internal.s
 import java.text.SimpleDateFormat
 import java.util.*
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -68,6 +68,9 @@ fun EditTransactionDialog(
     var oldImageBitmap by remember { mutableStateOf<Bitmap?>(null) }
     var oldImageUri by remember { mutableStateOf<Uri?>(null) }
 
+    // Confirmation dialog state
+    var showDeleteConfirmation by remember { mutableStateOf(false) }
+
     // Prefill ViewModel state ONCE per transaction
     LaunchedEffect(transaction.transactionId) {
         viewModel.resetInputFields(
@@ -81,7 +84,6 @@ fun EditTransactionDialog(
             imagePath = transaction.imageUrl
         )
         if (transaction.imageUrl != null) {
-            println("Image URL: ${transaction.imageUrl}")
             val image =
                 loadImageUriOrBitmapFromInternalStorage(context, viewModel.inputImagePath ?: "")
             selectedImageBitmap = image as? Bitmap
@@ -106,7 +108,7 @@ fun EditTransactionDialog(
         timeZone = TimeZone.getTimeZone("UTC")
     }
     val formattedDate = utcFormat.format(
-    Date(viewModel.inputDate ?: System.currentTimeMillis())
+        Date(viewModel.inputDate ?: System.currentTimeMillis())
     )
 
     // Location logic
@@ -128,13 +130,9 @@ fun EditTransactionDialog(
         }
     }
 
-
     var showImagePickerDialog by remember { mutableStateOf(false) }
     val cameraPermissionLauncher =
         rememberCameraPermissionHandler(onSuccess = { showImagePickerDialog = true })
-
-
-
 
     val cameraLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicturePreview(),
@@ -206,7 +204,7 @@ fun EditTransactionDialog(
                 ) {
                     IconButton(onClick = onDismiss) {
                         Icon(
-                            Icons.Default.ArrowBack,
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",
                             tint = PrimaryBlue
                         )
@@ -221,8 +219,7 @@ fun EditTransactionDialog(
                     )
                     IconButton(
                         onClick = {
-                            onDelete()
-                            onDismiss()
+                            showDeleteConfirmation = true
                         }
                     ) {
                         Icon(
@@ -497,6 +494,22 @@ fun EditTransactionDialog(
                     }
                 }
             }
+        }
+
+        // Confirmation dialog overlay
+        if (showDeleteConfirmation) {
+            ConfirmationDialog(
+                title = "Delete Transaction",
+                message = "Are you sure you want to delete this transaction? This action cannot be undone.",
+                onConfirm = {
+                    showDeleteConfirmation = false
+                    onDelete()
+                    Toast.makeText(context, "Transaction deleted", Toast.LENGTH_SHORT).show()
+                    onDismiss()
+                },
+                onCancel = { showDeleteConfirmation = false },
+                onDismiss = { showDeleteConfirmation = false }
+            )
         }
     }
 }
