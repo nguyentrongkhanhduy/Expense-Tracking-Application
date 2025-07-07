@@ -1,5 +1,6 @@
 package com.example.myapplication.screens
 
+import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -35,7 +36,10 @@ import com.example.myapplication.ui.theme.PrimaryBlue
 import com.example.myapplication.viewmodel.AuthViewModel
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.statusBars
-
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.ui.platform.LocalContext
+import com.example.myapplication.screens.dialogs.StyledAlertDialog
 
 @Composable
 fun LoginScreen(
@@ -43,14 +47,19 @@ fun LoginScreen(
     viewModel: AuthViewModel,
     showGuestOption: Boolean = false
 ) {
-    var email by remember { mutableStateOf("test@123.com") }
-    var password by remember { mutableStateOf("1234567") }
+    var email by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    var emailError by remember { mutableStateOf<String?>(null) }
+    var passwordError by remember { mutableStateOf<String?>(null) }
 
     val isSignedIn by viewModel.isSignedIn.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
+    val errorMessage by viewModel.errorMessage.collectAsState()
+    val context = LocalContext.current
 
     LaunchedEffect(isSignedIn) {
         if (isSignedIn) {
+            Toast.makeText(context, "Login Successful", Toast.LENGTH_SHORT).show()
             navController.navigate("home") {
                 popUpTo("login") { inclusive = true }
             }
@@ -62,13 +71,22 @@ fun LoginScreen(
             .fillMaxSize()
             .padding(horizontal = 24.dp)
     ) {
-        // Apply status bar padding ONLY to the back button
         if (navController.previousBackStackEntry != null) {
             BackButton(
                 modifier = Modifier
                     .align(Alignment.TopStart)
                     .windowInsetsPadding(WindowInsets.statusBars),
                 onClick = { navController.popBackStack() }
+            )
+        }
+
+        // Show AlertDialog if there's an error message
+        if (errorMessage != null) {
+            StyledAlertDialog(
+                title = "Login Error",
+                message = errorMessage ?: "",
+                confirmButtonText = "OK",
+                onConfirm = { viewModel.clearError() }
             )
         }
 
@@ -87,33 +105,46 @@ fun LoginScreen(
             Spacer(Modifier.height(32.dp))
             OutlinedTextField(
                 value = email,
-                onValueChange = { email = it },
+                onValueChange = {
+                    email = it
+                    if (emailError != null) emailError = null
+                },
                 label = { Text("Email") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp)
+                isError = emailError != null,
+                supportingText = { emailError?.let { Text(it) } },
+                enabled = !isLoading,
+                modifier = Modifier.fillMaxWidth()
             )
-            Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(12.dp))
             OutlinedTextField(
                 value = password,
-                onValueChange = { password = it },
+                onValueChange = {
+                    password = it
+                    if (passwordError != null) passwordError = null
+                },
                 label = { Text("Password") },
                 visualTransformation = PasswordVisualTransformation(),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp)
+                isError = passwordError != null,
+                supportingText = { passwordError?.let { Text(it) } },
+                enabled = !isLoading,
+                modifier = Modifier.fillMaxWidth()
             )
-            Spacer(Modifier.height(32.dp))
+            Spacer(Modifier.height(16.dp))
             MyButton(
                 onClick = {
-                    viewModel.signIn(email, password) {
-                        viewModel.setSyncPrompt(true)
+                    emailError = if (!AuthViewModel.isValidEmail(email)) "Invalid email address" else null
+                    passwordError = if (password.isBlank()) "Password cannot be empty" else null
+
+                    if (emailError == null && passwordError == null) {
+                        viewModel.signIn(email, password) {
+                            viewModel.setSyncPrompt(true)
+                        }
                     }
                 },
-                enabled = !isLoading && email.isNotBlank() && password.isNotBlank()
+                enabled = !isLoading
             ) {
                 if (isLoading) {
-                    androidx.compose.material3.CircularProgressIndicator(
+                    CircularProgressIndicator(
                         modifier = Modifier
                             .padding(4.dp)
                             .size(20.dp),
@@ -137,9 +168,7 @@ fun LoginScreen(
                     modifier = Modifier.clickable { navController.navigate("signup") }
                 )
             }
-
             Spacer(Modifier.height(32.dp))
-
             if (showGuestOption) {
                 Text("Or", color = PrimaryBlue, fontSize = 18.sp)
                 Spacer(Modifier.height(16.dp))

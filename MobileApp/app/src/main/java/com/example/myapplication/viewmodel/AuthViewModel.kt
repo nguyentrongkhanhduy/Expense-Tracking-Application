@@ -7,7 +7,6 @@ import com.example.myapplication.services.AuthApiService
 import com.example.myapplication.services.RetrofitClient
 import com.example.myapplication.services.SignUpRequest
 import com.example.myapplication.services.TokenRequest
-import com.github.mikephil.charting.utils.Utils.init
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -32,14 +31,18 @@ class AuthViewModel : ViewModel() {
     private val _shouldPromtSync = MutableStateFlow(false)
     val shouldPromtSync: StateFlow<Boolean> = _shouldPromtSync
 
+    // NEW: Error message state
+    private val _errorMessage = MutableStateFlow<String?>(null)
+    val errorMessage: StateFlow<String?> = _errorMessage
+
     fun setSyncPrompt(shouldPrompt: Boolean) {
         _shouldPromtSync.value = shouldPrompt
     }
 
     private val authService =
 
-        /*---- For Android Studio  ----*/
-//        RetrofitClient.createService(AuthApiService::class.java, "http://10.0.2.2:3000") //Simulator
+            /*---- For Android Studio  ----*/
+        //RetrofitClient.createService(AuthApiService::class.java, "http://10.0.2.2:3000")
 
         /*---- For Physical Device  ----*/
         RetrofitClient.createService(AuthApiService::class.java, "https://expense-app-server-mocha.vercel.app")
@@ -58,15 +61,24 @@ class AuthViewModel : ViewModel() {
                     _isSignedIn.value = true
                 } catch (e: Exception) {
                     println("Error: ${e.message}")
-
                 }
             }
+        }
+    }
+    companion object {
+        fun isValidEmail(email: String): Boolean {
+            return android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
+        }
+
+        fun isValidPassword(password: String): Boolean {
+            return password.length >= 6
         }
     }
 
     fun signIn(email: String, password: String, onSignInSuccess: (userId: String) -> Unit) {
         _isLoading.value = true
         _isSignedIn.value = false
+        _errorMessage.value = null
         viewModelScope.launch {
             auth.signInWithEmailAndPassword(email, password)
                 .addOnSuccessListener { result ->
@@ -83,14 +95,15 @@ class AuthViewModel : ViewModel() {
                             } catch (e: Exception) {
                                 println("Error: ${e.message}")
                                 _isLoading.value = false
+                                _errorMessage.value = "Login failed. Please try again."
                             }
                         }
                     }
-
                 }
                 .addOnFailureListener { exception ->
                     println("Error: ${exception.message}")
                     _isLoading.value = false
+                    _errorMessage.value = "Incorrect email or password"
                 }
         }
     }
@@ -125,5 +138,9 @@ class AuthViewModel : ViewModel() {
         _user.value = null
         _isSignedIn.value = false
         _isSignedUp.value = false
+    }
+
+    fun clearError() {
+        _errorMessage.value = null
     }
 }
