@@ -36,10 +36,13 @@ import com.example.myapplication.ui.theme.PrimaryBlue
 import com.example.myapplication.viewmodel.AuthViewModel
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.statusBars
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.ui.platform.LocalContext
 import com.example.myapplication.screens.dialogs.StyledAlertDialog
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.layout.imePadding
+
 
 @Composable
 fun LoginScreen(
@@ -93,7 +96,9 @@ fun LoginScreen(
         Column(
             modifier = Modifier
                 .align(Alignment.Center)
-                .padding(16.dp),
+                .padding(16.dp)
+                .verticalScroll(rememberScrollState())
+                .imePadding(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
@@ -132,11 +137,14 @@ fun LoginScreen(
             Spacer(Modifier.height(16.dp))
             MyButton(
                 onClick = {
-                    emailError = if (!AuthViewModel.isValidEmail(email)) "Invalid email address" else null
-                    passwordError = if (password.isBlank()) "Password cannot be empty" else null
+                    val trimmedEmail = email.trim()
+                    val trimmedPassword = password.trim()
+
+                    emailError = if (!AuthViewModel.isValidEmail(trimmedEmail)) "Invalid email address" else null
+                    passwordError = if (trimmedPassword.isBlank()) "Password cannot be empty" else null
 
                     if (emailError == null && passwordError == null) {
-                        viewModel.signIn(email, password) {
+                        viewModel.signIn(trimmedEmail, trimmedPassword) {
                             viewModel.setSyncPrompt(true)
                         }
                     }
@@ -154,6 +162,7 @@ fun LoginScreen(
                     Text("Login", fontSize = 20.sp, fontWeight = FontWeight.Bold)
                 }
             }
+
             Spacer(Modifier.height(24.dp))
             Row(
                 verticalAlignment = Alignment.CenterVertically
