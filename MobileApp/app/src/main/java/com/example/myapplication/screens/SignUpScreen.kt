@@ -40,6 +40,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.imePadding
+import com.example.myapplication.screens.dialogs.StyledAlertDialog
 
 @Composable
 fun SignUpScreen(
@@ -62,6 +63,7 @@ fun SignUpScreen(
     val isLoading by viewModel.isLoading.collectAsState()
 
     val context = LocalContext.current
+    val errorMessage by viewModel.errorMessage.collectAsState()
 
     LaunchedEffect(isSignedUp) {
         if (isSignedUp) {
@@ -84,7 +86,14 @@ fun SignUpScreen(
                 .windowInsetsPadding(WindowInsets.statusBars),
             onClick = { navController.popBackStack() }
         )
-
+        if (errorMessage != null) {
+            StyledAlertDialog(
+                title = "Sign Up Error",
+                message = errorMessage ?: "",
+                confirmButtonText = "OK",
+                onConfirm = { viewModel.clearError() }
+            )
+        }
         Column(
             modifier = Modifier
                 .align(Alignment.Center)
