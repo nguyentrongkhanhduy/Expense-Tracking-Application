@@ -26,7 +26,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
 import androidx.navigation.compose.rememberNavController
 import com.example.myapplication.components.BackButton
@@ -37,9 +36,10 @@ import com.example.myapplication.viewmodel.category.CategoryViewModel
 import com.example.myapplication.viewmodel.transaction.TransactionViewModel
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.statusBars
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.ui.platform.LocalContext
-
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.layout.imePadding
 
 @Composable
 fun SignUpScreen(
@@ -88,7 +88,9 @@ fun SignUpScreen(
         Column(
             modifier = Modifier
                 .align(Alignment.Center)
-                .padding(16.dp),
+                .padding(16.dp)
+            .verticalScroll(rememberScrollState()) // Make scrollable
+            .imePadding(),                         // Handle keyboard insets
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
@@ -154,14 +156,18 @@ fun SignUpScreen(
             Spacer(Modifier.height(16.dp))
             MyButton(
                 onClick = {
-                    // Validation logic
-                    emailError = if (!AuthViewModel.isValidEmail(email)) "Invalid email address" else null
-                    passwordError = if (!AuthViewModel.isValidPassword(password)) "Password must be at least 6 characters" else null
-                    confirmPasswordError = if (confirmPassword != password) "Passwords do not match" else null
-                    displayNameError = if (displayName.isBlank()) "Display name cannot be empty" else null
+                    val trimmedEmail = email.trim()
+                    val trimmedPassword = password.trim()
+                    val trimmedConfirmPassword = confirmPassword.trim()
+                    val trimmedDisplayName = displayName.trim()
+
+                    emailError = if (!AuthViewModel.isValidEmail(trimmedEmail)) "Invalid email address" else null
+                    passwordError = if (!AuthViewModel.isValidPassword(trimmedPassword)) "Password must be at least 6 characters" else null
+                    confirmPasswordError = if (trimmedConfirmPassword != trimmedPassword) "Passwords do not match" else null
+                    displayNameError = if (trimmedDisplayName.isBlank()) "Display name cannot be empty" else null
 
                     if (emailError == null && passwordError == null && confirmPasswordError == null && displayNameError == null) {
-                        viewModel.signUp(email, password, displayName) {
+                        viewModel.signUp(trimmedEmail, trimmedPassword, trimmedDisplayName) {
                             if (categoryViewModel.categories.value.isEmpty()) {
                                 categoryViewModel.initializeDefaults(it)
                             } else {
