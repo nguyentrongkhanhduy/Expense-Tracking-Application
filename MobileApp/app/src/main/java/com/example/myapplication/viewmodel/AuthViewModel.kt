@@ -7,6 +7,7 @@ import com.example.myapplication.services.AuthApiService
 import com.example.myapplication.services.RetrofitClient
 import com.example.myapplication.services.SignUpRequest
 import com.example.myapplication.services.TokenRequest
+import com.github.mikephil.charting.utils.Utils.init
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -124,11 +125,13 @@ class AuthViewModel : ViewModel() {
                 _isSignedUp.value = true
                 _isLoading.value = false
                 _isSignedIn.value = true
+                auth.signInWithEmailAndPassword(email, password)
                 onSignUpSuccess(response.uid)
                 println("User: ${response.email}")
             } catch (e: Exception) {
                 println("Error: ${e.message}")
                 _isLoading.value = false
+                _errorMessage.value = "Sign up failed. Please try again."
             }
         }
     }
