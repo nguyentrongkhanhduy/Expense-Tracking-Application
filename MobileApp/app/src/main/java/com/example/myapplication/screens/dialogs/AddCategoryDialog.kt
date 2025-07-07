@@ -1,21 +1,19 @@
 package com.example.myapplication.screens.dialogs
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
@@ -26,8 +24,8 @@ import androidx.compose.ui.window.DialogProperties
 import com.example.myapplication.ui.theme.PrimaryBlue
 import com.example.myapplication.ui.theme.PrimaryRed
 import com.example.myapplication.ui.theme.White
-import com.example.myapplication.ui.theme.InputBlue
 import com.example.myapplication.viewmodel.category.CategoryViewModel
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -36,13 +34,13 @@ fun AddCategoryDialog(
     onDismiss: () -> Unit,
     onSave: (String, String, String, String?) -> Unit
 ) {
+    val context = LocalContext.current
     val options = listOf("expense", "income")
     var expanded by remember { mutableStateOf(false) }
 
     Dialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false)
-
     ) {
         Card(
             shape = RoundedCornerShape(28.dp),
@@ -66,7 +64,7 @@ fun AddCategoryDialog(
                 ) {
                     IconButton(onClick = onDismiss) {
                         Icon(
-                            imageVector = Icons.Default.ArrowBack,
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",
                             tint = PrimaryBlue
                         )
@@ -145,41 +143,26 @@ fun AddCategoryDialog(
                     modifier = Modifier.fillMaxWidth()
                 )
 
-                // Icon with plus button
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
+                // Icon field (NO icon button)
+                OutlinedTextField(
+                    value = viewModel.inputIcon,
+                    onValueChange = {
+                        viewModel.inputIcon = it
+                        viewModel.validateInputs()
+                    },
+                    label = { Text("Generate Icon") },
+                    isError = viewModel.iconError != null,
+                    supportingText = {
+                        viewModel.iconError?.let {
+                            Text(
+                                it,
+                                color = Color.Red,
+                                fontSize = 12.sp
+                            )
+                        }
+                    },
                     modifier = Modifier.fillMaxWidth()
-                ) {
-                    OutlinedTextField(
-                        value = viewModel.inputIcon,
-                        onValueChange = {
-                            viewModel.inputIcon = it
-                            viewModel.validateInputs()
-                        },
-                        label = { Text("Generate Icon") },
-                        isError = viewModel.iconError != null,
-                        supportingText = {
-                            viewModel.iconError?.let {
-                                Text(
-                                    it,
-                                    color = Color.Red,
-                                    fontSize = 12.sp
-                                )
-                            }
-                        },
-                        modifier = Modifier.weight(1f)
-                    )
-                    Spacer(modifier = Modifier.width(12.dp))
-                    IconButton(
-                        onClick = { /* Generate icon logic here */ },
-                        modifier = Modifier
-                            .size(36.dp)
-                            .clip(CircleShape)
-                            .background(InputBlue)
-                    ) {
-                        Icon(Icons.Default.Add, contentDescription = "Generate Icon", tint = White)
-                    }
-                }
+                )
 
                 OutlinedTextField(
                     value = viewModel.inputLimit,
@@ -225,6 +208,8 @@ fun AddCategoryDialog(
                                     viewModel.inputIcon,
                                     viewModel.inputLimit.takeIf { it.isNotBlank() }
                                 )
+                                // Show toast on create
+                                Toast.makeText(context, "Category created", Toast.LENGTH_SHORT).show()
                                 onDismiss()
                             }
                         },
