@@ -1,5 +1,6 @@
 package com.example.myapplication.screens
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -37,6 +38,8 @@ import com.example.myapplication.viewmodel.transaction.TransactionViewModel
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.ui.platform.LocalContext
+
 
 @Composable
 fun SignUpScreen(
@@ -45,21 +48,30 @@ fun SignUpScreen(
     categoryViewModel: CategoryViewModel,
     transactionViewModel: TransactionViewModel
 ) {
-    var email by remember { mutableStateOf("test@123.com") }
-    var password by remember { mutableStateOf("1234567") }
-    var confirmPassword by remember { mutableStateOf("1234567") }
-    var displayName by remember { mutableStateOf("test123") }
+    var email by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    var confirmPassword by remember { mutableStateOf("") }
+    var displayName by remember { mutableStateOf("") }
+
+    var emailError by remember { mutableStateOf<String?>(null) }
+    var passwordError by remember { mutableStateOf<String?>(null) }
+    var confirmPasswordError by remember { mutableStateOf<String?>(null) }
+    var displayNameError by remember { mutableStateOf<String?>(null) }
 
     val isSignedUp by viewModel.isSignedUp.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
 
+    val context = LocalContext.current
+
     LaunchedEffect(isSignedUp) {
         if (isSignedUp) {
+            Toast.makeText(context, "Account successfully created", Toast.LENGTH_LONG).show()
             navController.navigate("home") {
                 popUpTo("signup") { inclusive = true }
             }
         }
     }
+
 
     Box(
         modifier = Modifier
@@ -88,48 +100,78 @@ fun SignUpScreen(
             Spacer(Modifier.height(32.dp))
             OutlinedTextField(
                 value = email,
-                onValueChange = { email = it },
+                onValueChange = {
+                    email = it
+                    if (emailError != null) emailError = null
+                },
                 label = { Text("Email") },
+                isError = emailError != null,
+                supportingText = { emailError?.let { Text(it) } },
+                enabled = !isLoading,
                 modifier = Modifier.fillMaxWidth()
             )
             Spacer(Modifier.height(12.dp))
             OutlinedTextField(
                 value = password,
-                onValueChange = { password = it },
+                onValueChange = {
+                    password = it
+                    if (passwordError != null) passwordError = null
+                },
                 label = { Text("Password") },
                 visualTransformation = PasswordVisualTransformation(),
+                isError = passwordError != null,
+                supportingText = { passwordError?.let { Text(it) } },
+                enabled = !isLoading,
                 modifier = Modifier.fillMaxWidth()
             )
             Spacer(Modifier.height(12.dp))
             OutlinedTextField(
                 value = confirmPassword,
-                onValueChange = { confirmPassword = it },
+                onValueChange = {
+                    confirmPassword = it
+                    if (confirmPasswordError != null) confirmPasswordError = null
+                },
                 label = { Text("Confirm Password") },
                 visualTransformation = PasswordVisualTransformation(),
+                isError = confirmPasswordError != null,
+                supportingText = { confirmPasswordError?.let { Text(it) } },
+                enabled = !isLoading,
                 modifier = Modifier.fillMaxWidth()
             )
             Spacer(Modifier.height(12.dp))
             OutlinedTextField(
                 value = displayName,
-                onValueChange = { displayName = it },
+                onValueChange = {
+                    displayName = it
+                    if (displayNameError != null) displayNameError = null
+                },
                 label = { Text("Display Name") },
+                isError = displayNameError != null,
+                supportingText = { displayNameError?.let { Text(it) } },
+                enabled = !isLoading,
                 modifier = Modifier.fillMaxWidth()
             )
             Spacer(Modifier.height(16.dp))
             MyButton(
                 onClick = {
-                    viewModel.signUp(email, password, displayName) {
-                        if (categoryViewModel.categories.value.isEmpty()) {
-                            categoryViewModel.initializeDefaults(it)
-                        } else {
-                            categoryViewModel.syncDataWhenSignUp(it)
-                            transactionViewModel.syncDataWhenSignUp(it)
+                    // Validation logic
+                    emailError = if (!AuthViewModel.isValidEmail(email)) "Invalid email address" else null
+                    passwordError = if (!AuthViewModel.isValidPassword(password)) "Password must be at least 6 characters" else null
+                    confirmPasswordError = if (confirmPassword != password) "Passwords do not match" else null
+                    displayNameError = if (displayName.isBlank()) "Display name cannot be empty" else null
+
+                    if (emailError == null && passwordError == null && confirmPasswordError == null && displayNameError == null) {
+                        viewModel.signUp(email, password, displayName) {
+                            if (categoryViewModel.categories.value.isEmpty()) {
+                                categoryViewModel.initializeDefaults(it)
+                            } else {
+                                categoryViewModel.syncDataWhenSignUp(it)
+                                transactionViewModel.syncDataWhenSignUp(it)
+                            }
                         }
                     }
                 },
-                enabled = !isLoading && email.isNotBlank() && password.isNotBlank()
-                        && password.length >= 6 && confirmPassword.isNotBlank()
-                        && displayName.isNotBlank() && password == confirmPassword,
+                enabled = !isLoading
             ) {
                 if (isLoading) {
                     CircularProgressIndicator(
