@@ -6,9 +6,9 @@ import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 
-object UserPreferences {
-    private val Context.dataStore by preferencesDataStore(name = "user_preferences")
+val Context.dataStore by preferencesDataStore(name = "user_preferences")
 
+object UserPreferences {
     // First-time launch
     suspend fun isFirstLaunch(context: Context): Boolean {
         return context.dataStore.data
@@ -57,6 +57,18 @@ object UserPreferences {
     suspend fun setInitialized(context: Context) {
         context.dataStore.edit {
             it[PreferencesKeys.IS_DEFAULT_CATEGORIES_INITIALIZED] = true
+        }
+    }
+
+    suspend fun getLastSyncDate(context: Context): String {
+        return context.dataStore.data
+            .map { it[PreferencesKeys.LAST_SYNC_DATE] ?: "" }
+            .first()
+    }
+
+    suspend fun setLastSyncDate(context: Context, date: String) {
+        context.dataStore.edit {
+            it[PreferencesKeys.LAST_SYNC_DATE] = date
         }
     }
 }

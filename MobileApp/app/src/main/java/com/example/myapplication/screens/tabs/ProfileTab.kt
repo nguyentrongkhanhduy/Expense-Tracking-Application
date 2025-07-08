@@ -37,7 +37,9 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.myapplication.components.CustomDropdownMenu
 import com.example.myapplication.components.MyButton
+import com.example.myapplication.data.datastore.PreferencesKeys
 import com.example.myapplication.data.datastore.UserPreferences
+import com.example.myapplication.data.datastore.dataStore
 import com.example.myapplication.screens.dialogs.ConfirmationDialog
 import com.example.myapplication.ui.theme.PrimaryBlue
 import com.example.myapplication.ui.theme.PrimaryRed
@@ -45,6 +47,7 @@ import com.example.myapplication.viewmodel.AuthViewModel
 import com.example.myapplication.viewmodel.CurrencyViewModel
 import com.example.myapplication.viewmodel.category.CategoryViewModel
 import com.example.myapplication.viewmodel.transaction.TransactionViewModel
+import kotlinx.coroutines.flow.map
 
 @Composable
 fun ProfileTab(
@@ -98,6 +101,10 @@ fun ProfileTab(
     LaunchedEffect(selectedCurrency) {
         UserPreferences.setCurrency(context, selectedCurrency) // Persist the new selection
     }
+
+    val lastSyncDate by context.dataStore.data
+        .map { it[PreferencesKeys.LAST_SYNC_DATE] ?: "" }
+        .collectAsState(initial = "")
 
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
@@ -199,7 +206,17 @@ fun ProfileTab(
                         fontWeight = FontWeight.Bold
                     )
                 }
+
+                if (lastSyncDate.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "Last sync: $lastSyncDate",
+                        fontSize = 14.sp,
+                        color = Color(0xFF222B45)
+                    )
+                }
                 Spacer(modifier = Modifier.height(16.dp))
+
 
                 MyButton(onClick = {
                     logOutDialog = true
