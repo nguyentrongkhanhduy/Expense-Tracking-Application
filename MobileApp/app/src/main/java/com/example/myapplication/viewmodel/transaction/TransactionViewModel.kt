@@ -554,7 +554,13 @@ class TransactionViewModel(
 
                 val downloadDir =
                     android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS)
-                val file = File(downloadDir, "transactions.csv")
+
+                val curtime = System.currentTimeMillis()
+                val formattedDate = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).apply {
+                    timeZone = TimeZone.getTimeZone("UTC")
+                }.format(Date(curtime))
+                
+                val file = File(downloadDir,  "Transactions_$formattedDate.csv")
                 file.bufferedWriter().use { writer ->
                     writer.write("ID, Name, Amount, Type, Category, Date, Location, Note\n")
                     transactions.forEach { transaction ->
