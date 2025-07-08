@@ -26,6 +26,11 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import java.io.File
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+import java.util.TimeZone
 
 class TransactionViewModel(
     private val transactionRepository: TransactionRepository,
@@ -342,10 +347,10 @@ class TransactionViewModel(
     }
 
     private val transactionApiService =
-            /*---- For Android Studio  ----*/
+        /*---- For Android Studio  ----*/
 //        RetrofitClient.createService(TransactionApiService::class.java, "http://10.0.2.2:3000") //Simulator
 
-        /*---- For Physical Device  ----*/
+    /*---- For Physical Device  ----*/
         RetrofitClient.createService(TransactionApiService::class.java, "https://expense-app-server-mocha.vercel.app")
     //CRUD firestore/firebase storage
     fun addTransactionToFirestore(userId: String, transaction: Transaction) {
@@ -433,7 +438,7 @@ class TransactionViewModel(
         }
     }
 
-    fun syncDataWhenLogIn(userId: String, onSyncComplete : () -> Unit) {
+    fun syncDataWhenLogIn(userId: String, onSyncComplete: () -> Unit) {
         viewModelScope.launch {
             val remoteTransactions = getTransactionsFromFirestore(userId)
             val localTransactions =
@@ -512,7 +517,8 @@ class TransactionViewModel(
     ) {
         viewModelScope.launch {
             try {
-                val response = transactionApiService.updateImage(ImageRequest(userId, requestedImage))
+                val response =
+                    transactionApiService.updateImage(ImageRequest(userId, requestedImage))
                 if (response.success) {
                     onImageUpdated(response.imageUrl!!)
                 } else {
@@ -533,6 +539,54 @@ class TransactionViewModel(
                 transactionApiService.deleteImage(RemoveImageRequest(userId, imageName))
             } catch (e: Exception) {
                 println("Error: ${e.message}")
+            }
+        }
+    }
+
+    fun exportTransactionsToCSV(onExportComplete: (title: String, message: String) -> Unit) {
+        viewModelScope.launch {
+            try {
+                val transactions = transactionsWithCategory.value
+                if (transactions.isEmpty()) {
+                    onExportComplete("Error", "No transactions to export")
+                    return@launch
+                }
+
+                val downloadDir =
+                    android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS)
+                val file = File(downloadDir, "transactions.csv")
+                file.bufferedWriter().use { writer ->
+                    writer.write("ID, Name, Amount, Type, Category, Date, Location, Note\n")
+                    transactions.forEach { transaction ->
+                        val t = transaction.transaction
+                        val c = transaction.category
+                        val formattedDate =
+                            SimpleDateFormat("MM/dd/yyyy", Locale.getDefault()).apply {
+                                timeZone = TimeZone.getTimeZone("UTC")
+                            }.format(Date(t.date))
+
+                        fun escapeCsvField(value: Any?): String {
+                            val str = value?.toString() ?: ""
+                            val escaped = str.replace("\"", "\"\"")
+                            return "\"$escaped\""
+                        }
+                        writer.write(
+                            "${escapeCsvField(t.transactionId)}," +
+                                    "${escapeCsvField(t.name)}," +
+                                    "${escapeCsvField(t.amount)}," +
+                                    "${escapeCsvField(t.type)}," +
+                                    "${escapeCsvField(c?.title)}," +
+                                    "${escapeCsvField(formattedDate)}," +
+                                    "${escapeCsvField(t.location)}," +
+                                    "${escapeCsvField(t.note)}\n"
+                        )
+                    }
+                }
+                onExportComplete("Export Complete", "Transactions exported to CSV")
+
+            } catch (e: Exception) {
+                println("Error: ${e.message}")
+                onExportComplete("Error", "Failed to export transactions")
             }
         }
     }
