@@ -33,8 +33,10 @@ import com.example.myapplication.components.CustomSegmentedTabRow
 import com.example.myapplication.helpers.getRequestedImage
 import com.example.myapplication.helpers.removeFromInternalStorage
 import com.example.myapplication.screens.dialogs.AddTransactionDialog
+import com.example.myapplication.screens.dialogs.ConfirmationDialog
 import com.example.myapplication.screens.dialogs.CustomCategoryFilterDialog
 import com.example.myapplication.screens.dialogs.CustomDateRangeDialog
+import com.example.myapplication.screens.dialogs.StyledAlertDialog
 import com.example.myapplication.ui.theme.PrimaryGreen
 import com.example.myapplication.viewmodel.AuthViewModel
 import com.example.myapplication.viewmodel.LocationViewModel
@@ -51,7 +53,7 @@ fun TransactionListTab(
     authViewModel: AuthViewModel,
     currencySymbol: String,
 
-) {
+    ) {
     val user by authViewModel.user.collectAsState()
     var searchQuery by remember { mutableStateOf(TextFieldValue("")) }
     val tabTexts = listOf("All", "Today", "Week", "Month", "Custom")
@@ -75,6 +77,11 @@ fun TransactionListTab(
     var showAddDialog by remember { mutableStateOf(false) }
 
     val context = LocalContext.current
+
+    var showExportDialog by remember { mutableStateOf(false) }
+    var showCompleteDialog by remember { mutableStateOf(false) }
+    var completeTitle by remember { mutableStateOf("") }
+    var completeMessage by remember { mutableStateOf("") }
 
     LaunchedEffect(selectedTab) {
         val calendar = Calendar.getInstance()
@@ -149,6 +156,32 @@ fun TransactionListTab(
         )
     }
 
+    if (showExportDialog) {
+        ConfirmationDialog(
+            title = "Export Transactions",
+            message = "Are you sure you want to export all transactions?",
+            onConfirm = {
+                showExportDialog = false
+                transactionViewModel.exportTransactionsToCSV { title, message ->
+                    completeTitle = title
+                    completeMessage = message
+                    showCompleteDialog = true
+                }
+            },
+            onCancel = { showExportDialog = false },
+            onDismiss = { showExportDialog = false }
+        )
+    }
+
+    if (showCompleteDialog) {
+        StyledAlertDialog(
+            title = completeTitle,
+            message = completeMessage,
+            onDismiss = { showCompleteDialog = false },
+            onConfirm = { showCompleteDialog = false }
+        )
+    }
+
     val filteredTransactions = transactionsWithCategory
         .filter {
             val query = searchQuery.text.trim()
@@ -186,9 +219,10 @@ fun TransactionListTab(
             }
         }
 
-    Box(modifier = Modifier
-        .fillMaxSize()
-        .navigationBarsPadding()
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .navigationBarsPadding()
     ) {
         Column(
             modifier = Modifier
@@ -203,15 +237,32 @@ fun TransactionListTab(
             Spacer(Modifier.height(10.dp))
 
             // Title
-            Text(
-                text = "Transactions",
-                fontSize = 28.sp,
-                fontWeight = FontWeight.Bold,
-                color = PrimaryBlue,
+            Box(
                 modifier = Modifier
-                    .align(Alignment.CenterHorizontally)
-                    .padding(bottom = 18.dp)
-            )
+                    .fillMaxWidth()
+                    .padding(bottom = 10.dp)
+            ) {
+                Text(
+                    text = "Transactions",
+                    fontSize = 28.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = PrimaryBlue,
+                    modifier = Modifier.align(Alignment.Center)
+                )
+
+                IconButton(
+                    onClick = {
+                        showExportDialog = true
+                    },
+                    modifier = Modifier.align(Alignment.CenterEnd)
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.download),
+                        contentDescription = "Settings",
+                        tint = PrimaryBlue
+                    )
+                }
+            }
 
             // Search Bar as OutlinedTextField
             OutlinedTextField(
@@ -342,9 +393,15 @@ fun TransactionListTab(
                         transaction.transactionId.toString()
                     )
                     if (requestedImage != null) {
-                        transactionViewModel.uploadImageToFirebaseStorage(user!!.uid, requestedImage) { url ->
+                        transactionViewModel.uploadImageToFirebaseStorage(
+                            user!!.uid,
+                            requestedImage
+                        ) { url ->
                             val copyTransaction = transaction.copy(imageUrl = url)
-                            transactionViewModel.addTransactionToFirestore(user!!.uid, copyTransaction)
+                            transactionViewModel.addTransactionToFirestore(
+                                user!!.uid,
+                                copyTransaction
+                            )
                         }
                     } else {
                         transactionViewModel.addTransactionToFirestore(user!!.uid, transaction)
@@ -372,12 +429,21 @@ fun TransactionListTab(
                     )
 
                     if (requestedImage != null) {
-                        transactionViewModel.updateImageInFirebaseStorage(user!!.uid, requestedImage) { url ->
+                        transactionViewModel.updateImageInFirebaseStorage(
+                            user!!.uid,
+                            requestedImage
+                        ) { url ->
                             val copyTransaction = updatedTransaction.copy(imageUrl = url)
-                            transactionViewModel.updateTransactionInFirestore(user!!.uid, copyTransaction)
+                            transactionViewModel.updateTransactionInFirestore(
+                                user!!.uid,
+                                copyTransaction
+                            )
                         }
                     } else {
-                        transactionViewModel.updateTransactionInFirestore(user!!.uid, updatedTransaction)
+                        transactionViewModel.updateTransactionInFirestore(
+                            user!!.uid,
+                            updatedTransaction
+                        )
                     }
                 }
                 transactionViewModel.checkAndNotifyBudget(context, updatedTransaction)
@@ -390,8 +456,14 @@ fun TransactionListTab(
                 transactionViewModel.softDeleteTransaction(editingTransaction!!.transaction)
 
                 if (user != null) {
-                    transactionViewModel.deleteImageFromFirebaseStorage(user!!.uid, editingTransaction!!.transaction.transactionId.toString())
-                    transactionViewModel.deleteTransactionFromFirestore(user!!.uid, editingTransaction!!.transaction.transactionId)
+                    transactionViewModel.deleteImageFromFirebaseStorage(
+                        user!!.uid,
+                        editingTransaction!!.transaction.transactionId.toString()
+                    )
+                    transactionViewModel.deleteTransactionFromFirestore(
+                        user!!.uid,
+                        editingTransaction!!.transaction.transactionId
+                    )
                     transactionViewModel.deleteTransaction(editingTransaction!!.transaction)
                 }
 
