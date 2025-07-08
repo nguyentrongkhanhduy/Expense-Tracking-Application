@@ -561,6 +561,7 @@ class TransactionViewModel(
                 }.format(Date(curtime))
                 
                 val file = File(downloadDir,  "Transactions_$formattedDate.csv")
+                
                 file.bufferedWriter().use { writer ->
                     writer.write("ID, Name, Amount, Type, Category, Date, Location, Note\n")
                     transactions.forEach { transaction ->

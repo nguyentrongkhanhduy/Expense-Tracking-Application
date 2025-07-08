@@ -49,12 +49,15 @@ import com.example.myapplication.ui.theme.PrimaryGreen
 import com.example.myapplication.ui.theme.White
 import com.example.myapplication.viewmodel.LocationViewModel
 import androidx.compose.material3.FloatingActionButtonDefaults
+import androidx.lifecycle.viewModelScope
 import com.example.myapplication.components.AdBanner
 import com.example.myapplication.data.datastore.UserPreferences
 import com.example.myapplication.helpers.getRequestedImage
 import com.example.myapplication.screens.dialogs.ConfirmationDialog
 import com.example.myapplication.viewmodel.CurrencyViewModel
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
+import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
 
@@ -118,6 +121,15 @@ fun HomeScreen(
                 transactionViewModel.setLoading(true)
                 categoryViewModel.syncDataWhenLogIn(user!!.uid) {
                     categoryViewModel.setLoading(false)
+
+                    val currentTime = System.currentTimeMillis()
+                    val formattedDate =
+                        SimpleDateFormat("MM/dd/yyyy", Locale.getDefault()).apply {
+                            timeZone = TimeZone.getTimeZone("UTC")
+                        }.format(Date(currentTime))
+                    transactionViewModel.viewModelScope.launch {
+                        UserPreferences.setLastSyncDate(context, formattedDate)
+                    }
                 }
                 transactionViewModel.syncDataWhenLogIn(user!!.uid) {
                     transactionViewModel.setLoading(false)
@@ -208,6 +220,15 @@ fun HomeScreen(
                     categoryViewModel.setLoading(true)
                     transactionViewModel.syncDataWhenLogIn(user!!.uid) {
                         transactionViewModel.setLoading(false)
+
+                        val currentTime = System.currentTimeMillis()
+                        val formattedDate =
+                            SimpleDateFormat("MM/dd/yyyy", Locale.getDefault()).apply {
+                                timeZone = TimeZone.getTimeZone("UTC")
+                            }.format(Date(currentTime))
+                        transactionViewModel.viewModelScope.launch {
+                            UserPreferences.setLastSyncDate(context, formattedDate)
+                        }
                     }
                     categoryViewModel.syncDataWhenLogIn(user!!.uid) {
                         categoryViewModel.setLoading(false)
@@ -215,6 +236,9 @@ fun HomeScreen(
                 },
                 onLogout = {
                     authViewModel.signOut()
+                    authViewModel.viewModelScope.launch {
+                        UserPreferences.setLastSyncDate(context, "")
+                    }
                     navController.navigate("login?showGuest=true") {
                         popUpTo(0)
                     }
