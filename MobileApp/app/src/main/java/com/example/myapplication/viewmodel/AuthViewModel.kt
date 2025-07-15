@@ -71,10 +71,15 @@ class AuthViewModel : ViewModel() {
             return android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
         }
 
+
         fun isValidPassword(password: String): Boolean {
-            return password.length >= 6
+            val passwordRegex = Regex(
+                "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[!@#\$%^&*()_+\\-=\\[\\]{};':\"\\\\|,.<>/?]).{6,}$"
+            )
+            return passwordRegex.matches(password)
         }
     }
+
 
     fun signIn(email: String, password: String, onSignInSuccess: (userId: String) -> Unit) {
         _isLoading.value = true
