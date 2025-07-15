@@ -1,5 +1,9 @@
 package com.example.myapplication.screens.tabs
 
+import android.app.Activity
+import android.content.pm.PackageManager
+import android.os.Build
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -8,9 +12,11 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
@@ -18,6 +24,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -34,6 +43,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
 import com.example.myapplication.components.CustomDropdownMenu
 import com.example.myapplication.components.MyButton
@@ -47,6 +58,8 @@ import com.example.myapplication.viewmodel.AuthViewModel
 import com.example.myapplication.viewmodel.CurrencyViewModel
 import com.example.myapplication.viewmodel.category.CategoryViewModel
 import com.example.myapplication.viewmodel.transaction.TransactionViewModel
+import com.google.android.play.integrity.internal.ac
+import com.google.android.play.integrity.internal.c
 import kotlinx.coroutines.flow.map
 
 @Composable
@@ -106,6 +119,14 @@ fun ProfileTab(
         .map { it[PreferencesKeys.LAST_SYNC_DATE] ?: "" }
         .collectAsState(initial = "")
 
+    val messageOptions = listOf(
+        "Off",
+        "Weekly",
+        "Monthly",
+        "Test"
+    )
+    var selectedMessage by remember { mutableStateOf("Off") }
+
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
@@ -155,9 +176,42 @@ fun ProfileTab(
             }
 
             Spacer(modifier = Modifier.height(18.dp))
+
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = "Enable summary message:",
+                    fontSize = 15.sp
+                )
+
+                CustomDropdownMenu(
+                    list = messageOptions,
+                    selected = selectedMessage,
+                    color = PrimaryBlue,
+                    onSelected = { selectedIndex ->
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                            if (ContextCompat.checkSelfPermission(context, android.Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                                val activity = context as? Activity
+                                if (ActivityCompat.shouldShowRequestPermissionRationale(activity!!, android.Manifest.permission.POST_NOTIFICATIONS)) {
+                                    ActivityCompat.requestPermissions(activity, arrayOf(android.Manifest.permission.POST_NOTIFICATIONS), 0)
+                                } else {
+                                    Toast.makeText(context, "Enable notifications in settings to receive summary messages.", Toast.LENGTH_SHORT).show()
+                                }
+                            }
+                        }
+                        selectedMessage = messageOptions[selectedIndex]
+                    },
+                    modifier = Modifier.padding(start = 10.dp),
+                )
+            }
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
                     text = "Currency preference:",
@@ -182,7 +236,7 @@ fun ProfileTab(
                     modifier = Modifier.padding(start = 10.dp),
                 )
             }
-            Spacer(modifier = Modifier.height(28.dp))
+            Spacer(modifier = Modifier.height(16.dp))
             MyButton(onClick = { navController.navigate("categories?fromTab=3") }) {
                 Text(
                     "Manage categories",

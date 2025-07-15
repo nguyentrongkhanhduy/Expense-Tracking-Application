@@ -67,7 +67,7 @@ fun CustomDropdownMenu(
             fontSize = 16.sp,
             fontWeight = FontWeight.SemiBold,
             modifier = Modifier
-                .padding(horizontal = 16.dp, vertical = 16.dp)
+                .padding(horizontal = 8.dp, vertical = 10.dp)
                 .defaultMinSize(minWidth = 120.dp),
             textAlign = TextAlign.Center
 
