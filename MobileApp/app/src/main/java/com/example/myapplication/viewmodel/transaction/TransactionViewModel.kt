@@ -595,4 +595,15 @@ class TransactionViewModel(
             }
         }
     }
+
+    fun sendTestNotification(userId: String) {
+        viewModelScope.launch {
+            try {
+                val response = transactionApiService.sendTestNotification(UserIdRequest(userId))
+                println("Notification sent: $response")
+            } catch (e: Exception) {
+                println("Error: ${e.message}")
+            }
+        }
+    }
 }

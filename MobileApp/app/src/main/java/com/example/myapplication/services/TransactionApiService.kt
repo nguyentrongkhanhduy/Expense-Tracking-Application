@@ -62,4 +62,7 @@ interface TransactionApiService {
 
     @POST("api/transactions/remove-image")
     suspend fun deleteImage(@Body request: RemoveImageRequest): Map<String, Any>
+
+    @POST("api/transactions/send-test-notification")
+    suspend fun sendTestNotification(@Body request: UserIdRequest): Map<String, Any>
 }

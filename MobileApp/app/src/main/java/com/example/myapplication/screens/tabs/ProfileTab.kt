@@ -229,7 +229,7 @@ fun ProfileTab(
                                     messageOptions[selectedIndex]
                                 )
                             } else {
-
+                                transactionViewModel.sendTestNotification(user!!.uid)
                             }
                             authViewModel.viewModelScope.launch {
                                 UserPreferences.setMessagePreference(
