@@ -164,7 +164,6 @@ class AuthViewModel : ViewModel() {
             try {
                 val response = authService.updateFcmToken(FcmTokenRequest(userId, token))
                 println("Response: $response")
-                println("Token sent: userId: $userId, token: $token")
             } catch (e: Exception) {
                 println("Error: ${e.message}")
             }
@@ -181,7 +180,6 @@ class AuthViewModel : ViewModel() {
                     )
                 )
                 println("Response: $response")
-                println("Message preference sent: userId: $userId, messagePreference: $messagePreference")
             } catch (e: Exception) {
                 println("Error: ${e.message}")
             }
