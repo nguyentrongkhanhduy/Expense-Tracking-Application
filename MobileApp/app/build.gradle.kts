@@ -94,4 +94,5 @@ dependencies {
     implementation ("com.google.android.gms:play-services-ads:24.3.0")
     implementation("com.google.ai.client.generativeai:generativeai:0.1.1")
 
+    implementation("com.google.firebase:firebase-messaging:24.1.2")
 }

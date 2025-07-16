@@ -202,7 +202,6 @@ class CategoryViewModel(
         viewModelScope.launch {
             try {
                 val response = categoryApiService.createCategory(CategoryRequest(userId, category))
-                println("Added category to Firestore: $response")
             } catch (e: Exception) {
                 println("Error: ${e.message}")
             }
@@ -237,7 +236,6 @@ class CategoryViewModel(
     suspend fun getCategoriesFromFirestore(userId: String): List<Category> {
         try {
             val response = categoryApiService.getCategories(UserIdRequest(userId))
-            println("Fetched categories from Firestore: $response")
             return response
         } catch (e: Exception) {
             println("Error: ${e.message}")

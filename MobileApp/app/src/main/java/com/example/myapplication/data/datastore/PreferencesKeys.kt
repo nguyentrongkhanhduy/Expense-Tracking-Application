@@ -9,4 +9,5 @@ object PreferencesKeys {
     val IS_GUEST_MODE = booleanPreferencesKey("is_guest_mode")
     val DEFAULT_CURRENCY = stringPreferencesKey("default_currency")
     val LAST_SYNC_DATE = stringPreferencesKey("last_sync_date")
+    val MESSAGE_PREFERENCE = stringPreferencesKey("message_preference")
 }

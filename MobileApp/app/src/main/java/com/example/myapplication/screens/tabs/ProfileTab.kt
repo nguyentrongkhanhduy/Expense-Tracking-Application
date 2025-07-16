@@ -45,6 +45,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import com.example.myapplication.components.CustomDropdownMenu
 import com.example.myapplication.components.MyButton
@@ -61,6 +62,7 @@ import com.example.myapplication.viewmodel.transaction.TransactionViewModel
 import com.google.android.play.integrity.internal.ac
 import com.google.android.play.integrity.internal.c
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 
 @Composable
 fun ProfileTab(
@@ -125,7 +127,9 @@ fun ProfileTab(
         "Monthly",
         "Test"
     )
-    var selectedMessage by remember { mutableStateOf("Off") }
+    val selectedMessage by context.dataStore.data
+        .map { it[PreferencesKeys.MESSAGE_PREFERENCE] ?: "Off" }
+        .collectAsState(initial = "Off")
 
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
@@ -177,35 +181,66 @@ fun ProfileTab(
 
             Spacer(modifier = Modifier.height(18.dp))
 
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(
-                    text = "Enable summary message:",
-                    fontSize = 15.sp
-                )
+            if (user != null) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = "Enable summary message:",
+                        fontSize = 15.sp
+                    )
 
-                CustomDropdownMenu(
-                    list = messageOptions,
-                    selected = selectedMessage,
-                    color = PrimaryBlue,
-                    onSelected = { selectedIndex ->
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                            if (ContextCompat.checkSelfPermission(context, android.Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-                                val activity = context as? Activity
-                                if (ActivityCompat.shouldShowRequestPermissionRationale(activity!!, android.Manifest.permission.POST_NOTIFICATIONS)) {
-                                    ActivityCompat.requestPermissions(activity, arrayOf(android.Manifest.permission.POST_NOTIFICATIONS), 0)
-                                } else {
-                                    Toast.makeText(context, "Enable notifications in settings to receive summary messages.", Toast.LENGTH_SHORT).show()
+                    CustomDropdownMenu(
+                        list = messageOptions,
+                        selected = selectedMessage,
+                        color = PrimaryBlue,
+                        onSelected = { selectedIndex ->
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                if (ContextCompat.checkSelfPermission(
+                                        context,
+                                        android.Manifest.permission.POST_NOTIFICATIONS
+                                    ) != PackageManager.PERMISSION_GRANTED
+                                ) {
+                                    val activity = context as? Activity
+                                    if (ActivityCompat.shouldShowRequestPermissionRationale(
+                                            activity!!,
+                                            android.Manifest.permission.POST_NOTIFICATIONS
+                                        )
+                                    ) {
+                                        ActivityCompat.requestPermissions(
+                                            activity,
+                                            arrayOf(android.Manifest.permission.POST_NOTIFICATIONS),
+                                            0
+                                        )
+                                    } else {
+                                        Toast.makeText(
+                                            context,
+                                            "Enable notifications in settings to receive summary messages.",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                    }
                                 }
                             }
-                        }
-                        selectedMessage = messageOptions[selectedIndex]
-                    },
-                    modifier = Modifier.padding(start = 10.dp),
-                )
+                            if (messageOptions[selectedIndex] != "Test") {
+                                authViewModel.setMessagePreference(
+                                    user!!.uid,
+                                    messageOptions[selectedIndex]
+                                )
+                            } else {
+
+                            }
+                            authViewModel.viewModelScope.launch {
+                                UserPreferences.setMessagePreference(
+                                    context,
+                                    messageOptions[selectedIndex]
+                                )
+                            }
+                        },
+                        modifier = Modifier.padding(start = 10.dp),
+                    )
+                }
             }
 
             Row(
@@ -223,7 +258,8 @@ fun ProfileTab(
                     color = PrimaryBlue,
                     onSelected = { selectedIndex ->
                         val fromCurrency = currencyViewModel.getCurrencyShortForm(selectedCurrency)
-                        val toCurrency = currencyViewModel.getCurrencyShortForm(currencyOptions[selectedIndex])
+                        val toCurrency =
+                            currencyViewModel.getCurrencyShortForm(currencyOptions[selectedIndex])
                         selectedCurrency = currencyOptions[selectedIndex]
 
                         currencyViewModel.getExchangeRate(fromCurrency, toCurrency) {
@@ -275,11 +311,21 @@ fun ProfileTab(
                 MyButton(onClick = {
                     logOutDialog = true
                 }, backgroundColor = PrimaryRed) {
-                    Text("Log out", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                    Text(
+                        "Log out",
+                        color = Color.White,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold
+                    )
                 }
             } else {
                 MyButton(onClick = { navController.navigate("login?showGuest=true") }) {
-                    Text("Log in", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                    Text(
+                        "Log in",
+                        color = Color.White,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold
+                    )
                 }
             }
             Spacer(Modifier.height(32.dp))

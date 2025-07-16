@@ -52,6 +52,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import com.example.myapplication.R
+import com.google.firebase.messaging.FirebaseMessaging
 
 @Composable
 fun LoginScreen(
@@ -233,6 +234,12 @@ fun LoginScreen(
                     if (emailError == null && passwordError == null) {
                         viewModel.signIn(trimmedEmail, trimmedPassword) {
                             viewModel.setSyncPrompt(true)
+                            FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+                                if (task.isSuccessful) {
+                                    val token = task.result
+                                    viewModel.sendFCMTokenToServer(it, token)
+                                }
+                            }
                         }
                     }
                 },
