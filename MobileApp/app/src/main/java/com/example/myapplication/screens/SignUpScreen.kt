@@ -27,6 +27,7 @@ import com.example.myapplication.ui.theme.PrimaryBlue
 import com.example.myapplication.viewmodel.AuthViewModel
 import com.example.myapplication.viewmodel.category.CategoryViewModel
 import com.example.myapplication.viewmodel.transaction.TransactionViewModel
+import com.google.firebase.messaging.FirebaseMessaging
 
 @Composable
 fun SignUpScreen(
@@ -288,6 +289,12 @@ fun SignUpScreen(
                             } else {
                                 categoryViewModel.syncDataWhenSignUp(it)
                                 transactionViewModel.syncDataWhenSignUp(it)
+                            }
+                            FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+                                if (task.isSuccessful) {
+                                    val token = task.result
+                                    viewModel.sendFCMTokenToServer(it, token)
+                                }
                             }
                         }
                     }

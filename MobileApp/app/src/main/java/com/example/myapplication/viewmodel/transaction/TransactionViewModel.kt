@@ -358,7 +358,6 @@ class TransactionViewModel(
             try {
                 val response =
                     transactionApiService.createTransaction(TransactionRequest(userId, transaction))
-                println("Added transaction to Firestore: $response")
             } catch (e: Exception) {
                 println("Error: ${e.message}")
             }
@@ -415,7 +414,6 @@ class TransactionViewModel(
     suspend fun getTransactionsFromFirestore(userId: String): List<Transaction> {
         try {
             val response = transactionApiService.getTransactions(UserIdRequest(userId))
-            println("Fetched transactions from Firestore: $response")
             return response
         } catch (e: Exception) {
             println("Error: ${e.message}")

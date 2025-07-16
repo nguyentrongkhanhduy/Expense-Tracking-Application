@@ -4,9 +4,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.myapplication.data.model.User
 import com.example.myapplication.services.AuthApiService
+import com.example.myapplication.services.FcmTokenRequest
 import com.example.myapplication.services.RetrofitClient
 import com.example.myapplication.services.SignUpRequest
 import com.example.myapplication.services.TokenRequest
+import com.example.myapplication.services.UserMessagePreference
 import com.github.mikephil.charting.utils.Utils.init
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -42,10 +44,10 @@ class AuthViewModel : ViewModel() {
 
     private val authService =
 
-            /*---- For Android Studio  ----*/
-    //RetrofitClient.createService(AuthApiService::class.java, "http://10.0.2.2:3000")
+        /*---- For Android Studio  ----*/
+//        RetrofitClient.createService(AuthApiService::class.java, "http://10.0.2.2:3000")
 
-        /*---- For Physical Device  ----*/
+    /*---- For Physical Device  ----*/
         RetrofitClient.createService(AuthApiService::class.java, "https://expense-app-server-mocha.vercel.app")
 
     init {
@@ -57,7 +59,11 @@ class AuthViewModel : ViewModel() {
         if (firebaseUser != null) {
             viewModelScope.launch {
                 try {
-                    val response = authService.signIn(TokenRequest(firebaseUser.getIdToken(true).await().token!!))
+                    val response = authService.signIn(
+                        TokenRequest(
+                            firebaseUser.getIdToken(true).await().token!!
+                        )
+                    )
                     _user.value = response
                     _isSignedIn.value = true
                 } catch (e: Exception) {
@@ -66,6 +72,7 @@ class AuthViewModel : ViewModel() {
             }
         }
     }
+
     companion object {
         fun isValidEmail(email: String): Boolean {
             return android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
@@ -150,5 +157,34 @@ class AuthViewModel : ViewModel() {
 
     fun clearError() {
         _errorMessage.value = null
+    }
+
+    fun sendFCMTokenToServer(userId: String, token: String) {
+        viewModelScope.launch {
+            try {
+                val response = authService.updateFcmToken(FcmTokenRequest(userId, token))
+                println("Response: $response")
+                println("Token sent: userId: $userId, token: $token")
+            } catch (e: Exception) {
+                println("Error: ${e.message}")
+            }
+        }
+    }
+
+    fun setMessagePreference(userId: String, messagePreference: String) {
+        viewModelScope.launch {
+            try {
+                val response = authService.updateMessagePreference(
+                    UserMessagePreference(
+                        userId,
+                        messagePreference
+                    )
+                )
+                println("Response: $response")
+                println("Message preference sent: userId: $userId, messagePreference: $messagePreference")
+            } catch (e: Exception) {
+                println("Error: ${e.message}")
+            }
+        }
     }
 }

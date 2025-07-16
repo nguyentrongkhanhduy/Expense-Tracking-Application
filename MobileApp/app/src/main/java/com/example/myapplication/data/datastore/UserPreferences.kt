@@ -71,4 +71,16 @@ object UserPreferences {
             it[PreferencesKeys.LAST_SYNC_DATE] = date
         }
     }
+
+    suspend fun getMessagePreference(context: Context): String {
+        return context.dataStore.data
+            .map { it[PreferencesKeys.MESSAGE_PREFERENCE] ?: "Off" }
+            .first()
+    }
+
+    suspend fun setMessagePreference(context: Context, preference: String) {
+        context.dataStore.edit {
+            it[PreferencesKeys.MESSAGE_PREFERENCE] = preference
+        }
+    }
 }
