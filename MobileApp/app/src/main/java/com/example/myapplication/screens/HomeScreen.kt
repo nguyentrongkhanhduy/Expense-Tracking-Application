@@ -235,9 +235,12 @@ fun HomeScreen(
                     }
                 },
                 onLogout = {
+                    authViewModel.setMessagePreference(user!!.uid, "Off")
+                    authViewModel.sendFCMTokenToServer(user!!.uid, "Delete")
                     authViewModel.signOut()
                     authViewModel.viewModelScope.launch {
                         UserPreferences.setLastSyncDate(context, "")
+                        UserPreferences.setMessagePreference(context, "Off")
                     }
                     navController.navigate("login?showGuest=true") {
                         popUpTo(0)
