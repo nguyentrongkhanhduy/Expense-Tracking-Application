@@ -32,6 +32,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -124,12 +125,14 @@ fun ProfileTab(
     val messageOptions = listOf(
         "Off",
         "Weekly",
-        "Monthly",
-        "Test"
+        "Monthly"
     )
     val selectedMessage by context.dataStore.data
         .map { it[PreferencesKeys.MESSAGE_PREFERENCE] ?: "Off" }
         .collectAsState(initial = "Off")
+    val oldSelectedIndex = messageOptions.indexOf(selectedMessage)
+    var newselectedIndex by remember { mutableIntStateOf(0) }
+    var showMessagePrompt by remember { mutableStateOf(false) }
 
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
@@ -197,45 +200,9 @@ fun ProfileTab(
                         selected = selectedMessage,
                         color = PrimaryBlue,
                         onSelected = { selectedIndex ->
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                                if (ContextCompat.checkSelfPermission(
-                                        context,
-                                        android.Manifest.permission.POST_NOTIFICATIONS
-                                    ) != PackageManager.PERMISSION_GRANTED
-                                ) {
-                                    val activity = context as? Activity
-                                    if (ActivityCompat.shouldShowRequestPermissionRationale(
-                                            activity!!,
-                                            android.Manifest.permission.POST_NOTIFICATIONS
-                                        )
-                                    ) {
-                                        ActivityCompat.requestPermissions(
-                                            activity,
-                                            arrayOf(android.Manifest.permission.POST_NOTIFICATIONS),
-                                            0
-                                        )
-                                    } else {
-                                        Toast.makeText(
-                                            context,
-                                            "Enable notifications in settings to receive summary messages.",
-                                            Toast.LENGTH_SHORT
-                                        ).show()
-                                    }
-                                }
-                            }
-                            if (messageOptions[selectedIndex] != "Test") {
-                                authViewModel.setMessagePreference(
-                                    user!!.uid,
-                                    messageOptions[selectedIndex]
-                                )
-                            } else {
-                                transactionViewModel.sendTestNotification(user!!.uid)
-                            }
-                            authViewModel.viewModelScope.launch {
-                                UserPreferences.setMessagePreference(
-                                    context,
-                                    messageOptions[selectedIndex]
-                                )
+                            if (selectedIndex != oldSelectedIndex) {
+                                newselectedIndex = selectedIndex
+                                showMessagePrompt = true
                             }
                         },
                         modifier = Modifier.padding(start = 10.dp),
@@ -393,6 +360,69 @@ fun ProfileTab(
             ) {
                 CircularProgressIndicator(color = PrimaryBlue)
             }
+        }
+
+        if (showMessagePrompt) {
+            val promptMessage = when (newselectedIndex) {
+                0 -> "Turn off summary notifications?"
+                1 -> "Enable weekly summaries? Notifications will appear every Monday at 8:00 AM."
+                2 -> "Enable monthly summaries? Notifications will appear on the 1st at 8:00 AM."
+                else -> ""
+            }
+
+            ConfirmationDialog(
+                title = "Summary Message",
+                message = promptMessage,
+                onConfirm = {
+                    if (newselectedIndex != 0) {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                            if (ContextCompat.checkSelfPermission(
+                                    context,
+                                    android.Manifest.permission.POST_NOTIFICATIONS
+                                ) != PackageManager.PERMISSION_GRANTED
+                            ) {
+                                val activity = context as? Activity
+                                if (ActivityCompat.shouldShowRequestPermissionRationale(
+                                        activity!!,
+                                        android.Manifest.permission.POST_NOTIFICATIONS
+                                    )
+                                ) {
+                                    ActivityCompat.requestPermissions(
+                                        activity,
+                                        arrayOf(android.Manifest.permission.POST_NOTIFICATIONS),
+                                        0
+                                    )
+                                } else {
+                                    Toast.makeText(
+                                        context,
+                                        "Enable notifications in settings to receive summary messages.",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
+                            }
+                        }
+                    }
+                    authViewModel.setMessagePreference(
+                        user!!.uid,
+                        messageOptions[newselectedIndex]
+                    )
+                    authViewModel.viewModelScope.launch {
+                        UserPreferences.setMessagePreference(
+                            context,
+                            messageOptions[newselectedIndex]
+                        )
+                    }
+                    showMessagePrompt = false
+                },
+                onCancel = {
+                    newselectedIndex = oldSelectedIndex
+                    showMessagePrompt = false
+                },
+                onDismiss = {
+                    newselectedIndex = oldSelectedIndex
+                    showMessagePrompt = false
+                }
+            )
         }
     }
 }
