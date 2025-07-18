@@ -16,6 +16,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -132,13 +133,15 @@ fun SignUpScreen(
                 if (showEmailTooltip) {
                     Text(
                         text = "Enter a valid email address (e.g., user@example.com).",
-                        fontSize = 13.sp,
+                        fontSize = 11.sp,
                         color = Color.Black,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
                         modifier = Modifier
                             .padding(top = 4.dp)
                             .background(Color(0xFFEEF4FF), shape = RoundedCornerShape(8.dp))
                             .border(1.dp, PrimaryBlue, shape = RoundedCornerShape(8.dp))
-                            .padding(horizontal = 12.dp, vertical = 10.dp)
+                            .padding(horizontal = 12.dp, vertical = 6.dp)
                             .widthIn(max = 260.dp)
                     )
                 }
@@ -173,17 +176,20 @@ fun SignUpScreen(
                 }
                 if (showPasswordTooltip) {
                     Text(
-                        text = "Create a password with at least 6 characters which includes Uppercase/Lowercase letters, Numbers & Special characters (@, #, \$, etc.)",
-                        fontSize = 13.sp,
+                        text = "Password with 6+ chars, letters, numbers & symbols.",
+                        fontSize = 11.sp,
                         color = Color.Black,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
                         modifier = Modifier
                             .padding(top = 4.dp)
                             .background(Color(0xFFEEF4FF), shape = RoundedCornerShape(8.dp))
                             .border(1.dp, PrimaryBlue, shape = RoundedCornerShape(8.dp))
-                            .padding(horizontal = 12.dp, vertical = 10.dp)
+                            .padding(horizontal = 12.dp, vertical = 6.dp)
                             .widthIn(max = 260.dp)
                     )
                 }
+
             }
 
             // Confirm Password field
@@ -216,13 +222,15 @@ fun SignUpScreen(
                 if (showConfirmTooltip) {
                     Text(
                         text = "Re-enter your password to confirm",
-                        fontSize = 13.sp,
+                        fontSize = 11.sp,
                         color = Color.Black,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
                         modifier = Modifier
                             .padding(top = 4.dp)
                             .background(Color(0xFFEEF4FF), shape = RoundedCornerShape(8.dp))
                             .border(1.dp, PrimaryBlue, shape = RoundedCornerShape(8.dp))
-                            .padding(horizontal = 12.dp, vertical = 10.dp)
+                            .padding(horizontal = 12.dp, vertical = 6.dp)
                             .widthIn(max = 260.dp)
                     )
                 }
@@ -257,13 +265,15 @@ fun SignUpScreen(
                 if (showDisplayNameTooltip) {
                     Text(
                         text = "Choose the name you'd like displayed in the app.",
-                        fontSize = 13.sp,
+                        fontSize = 11.sp,
                         color = Color.Black,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
                         modifier = Modifier
                             .padding(top = 4.dp)
                             .background(Color(0xFFEEF4FF), shape = RoundedCornerShape(8.dp))
                             .border(1.dp, PrimaryBlue, shape = RoundedCornerShape(8.dp))
-                            .padding(horizontal = 12.dp, vertical = 10.dp)
+                            .padding(horizontal = 12.dp, vertical = 6.dp)
                             .widthIn(max = 260.dp)
                     )
                 }

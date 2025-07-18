@@ -51,6 +51,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextOverflow
 import com.example.myapplication.R
 import com.google.firebase.messaging.FirebaseMessaging
 
@@ -157,13 +158,15 @@ fun LoginScreen(
                 if (showEmailTooltip) {
                     Text(
                         text = "Enter a valid email address (e.g., user@example.com).",
-                        fontSize = 13.sp,
+                        fontSize = 11.sp,
                         color = Color.Black,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
                         modifier = Modifier
                             .padding(top = 4.dp)
                             .background(Color(0xFFEEF4FF), shape = RoundedCornerShape(8.dp))
                             .border(1.dp, PrimaryBlue, shape = RoundedCornerShape(8.dp))
-                            .padding(horizontal = 12.dp, vertical = 10.dp)
+                            .padding(horizontal = 12.dp, vertical = 6.dp)
                             .widthIn(max = 260.dp)
                     )
                 }
@@ -209,13 +212,15 @@ fun LoginScreen(
                 if (showPasswordTooltip) {
                     Text(
                         text = "Enter your account password. It’s case sensitive.",
-                        fontSize = 13.sp,
+                        fontSize = 11.sp,
                         color = Color.Black,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
                         modifier = Modifier
                             .padding(top = 4.dp)
                             .background(Color(0xFFEEF4FF), shape = RoundedCornerShape(8.dp))
                             .border(1.dp, PrimaryBlue, shape = RoundedCornerShape(8.dp))
-                            .padding(horizontal = 12.dp, vertical = 10.dp)
+                            .padding(horizontal = 12.dp, vertical = 6.dp)
                             .widthIn(max = 260.dp)
                     )
                 }
