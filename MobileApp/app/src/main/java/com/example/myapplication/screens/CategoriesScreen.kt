@@ -1,5 +1,9 @@
 package com.example.myapplication.screens
 
+import android.app.Activity
+import android.content.pm.PackageManager
+import android.os.Build
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -16,9 +20,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
 import com.example.myapplication.data.model.Category
 import com.example.myapplication.screens.dialogs.AddCategoryDialog
@@ -44,6 +51,8 @@ fun CategoriesScreen(
     var showAddDialog by remember { mutableStateOf(false) }
     var editingCategory by remember { mutableStateOf<Category?>(null) }
     val user by authViewModel.user.collectAsState()
+
+    val context = LocalContext.current
 
     Scaffold(
         floatingActionButton = {
@@ -196,6 +205,35 @@ fun CategoriesScreen(
                     limit = limit?.toDoubleOrNull(),
                     updatedAt = System.currentTimeMillis()
                 )
+
+                if (updatedCat.limit != 0.0) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        if (ContextCompat.checkSelfPermission(
+                                context,
+                                android.Manifest.permission.POST_NOTIFICATIONS
+                            ) != PackageManager.PERMISSION_GRANTED
+                        ) {
+                            val activity = context as? Activity
+                            if (ActivityCompat.shouldShowRequestPermissionRationale(
+                                    activity!!,
+                                    android.Manifest.permission.POST_NOTIFICATIONS
+                                )
+                            ) {
+                                ActivityCompat.requestPermissions(
+                                    activity,
+                                    arrayOf(android.Manifest.permission.POST_NOTIFICATIONS),
+                                    0
+                                )
+                            } else {
+                                Toast.makeText(
+                                    context,
+                                    "Enable notifications in settings to receive alerts when your budget is exceeded.",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
+                        }
+                    }
+                }
                 categoryViewModel.updateCategory(updatedCat)
 
                 if (user != null) {
