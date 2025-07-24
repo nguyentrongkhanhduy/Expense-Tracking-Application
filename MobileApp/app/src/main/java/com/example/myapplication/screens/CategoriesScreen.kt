@@ -301,18 +301,16 @@ fun CategoryCard(category: Category, onClick: () -> Unit) {
             color = Color(0xFF22304B),
             modifier = Modifier.weight(1f)
         )
-        Text(
-            text = "$${category.limit?.let { "%.2f".format(it) } ?: "0.00"}",
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color.White,
-            modifier = Modifier
-                .background(
-                    if (category.type.lowercase() == "expense") Color(0xFFFF6B6B)
-                    else Color(0xFF4CAF50),
-                    shape = RoundedCornerShape(12.dp)
-                )
-                .padding(horizontal = 12.dp, vertical = 4.dp)
-        )
+        if (category.type.lowercase() == "expense") {
+            Text(
+                text = "$${category.limit?.let { "%.2f".format(it) } ?: "0.00"}",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.White,
+                modifier = Modifier
+                    .background(Color(0xFFFF6B6B), shape = RoundedCornerShape(12.dp))
+                    .padding(horizontal = 12.dp, vertical = 4.dp)
+            )
+        }
     }
 }

@@ -4,19 +4,15 @@ import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -146,28 +142,18 @@ fun EditCategoryDialog(
                             modifier = Modifier.weight(1f)
                         )
                         Spacer(modifier = Modifier.width(12.dp))
-                        IconButton(
-                            onClick = { /* Generate icon logic here */ },
-                            modifier = Modifier
-                                .size(36.dp)
-                                .clip(CircleShape)
-                                .background(Color(0xFFE0E0E0))
-                        ) {
-                            Icon(
-                                Icons.Default.Add,
-                                contentDescription = "Generate Icon",
-                                tint = Color.Black
-                            )
-                        }
                     }
 
-                    OutlinedTextField(
-                        value = limit,
-                        onValueChange = { limit = it },
-                        label = { Text("Limit") },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        modifier = Modifier.fillMaxWidth()
-                    )
+                    if (type == "expense") {
+                        OutlinedTextField(
+                            value = limit,
+                            onValueChange = { limit = it },
+                            label = { Text("Limit") },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+
 
                     if (isEnable) {
                         Row(

@@ -150,7 +150,7 @@ fun AddCategoryDialog(
                         viewModel.inputIcon = it
                         viewModel.validateInputs()
                     },
-                    label = { Text("Generate Icon") },
+                    label = { Text("Icon (emoji or symbol)") },
                     isError = viewModel.iconError != null,
                     supportingText = {
                         viewModel.iconError?.let {
@@ -164,26 +164,29 @@ fun AddCategoryDialog(
                     modifier = Modifier.fillMaxWidth()
                 )
 
-                OutlinedTextField(
-                    value = viewModel.inputLimit,
-                    onValueChange = {
-                        viewModel.inputLimit = it
-                        viewModel.validateInputs()
-                    },
-                    label = { Text("Limit") },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    isError = viewModel.limitError != null,
-                    supportingText = {
-                        viewModel.limitError?.let {
-                            Text(
-                                it,
-                                color = Color.Red,
-                                fontSize = 12.sp
-                            )
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth()
-                )
+                if (viewModel.inputType == "expense") {
+                    OutlinedTextField(
+                        value = viewModel.inputLimit,
+                        onValueChange = {
+                            viewModel.inputLimit = it
+                            viewModel.validateInputs()
+                        },
+                        label = { Text("Limit") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        isError = viewModel.limitError != null,
+                        supportingText = {
+                            viewModel.limitError?.let {
+                                Text(
+                                    it,
+                                    color = Color.Red,
+                                    fontSize = 12.sp
+                                )
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+
 
                 // Buttons
                 Row(
