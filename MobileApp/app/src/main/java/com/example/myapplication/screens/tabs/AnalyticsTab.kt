@@ -88,7 +88,7 @@ fun AnalyticsTab(
 // --- Date range logic ---
     LaunchedEffect(selectedTimeTab) {
         val calendar = Calendar.getInstance()
-        val now = calendar.timeInMillis
+        calendar.timeZone = java.util.TimeZone.getTimeZone("UTC")
         when (selectedTimeTab) {
             0 -> { startDate = null; endDate = null }
             1 -> {
@@ -97,7 +97,9 @@ fun AnalyticsTab(
                 calendar.set(Calendar.SECOND, 0)
                 calendar.set(Calendar.MILLISECOND, 0)
                 startDate = calendar.timeInMillis
-                endDate = now
+
+                calendar.add(Calendar.DAY_OF_MONTH, 1)
+                endDate = calendar.timeInMillis - 1
             }
             2 -> {
                 calendar.set(Calendar.DAY_OF_WEEK, calendar.firstDayOfWeek)
@@ -106,7 +108,9 @@ fun AnalyticsTab(
                 calendar.set(Calendar.SECOND, 0)
                 calendar.set(Calendar.MILLISECOND, 0)
                 startDate = calendar.timeInMillis
-                endDate = now
+
+                calendar.add(Calendar.WEEK_OF_YEAR, 1)
+                endDate = calendar.timeInMillis - 1
             }
             3 -> {
                 calendar.set(Calendar.DAY_OF_MONTH, 1)
@@ -115,7 +119,9 @@ fun AnalyticsTab(
                 calendar.set(Calendar.SECOND, 0)
                 calendar.set(Calendar.MILLISECOND, 0)
                 startDate = calendar.timeInMillis
-                endDate = now
+
+                calendar.add(Calendar.MONTH, 1)
+                endDate = calendar.timeInMillis - 1
             }
             4 -> { customDateDialogExpanded = true }
         }
