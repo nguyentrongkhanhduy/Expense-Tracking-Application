@@ -85,51 +85,43 @@ fun TransactionListTab(
 
     LaunchedEffect(selectedTab) {
         val calendar = Calendar.getInstance()
-        val now = calendar.timeInMillis
-
+        calendar.timeZone = java.util.TimeZone.getTimeZone("UTC")
         when (selectedTab) {
-            0 -> {
-                startDate = null
-                endDate = null
-            }
-
+            0 -> { startDate = null; endDate = null }
             1 -> {
-                // Today
                 calendar.set(Calendar.HOUR_OF_DAY, 0)
                 calendar.set(Calendar.MINUTE, 0)
                 calendar.set(Calendar.SECOND, 0)
                 calendar.set(Calendar.MILLISECOND, 0)
                 startDate = calendar.timeInMillis
-                endDate = now
-            }
 
+                calendar.add(Calendar.DAY_OF_MONTH, 1)
+                endDate = calendar.timeInMillis - 1
+            }
             2 -> {
-                // Week
                 calendar.set(Calendar.DAY_OF_WEEK, calendar.firstDayOfWeek)
                 calendar.set(Calendar.HOUR_OF_DAY, 0)
                 calendar.set(Calendar.MINUTE, 0)
                 calendar.set(Calendar.SECOND, 0)
                 calendar.set(Calendar.MILLISECOND, 0)
                 startDate = calendar.timeInMillis
-                endDate = now
-            }
 
+                calendar.add(Calendar.WEEK_OF_YEAR, 1)
+                endDate = calendar.timeInMillis - 1
+            }
             3 -> {
-                // Month
                 calendar.set(Calendar.DAY_OF_MONTH, 1)
                 calendar.set(Calendar.HOUR_OF_DAY, 0)
                 calendar.set(Calendar.MINUTE, 0)
                 calendar.set(Calendar.SECOND, 0)
                 calendar.set(Calendar.MILLISECOND, 0)
                 startDate = calendar.timeInMillis
-                endDate = now
-            }
 
-            4 -> {
-                customDateDialogExpanded = true
+                calendar.add(Calendar.MONTH, 1)
+                endDate = calendar.timeInMillis - 1
             }
+            4 -> { customDateDialogExpanded = true }
         }
-        println("Selected tab: $selectedTab, Start date: $startDate, End date: $endDate")
     }
 
     // Custom date range dialog
